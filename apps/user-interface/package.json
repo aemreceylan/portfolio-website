@@ -1,0 +1,43 @@
+{
+  "name": "@personal-os/user-interface",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spatial Dark Glass WebOS Frontend Portfolio",
+  "type": "module",
+  "imports": {
+    "#components/*": "./src/components/*",
+    "#stores/*": "./src/stores/*",
+    "#styles/*": "./src/styles/*",
+    "#apps/*": "./src/apps/*",
+    "#i18n/*": "./src/i18n/*",
+    "#test/*": "./src/test/*"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@personal-os/shared": "*",
+    "lucide-react": "^0.475.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@types/node": "^22.13.1",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "babel-plugin-react-compiler": "^19.0.0-beta-df7b47d-20241124",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^4.1.11"
+  }
+}

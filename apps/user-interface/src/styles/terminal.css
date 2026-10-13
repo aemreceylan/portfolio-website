@@ -1,0 +1,67 @@
+/* Spatial Dark Terminal Styles */
+.terminal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #08090d;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.terminal-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.terminal-line {
+  word-break: break-all;
+}
+
+.terminal-welcome {
+  color: var(--aurora-cyan);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.terminal-prompt-prefix {
+  color: var(--aurora-emerald);
+  margin-right: 8px;
+  font-weight: 600;
+}
+
+.terminal-input-row {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: inherit;
+  caret-color: var(--aurora-cyan);
+}
+
+.terminal-output-success {
+  color: #94a3b8;
+}
+
+.terminal-output-error {
+  color: var(--aurora-rose);
+}
+
+.terminal-output-accent {
+  color: var(--aurora-cyan);
+}

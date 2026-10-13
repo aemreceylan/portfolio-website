@@ -1,0 +1,35 @@
+{
+  "name": "personal-web-os-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Modular Monorepo for Spatial Dark Glass Personal Portfolio WebOS",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@personal-os/user-interface",
+    "dev:all": "npm run dev --workspaces --parallel",
+    "dev:user": "npm run dev --workspace=@personal-os/user-interface",
+    "dev:admin": "npm run dev --workspace=@personal-os/admin-interface",
+    "dev:backend": "npm run dev --workspace=@personal-os/backend",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "overrides": {
+    "tinypool": "2.2.0",
+    "@vitest/mocker": "4.1.11"
+  },
+  "keywords": [
+    "webos",
+    "portfolio",
+    "react19",
+    "typescript",
+    "fastify",
+    "modular-monolith"
+  ],
+  "author": "Ahmet",
+  "license": "MIT"
+}
