@@ -1,5 +1,5 @@
-import React from 'react';
-import { Globe, Palette, Check, Sparkles, Image } from 'lucide-react';
+import React, { useState } from 'react';
+import { Globe, Palette, Check, Sparkles, Image, RotateCcw, AlertTriangle } from 'lucide-react';
 import { LANGUAGE_OPTIONS } from '#i18n/translations';
 import { useTranslation } from '#i18n/i18n.store';
 import { LanguageFlag } from '#components/LanguageFlag';
@@ -8,6 +8,7 @@ import {
   WALLPAPER_OPTIONS,
   ACCENT_COLOR_OPTIONS,
 } from '#stores/theme.store';
+import { performSystemReset } from '#services/system-reset';
 import '#styles/settings.css';
 
 /**
@@ -15,10 +16,22 @@ import '#styles/settings.css';
  * - Multilingual preferences across 7 locales
  * - Desktop wallpaper themes with Spatial dark gradients
  * - Dynamic accent palette with automatic wallpaper synchronization
+ * - System factory reset (equivalent to sudo rm -rf)
  */
 export const SettingsApp: React.FC = () => {
   const { currentLanguage, setLanguage, t } = useTranslation();
   const { wallpaper, accent, isAutoAccent, setWallpaper, setAccent, setAutoAccent } = useThemeStore();
+  const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
+
+  const handleConfirmReset = () => {
+    performSystemReset();
+    setShowResetConfirm(false);
+    setResetSuccessMessage(t('settings_reset_success'));
+    setTimeout(() => {
+      setResetSuccessMessage(null);
+    }, 4000);
+  };
 
   return (
     <div className="settings-container" role="region" aria-label="System Settings">
@@ -145,6 +158,67 @@ export const SettingsApp: React.FC = () => {
             );
           })}
         </div>
+      </section>
+
+      {/* Factory Reset Section (sudo rm -rf in GUI) */}
+      <section className="settings-section settings-danger-zone" aria-label={t('settings_reset_section')}>
+        <div className="settings-section-title settings-danger-title">
+          <RotateCcw size={16} />
+          <span>{t('settings_reset_section')}</span>
+        </div>
+        <p className="settings-section-desc">
+          {t('settings_reset_desc')}
+        </p>
+
+        {resetSuccessMessage && (
+          <div className="settings-reset-success-alert" role="status" data-testid="settings-reset-success-alert">
+            <Check size={14} />
+            <span>{resetSuccessMessage}</span>
+          </div>
+        )}
+
+        {!showResetConfirm ? (
+          <div className="settings-reset-action">
+            <button
+              type="button"
+              className="settings-reset-trigger-btn"
+              onClick={() => setShowResetConfirm(true)}
+              data-testid="settings-reset-button"
+            >
+              <RotateCcw size={14} />
+              <span>{t('settings_reset_button')}</span>
+            </button>
+          </div>
+        ) : (
+          <div className="settings-reset-confirm-box" role="alert" data-testid="settings-reset-confirm-box">
+            <div className="settings-reset-confirm-header">
+              <AlertTriangle size={18} className="danger-icon" />
+              <h4>{t('settings_reset_confirm_title')}</h4>
+            </div>
+            <p className="settings-reset-confirm-text">
+              {t('settings_reset_confirm_desc')}
+            </p>
+            <div className="settings-reset-confirm-actions">
+              <button
+                type="button"
+                className="settings-reset-cancel-btn"
+                onClick={() => setShowResetConfirm(false)}
+                data-testid="settings-reset-cancel-button"
+              >
+                {t('settings_reset_cancel_btn')}
+              </button>
+              <button
+                type="button"
+                className="settings-reset-execute-btn"
+                onClick={handleConfirmReset}
+                data-testid="settings-reset-execute-button"
+              >
+                <RotateCcw size={13} />
+                <span>{t('settings_reset_confirm_btn')}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

@@ -62,6 +62,7 @@ interface FileSystemStoreState {
   closeIdeTab: (fileId: string) => void;
   showGuiAlert: (title: string, message: string) => void;
   dismissGuiAlert: () => void;
+  reset: () => void;
 }
 
 /**
@@ -452,5 +453,16 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
 
   dismissGuiAlert: () => {
     set({ guiAlert: null });
+  },
+
+  reset: () => {
+    set({
+      files: createInitialFileMap(),
+      openViewerFileIds: [],
+      openIdeFileIds: [],
+      activeViewerFileId: null,
+      activeIdeFileId: null,
+      guiAlert: null,
+    });
   },
 }));

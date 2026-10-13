@@ -189,5 +189,38 @@
   - `npm run typecheck` monorepo genelinde 0 hata ile doğrulandı.
   - Chrome DevTools MCP ile canlı tarayıcıda simgelerin birbirinin üzerine bırakılamadığı ve en yakın boş hücreye kenetlendiği görsel olarak doğrulandı.
 
+## [2026-10-13] - Masaüstü Sağ Tık Konumunda Dosya Oluşturma & İlk Boşluk Otomatik Doldurma
 
+### Yapılanlar
+- **Sağ Tıklanan Konumda Dosya Oluşturma (`Desktop.tsx`)**:
+  - Masaüstünde boş bir alana sağ tıklandığında imlecin orijinal tıklama koordinatları (`rawX, rawY`) kaydedilip istemci oluşturma modalına (`promptModal.targetCoords`) aktarıldı.
+  - "Yeni Metin Belgesi", "Yeni Markdown Belgesi" veya "Yeni JavaScript Dosyası" oluşturulduğunda, oluşturulan dosya simgesi kullanıcının sağ tıkladığı ızgara hücresinde (`col, row`) anında konumlandırıldı.
+  - Tıklanan ızgara hücresinde başka bir simge bulunması durumunda çakışma koruması devreye girerek dosyayı tıklanan noktaya en yakın boş hücreye yerleştirir ve `localStorage` üzerinde saklar.
+- **Terminal ve IDE'den Dosya Oluşumunda İlk Boşluğu Doldurma Algoritması (`Desktop.tsx`)**:
+  - Terminal (`touch`, `nano`) veya JavaScript IDE üzerinden yeni bir dosya oluşturulduğunda (sağ tık koordinatı olmadan), masaüstü ızgarası sütun 0 satır 0'dan taranarak ızgarada bulunan **ilk boş hücre** (`findNextFreeCell(0, 0)`) bulunur.
+  - Örneğin bir uygulama veya sistem simgesi başka bir konuma taşındığında açılan boşluk, terminal veya IDE'den oluşturulan yeni dosya tarafından anında doldurulur.
+  - Sistem başlangıç dosyaları (`isInitial: true`) stabil yerleşimlerini korurken, dinamik oluşturulan dosyalar kronolojik olarak ızgaradaki boşlukları doldurur.
+- **Sanal Dosya Sistemi İzolasyonu & Sıfırlama (`filesystem.store.ts`)**:
+  - `useFileSystemStore` üzerine `reset()` eylemi eklenerek testler arasında VFS durum izolasyonu güçlendirildi.
+  - Silinen dosyaların eski `localStorage` özel konum anahtarları temizlendi; var olmayan dosya kimliklerinin masaüstünde hayalet boşluk işgal etmesi engellendi.
+- **Test ve Kalite Durumu**:
+  - 13 test dosyasında 75 birim ve entegrasyon testi %100 başarıyla geçti (`Desktop.test.tsx`'e sağ tık konumunda oluşturma ve terminal/IDE ilk boşluk doldurma testleri eklendi).
+  - `npm run typecheck` monorepo genelinde 0 hata ile doğrulandı.
+  - Chrome DevTools MCP ile canlı ortamda hem Terminal `touch` ile ilk boşluk doldurma hem de masaüstü sağ tık ile tam tıklanan koordinatta dosya oluşumu test edilip doğrulandı.
+## [2026-10-13] - Fabrika Ayarlarına Sıfırlama (sudo rm -rf & Ayarlar GUI Desteği)
+
+### Yapılanlar
+- **Terminal CLI `sudo rm -rf` Desteği (`TerminalApp.tsx`)**:
+  - `sudo rm -rf` (ve `sudo rm -rf /`, `sudo rm -rf *`, `sudo rm -rf .`) komutları ile WebOS sistemini tamamen fabrika ayarlarına döndürme özelliği eklendi.
+  - VFS dosyaları varsayılana döner (kullanıcı tarafından oluşturulan dosyalar temizlenir, değiştirilmiş sistem dosyaları orijinal içeriklerine döner).
+  - Özel masaüstü simge konumları (`localStorage` anahtarı) silinir ve simgeler varsayılan ızgara yerleşimine döner.
+  - Duvar kağıdı (`deep-space`) ve tema vurgu rengi (`cyan`, otomatik senkronizasyon açık) varsayılan durumuna sıfırlanır.
+- **Terminal CLI `sudo rm -rf` Yalın Durum Bildirimi (`TerminalApp.tsx`)**:
+  - `sudo rm -rf` çalıştırıldığında araya giren gereksiz simülasyon satırları (şifre doğrulaması, dosya silme aşamaları vb.) temizlendi.
+  - Sadece net bir durum bildirimi basılacak şekilde sadeleştirildi: `terminal_reset_status` ("Sistem başarıyla varsayılana döndürüldü." / "System successfully restored to factory defaults.").
+- **Ayarlar Sıfırlama Buton Metni Sadeleştirmesi (`translations.ts`)**:
+  - `settings_reset_button` metnindeki parantez içi `(sudo rm -rf)` ifadesi tüm dillerden kaldırıldı; buton artık sadece sade biçimde "Varsayılana Sıfırla" / "Reset to Defaults" olarak sunuluyor.
+- **Test ve Kalite Durumu**:
+  - 14 test dosyasında 82 birim ve entegrasyon testi güncellenen beklentilerle %100 başarıyla geçti.
+  - Chrome DevTools MCP ile canlı ortamda hem Terminal `sudo rm -rf` tek satırlık durum bildirimi hem de Ayarlar penceresindeki parantezsiz buton metni doğrulandı.
 

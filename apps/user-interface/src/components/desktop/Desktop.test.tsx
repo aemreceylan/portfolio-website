@@ -10,7 +10,7 @@ describe('Desktop Component', () => {
     localStorage.clear();
     useI18nStore.getState().setLanguage('en');
     useWindowManager.getState().reset();
-    useFileSystemStore.getState().dismissGuiAlert();
+    useFileSystemStore.getState().reset();
   });
 
   it('should render status bar with AEC brand, clock, and app icons', () => {
@@ -155,6 +155,49 @@ describe('Desktop Component', () => {
 
     // Terminal must NOT be placed at the exact same coordinates as Settings
     expect(updatedTerminal.getAttribute('style')).not.toBe(updatedSettings.getAttribute('style'));
+  });
+
+  it('should spawn newly created file at exact right-click grid position', () => {
+    render(<Desktop />);
+
+    const desktopViewport = screen.getByTestId('desktop-viewport');
+    // Right-click at col: 3 (START_X + 3 * 96 = 312), row: 1 (START_Y + 1 * 100 = 162)
+    fireEvent.contextMenu(desktopViewport, { clientX: 312, clientY: 162 });
+
+    const newMdOption = screen.getByText('New Markdown Document (.md)');
+    fireEvent.click(newMdOption);
+
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'rightclick.md' } });
+    fireEvent.submit(input.closest('form')!);
+
+    const newFileIcon = screen.getByTestId('desktop-file-rightclick.md');
+    expect(newFileIcon).toBeInTheDocument();
+    expect(newFileIcon.getAttribute('style')).toContain('left: 312px');
+    expect(newFileIcon.getAttribute('style')).toContain('top: 162px');
+  });
+
+  it('should place file created from terminal/IDE into the first available empty slot on the grid', () => {
+    render(<Desktop />);
+
+    const terminalIcon = screen.getByTestId('desktop-app-terminal');
+    // Move Terminal from (24, 62) to (312, 362), vacating slot (24, 62)
+    act(() => {
+      fireEvent.pointerDown(terminalIcon, { clientX: 24, clientY: 62, button: 0 });
+      fireEvent.pointerMove(window, { clientX: 312, clientY: 362 });
+      fireEvent.pointerUp(window, { clientX: 312, clientY: 362 });
+    });
+
+    // Simulate Terminal / IDE creating a file without right-click coordinates
+    act(() => {
+      useFileSystemStore.getState().createFile('from-cli.txt', 'hello from cli');
+    });
+
+    const cliFileIcon = screen.getByTestId('desktop-file-from-cli.txt');
+    expect(cliFileIcon).toBeInTheDocument();
+    // Must fill the first available hole at (24, 62)
+    expect(cliFileIcon.getAttribute('style')).toContain('left: 24px');
+    expect(cliFileIcon.getAttribute('style')).toContain('top: 62px');
   });
 });
 

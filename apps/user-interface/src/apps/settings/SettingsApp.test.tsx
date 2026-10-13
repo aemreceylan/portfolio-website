@@ -3,11 +3,13 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { SettingsApp } from './SettingsApp';
 import { useI18nStore } from '#i18n/i18n.store';
 import { useThemeStore } from '#stores/theme.store';
+import { useFileSystemStore } from '#stores/filesystem.store';
 
 describe('SettingsApp Component', () => {
   beforeEach(() => {
     useI18nStore.getState().setLanguage('en');
     useThemeStore.getState().setWallpaper('deep-space');
+    useFileSystemStore.getState().reset();
   });
 
   it('should render language selection options including Turkish and English', () => {
@@ -50,4 +52,48 @@ describe('SettingsApp Component', () => {
     expect(useThemeStore.getState().accent).toBe('emerald');
     expect(useThemeStore.getState().isAutoAccent).toBe(false);
   });
+
+  it('should render factory reset section and trigger reset on confirmation', () => {
+    // 1. Modify some state
+    useThemeStore.getState().setWallpaper('cyberpunk');
+    useFileSystemStore.getState().createFile('temp-note.txt', 'test');
+
+    render(<SettingsApp />);
+
+    expect(screen.getByText('Factory Reset')).toBeInTheDocument();
+    const resetTrigger = screen.getByTestId('settings-reset-button');
+    expect(resetTrigger).toBeInTheDocument();
+    expect(resetTrigger).toHaveTextContent('Reset to Defaults');
+    expect(resetTrigger).not.toHaveTextContent(/\(sudo rm -rf\)/);
+
+    // Click reset trigger to open confirm box
+    fireEvent.click(resetTrigger);
+
+    expect(screen.getByTestId('settings-reset-confirm-box')).toBeInTheDocument();
+    expect(screen.getByText(/Are you sure you want to reset\?/i)).toBeInTheDocument();
+
+    // Click confirm execute button
+    const confirmBtn = screen.getByTestId('settings-reset-execute-button');
+    fireEvent.click(confirmBtn);
+
+    // Verify reset executed
+    expect(useThemeStore.getState().wallpaper).toBe('deep-space');
+    expect(useFileSystemStore.getState().getFile('temp-note.txt')).toBeUndefined();
+    expect(screen.getByTestId('settings-reset-success-alert')).toBeInTheDocument();
+  });
+
+  it('should allow cancelling factory reset confirmation', () => {
+    render(<SettingsApp />);
+
+    const resetTrigger = screen.getByTestId('settings-reset-button');
+    fireEvent.click(resetTrigger);
+
+    expect(screen.getByTestId('settings-reset-confirm-box')).toBeInTheDocument();
+
+    const cancelBtn = screen.getByTestId('settings-reset-cancel-button');
+    fireEvent.click(cancelBtn);
+
+    expect(screen.queryByTestId('settings-reset-confirm-box')).not.toBeInTheDocument();
+  });
 });
+

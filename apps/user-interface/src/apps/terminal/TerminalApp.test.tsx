@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { TerminalApp } from './TerminalApp';
 import { useI18nStore } from '../../i18n/i18n.store';
 import { useFileSystemStore } from '../../stores/filesystem.store';
+import { useThemeStore } from '../../stores/theme.store';
 
 describe('TerminalApp Component', () => {
   beforeEach(() => {
@@ -103,5 +104,51 @@ describe('TerminalApp Component', () => {
 
     // Back in command line
     expect(screen.getByPlaceholderText(/type a command/i)).toBeInTheDocument();
+  });
+
+  it('should execute factory reset on "sudo rm -rf" command and restore default files and theme', () => {
+    render(<TerminalApp />);
+
+    // 1. Create a user file
+    useFileSystemStore.getState().createFile('custom-temp.md', 'some content');
+    expect(useFileSystemStore.getState().getFile('custom-temp.md')).toBeDefined();
+
+    // 2. Change theme
+    useThemeStore.getState().setWallpaper('cyberpunk');
+    expect(useThemeStore.getState().wallpaper).toBe('cyberpunk');
+
+    // 3. Switch user
+    const input = screen.getByPlaceholderText(/type a command/i);
+    fireEvent.change(input, { target: { value: 'su admin' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    expect(screen.getByText('admin@aec:~$')).toBeInTheDocument();
+
+    // 4. Run sudo rm -rf /
+    fireEvent.change(input, { target: { value: 'sudo rm -rf /' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+    // Assert only concise status notification is displayed
+    expect(screen.getByText(/System successfully restored to factory defaults/i)).toBeInTheDocument();
+    expect(screen.queryByText(/INITIATING SYSTEM FACTORY RESET/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Wiping user-created files/i)).not.toBeInTheDocument();
+
+    // Assert user reset to guest
+    expect(screen.getByText('guest@aec:~$')).toBeInTheDocument();
+
+    // Assert custom file wiped
+    expect(useFileSystemStore.getState().getFile('custom-temp.md')).toBeUndefined();
+
+    // Assert wallpaper reset to deep-space
+    expect(useThemeStore.getState().wallpaper).toBe('deep-space');
+  });
+
+  it('should warn when attempting rm -rf without sudo', () => {
+    render(<TerminalApp />);
+
+    const input = screen.getByPlaceholderText(/type a command/i);
+    fireEvent.change(input, { target: { value: 'rm -rf /' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+    expect(screen.getByText(/Permission denied\. Try "sudo rm -rf \/"/i)).toBeInTheDocument();
   });
 });

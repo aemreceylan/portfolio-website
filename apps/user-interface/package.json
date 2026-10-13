@@ -10,6 +10,7 @@
     "#styles/*": "./src/styles/*",
     "#apps/*": "./src/apps/*",
     "#i18n/*": "./src/i18n/*",
+    "#services/*": "./src/services/*",
     "#test/*": "./src/test/*"
   },
   "scripts": {

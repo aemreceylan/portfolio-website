@@ -73,6 +73,8 @@ export interface Translations {
   terminal_user_invalid: string;
   terminal_cmd_not_found: string;
   terminal_input_placeholder: string;
+  terminal_cmd_reset_desc: string;
+  terminal_reset_status: string;
 
   // Settings App
   settings_heading: string;
@@ -82,6 +84,14 @@ export interface Translations {
   settings_appearance_section: string;
   settings_appearance_desc: string;
   settings_active_badge: string;
+  settings_reset_section: string;
+  settings_reset_desc: string;
+  settings_reset_button: string;
+  settings_reset_confirm_title: string;
+  settings_reset_confirm_desc: string;
+  settings_reset_confirm_btn: string;
+  settings_reset_cancel_btn: string;
+  settings_reset_success: string;
 
   // Desktop Context Menu & File Actions
   ctx_open: string;
@@ -152,6 +162,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     terminal_user_invalid: 'Please provide a valid username (e.g., "su ahmet")',
     terminal_cmd_not_found: 'Command not found: {cmd}. Type "help" for command list.',
     terminal_input_placeholder: 'type a command...',
+    terminal_cmd_reset_desc: 'Factory reset system and restore default files',
+    terminal_reset_status: 'System successfully restored to factory defaults.',
     settings_heading: 'System Settings',
     settings_subheading: 'Customize language and runtime options',
     settings_language_section: 'Language & Localization',
@@ -159,6 +171,14 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_appearance_section: 'Spatial Dark Glass Theme',
     settings_appearance_desc: 'Hardware accelerated blur, glowing borders and fluid spring physics.',
     settings_active_badge: 'Active',
+    settings_reset_section: 'Factory Reset',
+    settings_reset_desc: 'Wipes all custom files, resets desktop icon positions, and restores default wallpaper and theme.',
+    settings_reset_button: 'Reset to Defaults',
+    settings_reset_confirm_title: 'Are you sure you want to reset?',
+    settings_reset_confirm_desc: 'All your created files, edits, and desktop arrangement will be permanently reset to factory state.',
+    settings_reset_confirm_btn: 'Yes, Reset System',
+    settings_reset_cancel_btn: 'Cancel',
+    settings_reset_success: 'System has been successfully restored to factory defaults!',
     ctx_open: 'Open',
     ctx_rename: 'Rename',
     ctx_delete: 'Delete',
@@ -221,6 +241,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     terminal_user_invalid: 'Lütfen geçerli bir kullanıcı adı belirtin (örn: "su ahmet")',
     terminal_cmd_not_found: 'Komut bulunamadı: {cmd}. Komut listesi için "help" yazın.',
     terminal_input_placeholder: 'komut yazın...',
+    terminal_cmd_reset_desc: 'Sistemi fabrika ayarlarına döndürür ve varsayılanları yükler',
+    terminal_reset_status: 'Sistem başarıyla varsayılana döndürüldü.',
     settings_heading: 'Sistem Ayarları',
     settings_subheading: 'Dil ve çalışma zamanı tercihlerini özelleştirin',
     settings_language_section: 'Dil ve Bölge',
@@ -228,6 +250,14 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_appearance_section: 'Spatial Dark Glass Teması',
     settings_appearance_desc: 'Donanım hızlandırmalı buzlu cam, parıldayan kenarlıklar ve akıcı yay fiziği.',
     settings_active_badge: 'Aktif',
+    settings_reset_section: 'Fabrika Ayarlarına Sıfırla',
+    settings_reset_desc: 'Tüm özel dosyaları siler, masaüstü simge dizilimini sıfırlar ve varsayılan duvar kağıdı ile temayı geri yükler.',
+    settings_reset_button: 'Varsayılana Sıfırla',
+    settings_reset_confirm_title: 'Sistemi sıfırlamak istediğinize emin misiniz?',
+    settings_reset_confirm_desc: 'Oluşturduğunuz tüm dosyalar, düzenlemeler ve masaüstü yerleşimi kalıcı olarak fabrika durumuna dönecektir.',
+    settings_reset_confirm_btn: 'Evet, Sistemi Sıfırla',
+    settings_reset_cancel_btn: 'İptal',
+    settings_reset_success: 'Sistem başarıyla fabrika ayarlarına döndürüldü!',
     ctx_open: 'Aç',
     ctx_rename: 'Yeniden Adlandır',
     ctx_delete: 'Sil',
@@ -290,6 +320,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     terminal_user_invalid: 'Bitte geben Sie einen gültigen Benutzernamen an (z. B. "su ahmet")',
     terminal_cmd_not_found: 'Befehl nicht gefunden: {cmd}. Geben Sie "help" ein.',
     terminal_input_placeholder: 'Befehl eingeben...',
+    terminal_cmd_reset_desc: 'System auf Werkseinstellungen zurücksetzen',
+    terminal_reset_status: 'System erfolgreich auf Werkseinstellungen zurückgesetzt.',
     settings_heading: 'Systemeinstellungen',
     settings_subheading: 'Sprache und Systemeinstellungen anpassen',
     settings_language_section: 'Sprache & Lokalisierung',
@@ -297,6 +329,14 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_appearance_section: 'Spatial Dark Glass Design',
     settings_appearance_desc: 'Hardwarebeschleunigte Unschärfe und reaktive Übergänge.',
     settings_active_badge: 'Aktiv',
+    settings_reset_section: 'Auf Werkseinstellungen zurücksetzen',
+    settings_reset_desc: 'Löscht alle benutzerdefinierten Dateien und stellt das Standarddesign wieder her.',
+    settings_reset_button: 'Auf Standard zurücksetzen',
+    settings_reset_confirm_title: 'Möchten Sie das System wirklich zurücksetzen?',
+    settings_reset_confirm_desc: 'Alle erstellten Dateien und Desktop-Anordnungen werden dauerhaft zurückgesetzt.',
+    settings_reset_confirm_btn: 'Ja, System zurücksetzen',
+    settings_reset_cancel_btn: 'Abbrechen',
+    settings_reset_success: 'Das System wurde erfolgreich auf die Werkseinstellungen zurückgesetzt!',
     ctx_open: 'Öffnen',
     ctx_rename: 'Umbenennen',
     ctx_delete: 'Löschen',
@@ -359,6 +399,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     terminal_user_invalid: 'Veuillez fournir un nom d\'utilisateur valide (ex. "su ahmet")',
     terminal_cmd_not_found: 'Commande introuvable : {cmd}. Tapez "help".',
     terminal_input_placeholder: 'tapez une commande...',
+    terminal_cmd_reset_desc: 'Restaurer le système aux paramètres d\'usine',
+    terminal_reset_status: 'Système restauré avec succès aux paramètres d\'usine.',
     settings_heading: 'Paramètres Système',
     settings_subheading: 'Personnalisez la langue et les options',
     settings_language_section: 'Langue & Région',
@@ -366,6 +408,14 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_appearance_section: 'Thème Spatial Dark Glass',
     settings_appearance_desc: 'Flou d\'arrière-plan accéléré par le matériel et esthétique sombre.',
     settings_active_badge: 'Actif',
+    settings_reset_section: 'Réinitialisation d\'usine',
+    settings_reset_desc: 'Supprime tous les fichiers personnalisés et restaure le thème par défaut.',
+    settings_reset_button: 'Réinitialiser par défaut',
+    settings_reset_confirm_title: 'Êtes-vous sûr de vouloir réinitialiser le système ?',
+    settings_reset_confirm_desc: 'Tous vos fichiers créés et la disposition du bureau seront définitivement réinitialisés.',
+    settings_reset_confirm_btn: 'Oui, réinitialiser le système',
+    settings_reset_cancel_btn: 'Annuler',
+    settings_reset_success: 'Le système a été réinitialisé avec succès aux paramètres d\'usine !',
     ctx_open: 'Ouvrir',
     ctx_rename: 'Renommer',
     ctx_delete: 'Supprimer',
@@ -428,6 +478,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     terminal_user_invalid: 'Por favor proporcione un usuario válido (ej. "su ahmet")',
     terminal_cmd_not_found: 'Comando no encontrado: {cmd}. Escribe "help".',
     terminal_input_placeholder: 'escribe un comando...',
+    terminal_cmd_reset_desc: 'Restablecer el sistema a los valores de fábrica',
+    terminal_reset_status: 'Sistema restablecido con éxito a los valores de fábrica.',
     settings_heading: 'Ajustes del Sistema',
     settings_subheading: 'Personaliza idioma y preferencias',
     settings_language_section: 'Idioma y Región',
@@ -435,6 +487,14 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_appearance_section: 'Tema Spatial Dark Glass',
     settings_appearance_desc: 'Desenfoque de vidrio esmerilado acelerado por GPU y física fluida.',
     settings_active_badge: 'Activo',
+    settings_reset_section: 'Restablecer a valores de fábrica',
+    settings_reset_desc: 'Elimina todos los archivos personalizados y restaura el tema predeterminado.',
+    settings_reset_button: 'Restablecer por defecto',
+    settings_reset_confirm_title: '¿Está seguro de que desea restablecer el sistema?',
+    settings_reset_confirm_desc: 'Todos los archivos creados y la disposición del escritorio se restablecerán permanentemente.',
+    settings_reset_confirm_btn: 'Sí, restablecer sistema',
+    settings_reset_cancel_btn: 'Cancelar',
+    settings_reset_success: '¡El sistema se ha restablecido con éxito a los valores de fábrica!',
     ctx_open: 'Abrir',
     ctx_rename: 'Renombrar',
     ctx_delete: 'Eliminar',
@@ -497,6 +557,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     terminal_user_invalid: 'Укажите корректное имя пользователя (напр. "su ahmet")',
     terminal_cmd_not_found: 'Команда не найдена: {cmd}. Введите "help".',
     terminal_input_placeholder: 'введите команду...',
+    terminal_cmd_reset_desc: 'Сбросить систему до заводских настроек',
+    terminal_reset_status: 'Система успешно сброшена до заводских настроек.',
     settings_heading: 'Настройки Системы',
     settings_subheading: 'Настройка языка и среды выполнения',
     settings_language_section: 'Язык и Регион',
@@ -504,6 +566,14 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_appearance_section: 'Тема Spatial Dark Glass',
     settings_appearance_desc: 'Аппаратно ускоренное размытие стекла и темная палитра.',
     settings_active_badge: 'Активен',
+    settings_reset_section: 'Сброс до заводских настроек',
+    settings_reset_desc: 'Удаляет все пользовательские файлы и восстанавливает тему по умолчанию.',
+    settings_reset_button: 'Сбросить по умолчанию',
+    settings_reset_confirm_title: 'Вы уверены, что хотите сбросить систему?',
+    settings_reset_confirm_desc: 'Все созданные вами файлы и расположение рабочего стола будут сброшены.',
+    settings_reset_confirm_btn: 'Да, сбросить систему',
+    settings_reset_cancel_btn: 'Отмена',
+    settings_reset_success: 'Система успешно сброшена до заводских настроек!',
     ctx_open: 'Открыть',
     ctx_rename: 'Переименовать',
     ctx_delete: 'Удалить',
@@ -566,6 +636,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     terminal_user_invalid: '有効なユーザー名を指定してください (例: "su ahmet")',
     terminal_cmd_not_found: 'コマンドが見つかりません: {cmd}。"help" をお試しください。',
     terminal_input_placeholder: 'コマンドを入力...',
+    terminal_cmd_reset_desc: 'システムを出荷時設定にリセット',
+    terminal_reset_status: 'システムは正常に初期状態にリセットされました。',
     settings_heading: 'システム設定',
     settings_subheading: '言語およびランタイム設定のカスタマイズ',
     settings_language_section: '言語と地域',
@@ -573,6 +645,14 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_appearance_section: 'Spatial Dark Glass テーマ',
     settings_appearance_desc: 'GPUアクセラレーションによるすりガラス効果と流体物理学。',
     settings_active_badge: '選択中',
+    settings_reset_section: '工場出荷時リセット',
+    settings_reset_desc: 'すべてのカスタムファイルを削除し、デフォルトのテーマを復元します。',
+    settings_reset_button: 'デフォルトにリセット',
+    settings_reset_confirm_title: 'システムをリセットしてもよろしいですか？',
+    settings_reset_confirm_desc: '作成したすべてのファイルとデスクトップの配置が初期状態にリセットされます。',
+    settings_reset_confirm_btn: 'はい、システムをリセット',
+    settings_reset_cancel_btn: 'キャンセル',
+    settings_reset_success: 'システムは正常に工場出荷時の状態にリセットされました！',
     ctx_open: '開く',
     ctx_rename: '名前を変更',
     ctx_delete: '削除',

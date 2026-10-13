@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { z } from 'zod';
 import { useTranslation } from '#i18n/i18n.store';
 import { useFileSystemStore, parseAllowedExtension } from '#stores/filesystem.store';
+import { performSystemReset } from '#services/system-reset';
 import '#styles/terminal.css';
 
 /**
@@ -196,7 +197,8 @@ export const TerminalApp: React.FC = () => {
           { id: `out-${Date.now()}-6`, type: 'accent', text: `  nano <file> - ${t('terminal_cmd_nano_desc')}` },
           { id: `out-${Date.now()}-7`, type: 'accent', text: `  su <user>   - ${t('terminal_cmd_su_desc')}` },
           { id: `out-${Date.now()}-8`, type: 'accent', text: `  exit        - ${t('terminal_cmd_exit_desc')}` },
-          { id: `out-${Date.now()}-9`, type: 'accent', text: `  clear       - ${t('terminal_cmd_clear_desc')}` }
+          { id: `out-${Date.now()}-9`, type: 'accent', text: `  clear       - ${t('terminal_cmd_clear_desc')}` },
+          { id: `out-${Date.now()}-10`, type: 'accent', text: `  sudo rm -rf - ${t('terminal_cmd_reset_desc')}` }
         );
         break;
 
@@ -277,6 +279,16 @@ export const TerminalApp: React.FC = () => {
             id: `out-${Date.now()}-err`,
             type: 'error',
             text: 'rm: missing operand. Usage: rm <filename>',
+          });
+          break;
+        }
+
+        const rmParts = cmdArg.split(/\s+/);
+        if (rmParts[0]?.toLowerCase().startsWith('-rf') || rmParts[0]?.toLowerCase().startsWith('-fr')) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: 'rm: cannot remove root filesystem: Permission denied. Try "sudo rm -rf /"',
           });
           break;
         }
@@ -362,6 +374,37 @@ export const TerminalApp: React.FC = () => {
           text: t('terminal_user_switched', { user: 'guest' }),
         });
         break;
+
+      case 'sudo': {
+        const subParts = cmdArg.split(/\s+/);
+        const subCmd = subParts[0]?.toLowerCase();
+        const subFlags = subParts.slice(1).join(' ').trim().toLowerCase();
+
+        if (
+          subCmd === 'rm' &&
+          (subFlags.startsWith('-rf') ||
+            subFlags.startsWith('-fr') ||
+            subFlags === '-r' ||
+            subFlags === '-f' ||
+            subFlags === '')
+        ) {
+          performSystemReset();
+          setCurrentUser('guest');
+          newOutputLines.push({
+            id: `out-${Date.now()}-status`,
+            type: 'accent',
+            text: t('terminal_reset_status'),
+          });
+          break;
+        }
+
+        newOutputLines.push({
+          id: `out-${Date.now()}-err`,
+          type: 'error',
+          text: `sudo: '${cmdArg}' is not permitted. Try 'sudo rm -rf /' to reset the system.`,
+        });
+        break;
+      }
 
       case 'clear':
         setLines([]);

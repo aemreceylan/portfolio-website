@@ -177,5 +177,40 @@ PersonalWebSite/
   - Dolu hücreye bırakılan simge asla diğer simgenin üzerine bindirilmez; bırakılan imleç koordinatlarına Öklid mesafesi (`Math.hypot`) açısından en yakın boş ızgara hücresine yönlendirilerek kenetlenir.
   - `layoutPositions` memoized motoru sayesinde özel konumu olmayan simgeler de özel konumu olan simgelerin hücrelerini atlayarak sonraki boş hücrelere akar. Bu sayede masaüstünde hiçbir iki simge asla üst üste binemez.
 
+---
 
+## 12. Masaüstü Sağ Tık Konumlandırma & İlk Boşluk Otomatik Yerleşim Mimarisi
 
+* **Sağ Tıklanan Koordinatta Doğrudan Dosya Oluşturma (`Desktop.tsx`)**:
+  - Masaüstünde boş alana sağ tıklandığında imlecin ham ekran koordinatları (`rawX, rawY`) kaydedilir ve oluşturma modalı durumuna (`promptModal.targetCoords`) taşınır.
+  - Modal formundan dosya oluşturulduğunda (`createFile`), hedef koordinat masaüstü ızgara indeksine dönüştürülür:
+    `targetCol = Math.round((targetCoords.x - START_X) / CELL_WIDTH)`
+    `targetRow = Math.round((targetCoords.y - START_Y) / CELL_HEIGHT)`
+  - Eğer hedeflenen ızgara hücresi boşsa dosya tam olarak oraya yerleştirilir (`customPositions`). Dolu ise Öklid mesafesi en yakın boş hücreye kenetlenir ve `localStorage`'a kaydedilir.
+* **Terminal ve IDE'den Dosya Oluşturmada İlk Boşluğu Doldurma Algoritması**:
+  - Terminal (`touch`, `nano`) veya JavaScript IDE üzerinden dosya oluşturulduğunda `targetCoords` bulunmaz.
+  - `layoutPositions` motoru dinamik dosyalar için ızgarayı en baştan (`c = 0, r = 0`) tarar (`findNextFreeCell(0, 0)`).
+  - Masaüstünde daha önce bir simgenin başka yere sürüklenmesiyle veya dosya silinmesiyle oluşan ilk boş delik/hücre tespit edilir ve yeni dosya doğrudan bu boşluğa yerleştirilir.
+  - Sistem başlangıç dosyaları (`isInitial: true`) stabil dizilimlerini korurken, dinamik dosyalar sıralı biçimde açık boşlukları doldurur.
+* **VFS ve Yaşam Döngüsü İzolasyonu (`filesystem.store.ts`)**:
+  - `reset()` eylemi eklenerek test ortamlarında ve oturum yenilemelerinde temiz dosya haritasına dönülmesi garanti altına alınmıştır.
+  - Silinen dosyaların `localStorage` özel konum anahtarları derhal kaldırılarak ızgarada hayalet dolu alan kalması önlenir.
+
+---
+
+## 13. Fabrika Ayarlarına Sıfırlama & Olay Tabanlı Senkronizasyon (Factory Reset Architecture)
+
+WebOS platformunun bütünsel sistem durumunu ilk kurulum haline döndürmek için CLI (`sudo rm -rf`) ve GUI (Ayarlar Tehlike Bölgesi) entegrasyonu sağlanmıştır:
+
+* **Merkezi Sıfırlama Servisi (`performSystemReset` - `system-reset.ts`)**:
+  - **VFS Sıfırlama**: `useFileSystemStore.getState().reset()` çağrılır; kullanıcı tarafından oluşturulmuş tüm dinamik dosyalar temizlenir, sistem başlangıç dosyaları (`bio.md`, `skills.md`, `contact.md`, `welcome.txt`) orijinal metinleriyle yeniden oluşturulur, açık IDE ve okuyucu sekmeleri sıfırlanır.
+  - **Görsel Tema Sıfırlama**: `useThemeStore.getState().reset()` çağrılır; duvar kağıdı `'deep-space'`, vurgu rengi `'cyan'` yapılır, dinamik renk senkronizasyonu (`isAutoAccent: true`) açılır ve `aec_portfolio_theme` `localStorage` kaydı silinir.
+  - **Masaüstü Izgara Konumları**: `localStorage.removeItem('aec-desktop-icon-positions')` ile kullanıcı tarafından sürüklenmiş veya sağ tıkla oluşturulmuş özel koordinatlar sıfırlanır.
+  - **Geniş Yayın (CustomEvent Broadcast)**: `window.dispatchEvent(new CustomEvent('aec-system-reset'))` tetiklenir. `Desktop.tsx` bu olayı dinleyerek dahili `customPositions` state'ini temizler; sayfayı yeniden yüklemeden (zero-reload) tüm masaüstü simgeleri akıcı bir şekilde varsayılan ızgara düzenine döner.
+* **Terminal CLI `sudo rm -rf` ve Yalın Durum Bildirimi (`TerminalApp.tsx`)**:
+  - `rm -rf /` root silme komutu standart `guest` yetkisiyle çalıştırıldığında işletim sistemi güvenlik kuralı simüle edilir: `Permission denied. Try "sudo rm -rf /"`.
+  - `sudo rm -rf` (veya `sudo rm -rf /`, `sudo rm -rf *`) girildiğinde araya gereksiz işlem basamakları girmeden doğrudan `performSystemReset()` çalıştırılır, aktif kullanıcı `guest` olarak sıfırlanır ve terminale yalnızca yalın durum bildirimi (`terminal_reset_status`: "Sistem başarıyla varsayılana döndürüldü.") basılır.
+* **Ayarlar (Settings) Uygulaması İki Aşamalı Doğrulama**:
+  - Kazara veri kayıplarını önlemek için satır içi onay kartı (`Inline Confirmation Card`) deseni uygulanmıştır.
+  - Buton metni sadeleştirilmiştir ("Varsayılana Sıfırla" / "Reset to Defaults").
+  - İlk tıklamada uyarı ve onay kutusu (`İptal` / `Evet, Sistemi Sıfırla`) açılır; onay verildiğinde işlem yürütülür ve 4 saniye süreli otomatik kaybolan başarı bildirimi sunulur.

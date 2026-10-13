@@ -71,6 +71,7 @@ interface ThemeStoreState {
   setWallpaper: (wallpaper: WallpaperId) => void;
   setAccent: (accent: AccentColorId) => void;
   setAutoAccent: (isAuto: boolean) => void;
+  reset: () => void;
 }
 
 /**
@@ -166,6 +167,18 @@ export const useThemeStore = create<ThemeStoreState>((set, get) => {
       }
 
       set({ isAutoAccent: isAuto, accent: nextAccent });
+    },
+
+    reset: () => {
+      applyThemeToDom('deep-space', 'cyan');
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.removeItem(THEME_STORAGE_KEY);
+        } catch {
+          // ignore
+        }
+      }
+      set({ wallpaper: 'deep-space', accent: 'cyan', isAutoAccent: true });
     },
   };
 });

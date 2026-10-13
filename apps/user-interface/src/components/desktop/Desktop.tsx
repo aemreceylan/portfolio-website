@@ -52,6 +52,8 @@ interface ContextMenuState {
   isOpen: boolean;
   x: number;
   y: number;
+  rawX: number;
+  rawY: number;
   file: VFSFile | null;
 }
 
@@ -62,6 +64,7 @@ interface PromptModalState {
   mode: 'rename' | 'new-txt' | 'new-md' | 'new-js';
   file?: VFSFile;
   error?: string;
+  targetCoords?: { x: number; y: number };
 }
 
 /**
@@ -96,6 +99,8 @@ export const Desktop: React.FC = () => {
     isOpen: false,
     x: 0,
     y: 0,
+    rawX: 0,
+    rawY: 0,
     file: null,
   });
 
@@ -129,6 +134,15 @@ export const Desktop: React.FC = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Listen to system factory reset event (triggered by `sudo rm -rf` or Settings)
+  useEffect(() => {
+    const handleSystemReset = () => {
+      setCustomPositions({});
+    };
+    window.addEventListener('aec-system-reset', handleSystemReset);
+    return () => window.removeEventListener('aec-system-reset', handleSystemReset);
   }, []);
 
   // Synchronous drag tracking ref to prevent state-batching race conditions
@@ -167,16 +181,24 @@ export const Desktop: React.FC = () => {
     const positions: Record<string, { x: number; y: number }> = {};
     const occupiedKeys = new Set<string>();
 
-    // 1. Explicit user custom positions take precedence
-    Object.entries(customPositions).forEach(([id, pos]) => {
-      positions[id] = pos;
-      occupiedKeys.add(`${pos.x},${pos.y}`);
-    });
-
     const appEntries = Object.values(APP_REGISTRY);
     const appCount = appEntries.length;
 
-    // Helper to find next free cell if natural slot is claimed by a custom position
+    // Filter valid IDs to avoid stale entries from deleted files occupying spots
+    const validIds = new Set<string>([
+      ...appEntries.map(({ manifest }) => `app-${manifest.id}`),
+      ...Object.values(files).map((f) => `file-${f.id}`),
+    ]);
+
+    // 1. Explicit user custom positions take precedence (for existing apps and files)
+    Object.entries(customPositions).forEach(([id, pos]) => {
+      if (validIds.has(id)) {
+        positions[id] = pos;
+        occupiedKeys.add(`${pos.x},${pos.y}`);
+      }
+    });
+
+    // Helper to find next free cell scanning column by column, row by row from (startCol, startRow)
     const findNextFreeCell = (startCol = 0, startRow = 0) => {
       let c = startCol;
       let r = startRow;
@@ -214,7 +236,21 @@ export const Desktop: React.FC = () => {
     });
 
     // 3. Virtual files without custom positions
-    Object.values(files).forEach((file, fileIdx) => {
+    // Initial preloaded files maintain their natural sequential slots; dynamically created files fill first available hole.
+    const initialFiles: VFSFile[] = [];
+    const dynamicFiles: VFSFile[] = [];
+
+    Object.values(files).forEach((file) => {
+      const isInitial = file.isSystem || file.id === 'user-demo-script' || file.createdAt <= 1700000000000;
+      if (isInitial) {
+        initialFiles.push(file);
+      } else {
+        dynamicFiles.push(file);
+      }
+    });
+
+    // Initial files take their designated natural slots following the apps
+    initialFiles.forEach((file, fileIdx) => {
       const itemId = `file-${file.id}`;
       if (positions[itemId]) return;
 
@@ -233,6 +269,19 @@ export const Desktop: React.FC = () => {
         occupiedKeys.add(`${pos.x},${pos.y}`);
       }
     });
+
+    // Dynamically created files (via Terminal, IDE, or upload without right-click):
+    // Fill the FIRST available empty slot on the desktop grid!
+    dynamicFiles
+      .sort((a, b) => a.createdAt - b.createdAt || a.name.localeCompare(b.name))
+      .forEach((file) => {
+        const itemId = `file-${file.id}`;
+        if (positions[itemId]) return;
+
+        const pos = findNextFreeCell(0, 0);
+        positions[itemId] = pos;
+        occupiedKeys.add(`${pos.x},${pos.y}`);
+      });
 
     return positions;
   }, [customPositions, files, maxRows]);
@@ -445,6 +494,8 @@ export const Desktop: React.FC = () => {
       isOpen: true,
       x: Math.min(e.clientX, window.innerWidth - 230),
       y: Math.min(e.clientY, window.innerHeight - 300),
+      rawX: e.clientX,
+      rawY: e.clientY,
       file: null,
     });
   };
@@ -459,6 +510,8 @@ export const Desktop: React.FC = () => {
       isOpen: true,
       x: Math.min(e.clientX, window.innerWidth - 230),
       y: Math.min(e.clientY, window.innerHeight - 180),
+      rawX: e.clientX,
+      rawY: e.clientY,
       file,
     });
   };
@@ -475,6 +528,16 @@ export const Desktop: React.FC = () => {
       );
     } else {
       deleteFile(file.name);
+      setCustomPositions((prev) => {
+        const next = { ...prev };
+        delete next[`file-${file.id}`];
+        try {
+          localStorage.setItem('aec-desktop-icon-positions', JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
     }
   };
 
@@ -533,6 +596,59 @@ export const Desktop: React.FC = () => {
       if (!res.success) {
         setPromptModal((prev) => ({ ...prev, error: res.error }));
         return;
+      }
+
+      // If created via right-click with targetCoords, place file at clicked grid cell with collision protection
+      if (res.file && promptModal.targetCoords) {
+        const winW = typeof window !== 'undefined' && window.innerWidth > 0 ? window.innerWidth : 1024;
+        const maxCols = Math.max(1, Math.floor((winW - START_X) / CELL_WIDTH));
+
+        const targetCol = Math.max(0, Math.round((promptModal.targetCoords.x - START_X) / CELL_WIDTH));
+        const targetRow = Math.max(0, Math.min(maxRows - 1, Math.round((promptModal.targetCoords.y - START_Y) / CELL_HEIGHT)));
+        const targetX = START_X + targetCol * CELL_WIDTH;
+        const targetY = START_Y + targetRow * CELL_HEIGHT;
+
+        let finalX = targetX;
+        let finalY = targetY;
+
+        // Current occupied keys across all desktop items
+        const occupiedKeys = new Set<string>();
+        Object.values(layoutPositions).forEach((pos) => {
+          occupiedKeys.add(`${pos.x},${pos.y}`);
+        });
+
+        if (occupiedKeys.has(`${targetX},${targetY}`)) {
+          let minDistance = Infinity;
+          let bestCandidate = { x: targetX, y: targetY };
+
+          for (let c = 0; c < maxCols + 5; c++) {
+            for (let r = 0; r < maxRows; r++) {
+              const candX = START_X + c * CELL_WIDTH;
+              const candY = START_Y + r * CELL_HEIGHT;
+              const key = `${candX},${candY}`;
+
+              if (!occupiedKeys.has(key)) {
+                const dist = Math.hypot(candX - promptModal.targetCoords.x, candY - promptModal.targetCoords.y);
+                if (dist < minDistance) {
+                  minDistance = dist;
+                  bestCandidate = { x: candX, y: candY };
+                }
+              }
+            }
+          }
+          finalX = bestCandidate.x;
+          finalY = bestCandidate.y;
+        }
+
+        setCustomPositions((prev) => {
+          const next = { ...prev, [`file-${res.file!.id}`]: { x: finalX, y: finalY } };
+          try {
+            localStorage.setItem('aec-desktop-icon-positions', JSON.stringify(next));
+          } catch {
+            // ignore
+          }
+          return next;
+        });
       }
     }
 
@@ -724,6 +840,7 @@ export const Desktop: React.FC = () => {
                     title: t('ctx_new_txt'),
                     filename: 'not.txt',
                     mode: 'new-txt',
+                    targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
                   });
                 }}
               >
@@ -741,6 +858,7 @@ export const Desktop: React.FC = () => {
                     title: t('ctx_new_md'),
                     filename: 'belge.md',
                     mode: 'new-md',
+                    targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
                   });
                 }}
               >
@@ -758,6 +876,7 @@ export const Desktop: React.FC = () => {
                     title: t('ctx_new_js'),
                     filename: 'script.js',
                     mode: 'new-js',
+                    targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
                   });
                 }}
               >
