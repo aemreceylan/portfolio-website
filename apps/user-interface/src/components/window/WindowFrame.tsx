@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Minus, Maximize2, Minimize2 } from 'lucide-react';
 import { WindowState } from '@personal-os/shared';
 import { useWindowManager } from '#stores/window-manager.store';
@@ -15,6 +16,8 @@ interface WindowFrameProps {
  * - Native pointer events dragging with GPU-accelerated translate3d transforms
  * - Window controls (Close, Minimize, Maximize / Restore) with localized tooltips
  * - Double-click on titlebar to toggle maximize / restore
+ * - Titlebar right-click context menu (Close, Minimize, Maximize / Restore)
+ * - Isolated window-content context handling (native browser menu preserved for text copy/paste)
  * - Cross-browser backdrop blur and touch/pointer handling (Safari, Firefox, Chromium)
  */
 export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children }) => {
@@ -25,6 +28,52 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
   const isActive = activeWindowId === win.id;
   const isMinimized = win.isMinimized;
   const isMaximized = win.isMaximized;
+
+  const [titlebarMenu, setTitlebarMenu] = useState<{ isOpen: boolean; x: number; y: number }>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+  });
+
+  useEffect(() => {
+    if (!titlebarMenu.isOpen) return;
+
+    const handleGlobalClick = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest('.window-titlebar-context-menu')) return;
+      setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+    };
+
+    const handleGlobalContextMenu = (e: MouseEvent) => {
+      // If right-clicking anywhere outside this window's titlebar, close menu
+      if (!(e.target as HTMLElement).closest('.window-titlebar')) {
+        setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+    };
+
+    window.addEventListener('click', handleGlobalClick);
+    window.addEventListener('contextmenu', handleGlobalContextMenu);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('click', handleGlobalClick);
+      window.removeEventListener('contextmenu', handleGlobalContextMenu);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [titlebarMenu.isOpen]);
+
+  const handleTitlebarContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setTitlebarMenu({
+      isOpen: true,
+      x: Math.min(e.clientX, window.innerWidth - 210),
+      y: Math.min(e.clientY, window.innerHeight - 150),
+    });
+  };
 
   // Track initial pointer coordinates and window position during drag
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(
@@ -55,8 +104,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
    * Initiates window dragging across the desktop viewport
    */
   const handleTitlebarPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Prevent dragging when clicking directly on control buttons or when maximized
-    if ((e.target as HTMLElement).closest('.window-controls') || isMaximized) {
+    // Only primary button (left click) initiates window dragging; right click (button === 2) must not capture pointer
+    if (e.button !== 0 || (e.target as HTMLElement).closest('.window-controls') || isMaximized) {
       return;
     }
 
@@ -207,11 +256,12 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
       role="dialog"
       aria-label={win.title}
     >
-      {/* Titlebar with double-click maximize toggle */}
+      {/* Titlebar with double-click maximize toggle and right-click context menu */}
       <div
         className="window-titlebar"
         onPointerDown={handleTitlebarPointerDown}
         onDoubleClick={() => maximizeWindow(win.id)}
+        onContextMenu={handleTitlebarContextMenu}
       >
         <div className="window-controls">
           <button
@@ -254,8 +304,63 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
         <div style={{ width: 44 }} aria-hidden="true" />
       </div>
 
-      {/* Content Area with custom Spatial Glass scrollbars */}
-      <div className="window-content">{children}</div>
+      {/* Titlebar Context Menu (rendered in document.body to avoid parent transform offsets) */}
+      {titlebarMenu.isOpen &&
+        createPortal(
+          <div
+            className="window-titlebar-context-menu"
+            style={{ left: titlebarMenu.x, top: titlebarMenu.y }}
+            onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <button
+              type="button"
+              className="window-titlebar-context-item danger"
+              onClick={() => {
+                setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+                closeWindow(win.id);
+              }}
+            >
+              <X size={14} />
+              <span>{t('window_ctx_close')}</span>
+            </button>
+            <button
+              type="button"
+              className="window-titlebar-context-item"
+              onClick={() => {
+                setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+                minimizeWindow(win.id);
+              }}
+            >
+              <Minus size={14} />
+              <span>{t('window_ctx_minimize')}</span>
+            </button>
+            <button
+              type="button"
+              className="window-titlebar-context-item"
+              onClick={() => {
+                setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+                maximizeWindow(win.id);
+              }}
+            >
+              {isMaximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              <span>{isMaximized ? t('window_ctx_restore') : t('window_ctx_maximize')}</span>
+            </button>
+          </div>,
+          document.body
+        )}
+
+      {/* Content Area with custom Spatial Glass scrollbars (isolates right-click for native browser menu) */}
+      <div
+        className="window-content"
+        onContextMenu={(e) => {
+          // Prevent bubbling to desktop viewport so desktop menu never triggers here,
+          // but do NOT call preventDefault so native browser context menu (Copy/Paste/Inspect) is available!
+          e.stopPropagation();
+        }}
+      >
+        {children}
+      </div>
 
       {/* 8-Directional Resize Handles */}
       {win.resizable && !isMaximized && (

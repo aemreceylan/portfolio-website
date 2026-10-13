@@ -95,11 +95,8 @@ code, pre, .font-mono {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: 
-    radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 85% 75%, rgba(129, 140, 248, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(52, 211, 153, 0.04) 0%, transparent 60%),
-    linear-gradient(180deg, #07080b 0%, #0c0e14 100%);
+  background: var(--wallpaper-bg, #06070a);
+  transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Subtle Spatial Grid Texture */

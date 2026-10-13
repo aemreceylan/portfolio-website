@@ -54,14 +54,15 @@
   color: var(--text-secondary);
 }
 
-/* Desktop App Grid positioned properly below the thicker statusbar */
-.desktop-apps-grid {
+/* Desktop Icon Areas (Unified drag and column layout) */
+.desktop-apps-grid,
+.desktop-files-grid {
   position: absolute;
-  top: calc(var(--statusbar-height, 42px) + 20px);
-  left: 24px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 92px);
-  gap: 22px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
   z-index: 2;
 }
 
@@ -73,15 +74,26 @@
   gap: 8px;
   padding: 10px 6px;
   border-radius: 12px;
-  cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
+  pointer-events: auto;
+  transition: background var(--transition-fast), transform var(--transition-fast), left 0.2s cubic-bezier(0.2, 0, 0, 1), top 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .desktop-app-card:hover {
   background: rgba(255, 255, 255, 0.06);
   transform: translateY(-2px);
+}
+
+.desktop-app-card.dragging {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+  transform: scale(1.08);
+  opacity: 0.95;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 16px rgba(var(--accent-rgb, 56, 189, 248), 0.35);
+  transition: none !important;
 }
 
 .desktop-app-icon {
@@ -114,4 +126,254 @@
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   letter-spacing: -0.01em;
   word-break: break-word;
+}
+
+.desktop-file-card {
+  width: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  cursor: grab;
+  position: absolute;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  pointer-events: auto;
+  transition: background var(--transition-fast), transform var(--transition-fast), left 0.2s cubic-bezier(0.2, 0, 0, 1), top 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.desktop-file-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateY(-2px);
+}
+
+.desktop-file-card.dragging {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+  transform: scale(1.08);
+  opacity: 0.95;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 16px rgba(var(--accent-rgb, 56, 189, 248), 0.35);
+  transition: none !important;
+}
+
+.desktop-file-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #38bdf8;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  transition: all var(--transition-fast);
+}
+
+.desktop-file-card.js-file .desktop-file-icon {
+  color: #fbbf24;
+}
+
+.desktop-file-card:hover .desktop-file-icon {
+  transform: scale(1.06);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+.desktop-file-name {
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: #cbd5e1;
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.2;
+}
+
+/* Spatial Glass Context Menu */
+.spatial-context-menu {
+  position: fixed;
+  z-index: 99998;
+  min-width: 210px;
+  background: rgba(14, 17, 24, 0.82);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(var(--accent-rgb, 34, 211, 238), 0.1);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: contextMenuPop 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+@keyframes contextMenuPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.spatial-context-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.12s ease;
+}
+
+.spatial-context-item:hover {
+  background: rgba(var(--accent-rgb, 34, 211, 238), 0.14);
+  color: var(--accent-color, #22d3ee);
+  transform: translateX(2px);
+}
+
+.spatial-context-item.danger:hover {
+  background: rgba(244, 63, 94, 0.18);
+  color: #fb7185;
+}
+
+.spatial-context-separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 6px;
+}
+
+/* Spatial Input Modal for Rename and New File */
+.spatial-input-field {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  margin-top: 10px;
+}
+
+.spatial-input-field:focus {
+  border-color: var(--accent-color, #22d3ee);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb, 34, 211, 238), 0.25);
+}
+
+.spatial-alert-btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.15s ease;
+}
+
+.spatial-alert-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* Spatial Dark Glass Alert Modal */
+.spatial-alert-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.spatial-alert-dialog {
+  background: rgba(14, 17, 24, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(244, 63, 94, 0.15);
+  padding: 22px 24px;
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: #f8fafc;
+  animation: alertFadeIn 0.18s ease-out;
+}
+
+@keyframes alertFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.spatial-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f43f5e;
+}
+
+.spatial-alert-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.spatial-alert-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.spatial-alert-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.spatial-alert-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spatial-alert-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
 }

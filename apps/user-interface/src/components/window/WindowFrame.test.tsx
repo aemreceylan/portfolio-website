@@ -74,4 +74,20 @@ describe('WindowFrame Component', () => {
     fireEvent.click(screen.getByLabelText('Restore Window'));
     expect(useWindowManager.getState().windows['test-app'].isMaximized).toBe(false);
   });
+
+  it('should open titlebar context menu with Close, Minimize, Maximize on right click', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div>Content</div>
+      </WindowFrame>
+    );
+
+    const title = screen.getByText('Test Application');
+    fireEvent.contextMenu(title);
+
+    expect(screen.getByRole('button', { name: /^Close$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Minimize$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Maximize$/i })).toBeInTheDocument();
+  });
 });
+

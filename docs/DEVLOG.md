@@ -60,3 +60,129 @@
   - 11 test dosyasında 37 birim/entegrasyon testi %100 başarıyla geçti.
   - `npm run typecheck` monorepo genelinde 0 hata ile doğrulandı.
   - `npm run build` 4.5 saniyede temiz üretim paketi oluşturdu.
+
+## [2026-10-13] - Sanal Dosya Sistemi (VFS), GNU nano, Markdown Okuyucu, JavaScript IDE & Tema Motoru
+
+### Yapılanlar
+- **Sanal Dosya Sistemi (Virtual File System - VFS) Katmanı**:
+  - `useFileSystemStore` Zustand store'u oluşturuldu (`apps/user-interface/src/stores/filesystem.store.ts`).
+  - Sadece `.txt`, `.md`, `.js` uzantılı dosyalara izin veren Zod destekli uzantı denetimi yazıldı.
+  - Sistem dosyaları (`bio.md`, `skills.md`, `contact.md`, `welcome.txt`) `isSystem: true` bayrağı ile silinmeye karşı korundu.
+  - Dosya oluşturma (`createFile`), silme (`deleteFile`), güncelleme (`updateFile`), yeniden adlandırma (`renameFile`) operasyonları reaktif hale getirildi.
+- **Linux Terminal Standartları & GNU nano Editörü**:
+  - Linux standartlarına geçilerek `dir`, `login` ve `logout` komutları kaldırıldı.
+  - Kullanıcı değiştirme doğrudan `su <username>` ile, oturum kapatma `exit` ile sınırlandırıldı.
+  - Terminal sanal dosya sistemi ile tam entegre edildi: `ls`, `cat <file>`, `touch <file>`, `rm <file>`.
+  - Terminal geçmişi değişmezliği (Static Terminal History): Geçmiş `ls` komutlarının çıktıları VFS güncellense bile terminal tampon belleğinde statik kalır; yeni `ls` komutu çağrıldığında güncel durum listelenir.
+  - Gerçek GNU nano deneyimi: `nano <filename>` komutu ile terminal içinde tam ekran nano arayüzü (`GNU nano 7.2`), üst durum çubuğu, alt `^O WriteOut` (Ctrl+O/Ctrl+S) ve `^X Exit` (Ctrl+X/Esc) kısayolları geliştirildi.
+- **Farklılaştırılmış Hata Kanalları (Terminal vs GUI Modal)**:
+  - Terminal üzerinden korumalı sistem dosyası silinmeye çalışıldığında hata doğrudan komut satırına yazılır (`rm: cannot remove '...': Protected system file`).
+  - Grafik arayüzde (Desktop veya buton üzerinden) sistem dosyası silinmeye çalışıldığında ise şık bir Spatial Dark Glass Alert Modal (`ShieldAlert` ikonu, başlık, açıklama ve Tamam butonu) gösterilir.
+- **İki Yeni Çekirdek Uygulama**:
+  1. **Markdown Okuyucu (`markdown-viewer`)**:
+     - `marked` kütüphanesi entegre edildi.
+     - Tüm `.md` ve `.txt` dosyaları için reaktif sekme çubuğu, Zengin HTML Önizleme (`Preview`) ve Ham Kaynak Kodu (`Raw`) modları sağlandı.
+  2. **JavaScript IDE & Sandboxed Kod Stüdyosu (`js-ide`)**:
+     - Satır numaraları, Tab girintileme ve sözdizimi dostu kod editörü.
+     - Tamamen izole `<iframe sandbox="allow-scripts">` (OWASP DevSecOps standartlarında `allow-same-origin` verilmeden) güvenli çalıştırma ortamı.
+     - `console.log`, `info`, `warn`, `error` yakalayan ve zaman damgaları ile konsol panelinde gösteren `postMessage` köprüsü.
+- **Masaüstü & Tema Motoru**:
+  - 4 spatial koyu duvar kağıdı (`deep-space`, `cyberpunk`, `emerald-matrix`, `obsidian-minimal`).
+  - Dinamik akıcı tema rengi (Accent palette: `cyan`, `purple`, `emerald`, `amber`, `rose`) ve duvar kağıdıyla otomatik senkronize olan Otomatik Mod (`isAutoAccent`).
+  - Masaüstünde VFS dosyalarının anlık listelenmesi; terminalde `touch` veya `nano` ile kaydedilen dosyaların anında masaüstüne dosya ikonu olarak yansıması.
+- **Doğrulama ve Metrikler**:
+  - 14 test dosyasında 61 birim ve entegrasyon testi %100 başarıyla geçti.
+  - `npm run typecheck` monorepo genelinde 0 hata ile doğrulandı.
+  - `npm run build` 18 saniyede temiz, dinamik chunk'lara bölünmüş üretim paketi oluşturdu.
+  - `npm audit` 0 güvenlik açığı (0 vulnerabilities) ile DevSecOps gereksinimlerini karşıladı.
+  - Monorepo kök `tsconfig.json` ve `tsconfig.base.json` yapılandırmasına `"jsx": "react-jsx"` ve temel miras eklenerek IDE TypeScript dil sunucusunun (TSServer) test dosyalarındaki JSX/TSX modül çözümleme hatası (TS2307) tamamen çözüldü.
+
+## [2026-10-13] - Masaüstü Sağ Tık Menüsü, JS IDE Çoklu Betik & Hata Yakalama, Vektör Bayraklar ve Tema Senkronizasyonu
+
+### Yapılanlar
+- **Terminal CLI Sadeleştirmesi & Tam Yerelleştirme**:
+  - `skills`, `contact`, `whoami` komutları CLI komut kümesinden ve `help` çıktısından çıkarıldı.
+  - CLI `help` çıktısındaki tüm komut açıklamaları 7 dilde (`en`, `tr`, `de`, `fr`, `es`, `ru`, `ja`) `t(...)` motoruna bağlandı; sistem dili Türkçe seçildiğinde yarı Türkçe yarı İngilizce görünme sorunu tamamen giderildi.
+- **İşlevsel Masaüstü & Dosya Sağ Tık (Context) Menüsü**:
+  - Masaüstü dosya kartlarının üzerindeki doğrudan hover silme butonu kaldırıldı.
+  - Masaüstü boşluğuna sağ tıklandığında: `Yeni Metin Belgesi (.txt)`, `Yeni Markdown Belgesi (.md)`, `Yeni JavaScript Dosyası (.js)`, `Dosya Yükle`, `Terminali Aç`, `Ayarları Aç` menüsü açılır.
+  - Dosya üzerine sağ tıklandığında: `Aç`, `Yeniden Adlandır`, `Sil` menüsü gelir.
+  - Yerel diskten dosya yükleme (`FileReader` + VFS) ve isim değiştirme modal diyalogları entegre edildi.
+  - Korumalı sistem dosyaları sağ tık menüsünden silinmek istendiğinde Spatial Alert güvenlik uyarısı tetiklenir.
+- **JavaScript IDE Çoklu Dosya Desteği & Gelişmiş Hata Tanılama**:
+  - Tek dosyaya bağlı kalma kısıtlaması kaldırıldı; sekme çubuğuna `+` butonu ve modal diyalog eklenerek sınırsız sayıda yeni `.js` betiği oluşturulabilmesi sağlandı (`script-2.js`, vb.).
+  - Oluşturulan tüm `.js` betikleri eşzamanlı olarak masaüstü VFS sisteminde dosya ikonu olarak belirir.
+  - **Sözdizimi Hatası Denetimi (Syntax Error Detection)**: Kod çalıştırılmadan önce `new Function(code)` ile dinamik sözdizimi doğrulamasından geçirilir. Hatalı kod durumunda (örn. `const x = ;`) sandbox başlatılmadan araç çubuğunda kırmızı `🚨 Sözdizimi Hatası` rozeti ve konsol panelinde detaylı hata satırı basılır.
+  - **Çalışma Zamanı Hata Yakalama (Runtime Error Catching)**: İzole iframe içerisinde `window.onerror` ve `window.onunhandledrejection` yakalayıcıları ile beklenmedik çalışma zamanı hataları yakalanıp konsola iletilir.
+- **Duvar Kağıdı & Çerçeve Başlık Çubuğu Renk Senkronizasyonu**:
+  - `design-tokens.css` içindeki statik gradyan geçersiz kılınarak `var(--wallpaper-bg)` değişkenine bağlandı; duvar kağıdı değişimleri 0.6s akıcı bezier geçişiyle anında masaüstüne yansıtıldı.
+  - `.window-titlebar` arka planı ve alt kenarlığı `rgba(var(--accent-rgb), ...)` temasına bağlandı; pencere kontrol butonlarının yer aldığı üst başlık çubuğu seçilen vurgu rengiyle dinamik olarak aydınlatıldı.
+- **Vektör SVG Bayrak Motoru (Pixel-Crisp Language Flags)**:
+  - Windows işletim sisteminde ülke bayrak emojilerinin `GB`, `TR` gibi harf kısaltmalarına dönüşmesi ve alttaki dil koduyla yinelenmesi sorunu çözüldü.
+  - 7 desteklenen dil için (`en`, `tr`, `de`, `fr`, `es`, `ru`, `ja`) saf vektör SVG bayrak bileşeni (`LanguageFlag.tsx`) geliştirildi.
+  - Ayarlar uygulamasındaki gereksiz dil kısaltma etiketi (`.language-code`) kaldırılarak solda keskin ulusal bayrak ve sağda ana dil ismi sunuldu.
+- **Test ve Kalite**:
+  - 13 test dosyasında 64 birim/entegrasyon testi %100 başarıyla geçti (`TerminalApp`, `JsIdeApp`, `SettingsApp`, `Desktop`, `LanguageFlag`, `WindowFrame`, `MarkdownViewerApp`, `Dock`, vb.).
+  - `npm run typecheck` 0 hata ile doğrulandı.
+  - Chrome DevTools MCP ile görsel doğrulamalar ve test adımları başarıyla tamamlandı.
+
+## [2026-10-13] - Pencere Sağ Tık İzolasyonu, Gerçek IDE Sekme Yaşam Döngüsü, İki Yönlü Markdown Editörü & Dinamik Sekme Başlığı
+
+### Yapılanlar
+- **Masaüstü Sağ Tık Sadeleştirmesi**:
+  - Masaüstü bağlam menüsünden `Dosya Yükle` seçeneği tamamen kaldırıldı.
+- **Pencere & Masaüstü Sağ Tık İzolasyonu**:
+  - Uygulama pencerelerinin çerçevesine veya içeriğine sağ tıklandığında masaüstü bağlam menüsünün açılması kesin olarak engellendi (`e.stopPropagation()` ve `.window-container` kontrolü).
+  - Pencere başlık çubuğuna (`.window-titlebar`) sağ tıklandığında pencere yönetim menüsü açılır:
+    - **Kapat** (`Close`)
+    - **Simge Durumuna Küçült** (`Minimize`)
+    - **Ekranı Kapla / Önceki Boyuta Getir** (`Maximize / Restore`)
+  - Uygulama içerik alanına (`.window-content`) sağ tıklandığında `e.stopPropagation()` ile masaüstü menüsü engellenirken `preventDefault()` çağrılmayarak tarayıcının yerel sağ tık menüsünün (Kopyala, Yapıştır, İncele) çalışması sağlandı.
+- **Gerçek IDE Sekme & Boş Çalışma Alanı Yaşam Döngüsü (Markdown & JavaScript IDE)**:
+  - Editörler artık herhangi bir varsayılan dosya ile açılmaz; gerçek IDE standartlarında boş çalışma ekranı (`No Open Files / Açık Dosya Yok`) ile başlar.
+  - Sistemdeki tüm dosyaların üstte peşinen listelenmesi kuralı kaldırıldı; sadece kullanıcının açtığı dosyalar sekmelere eklenir.
+  - Her sekme için `X` kapatma butonu eklendi; sekme kapatıldığında açık kalan diğer sekmeye veya boş ekrana sorunsuz geçiş yapılır.
+  - Boş ekranda doğrudan yeni dosya oluşturma (`+ Yeni Belge / + Yeni Script`) ve hızlı dosya açma çipleri sunuldu.
+- **İki Yönlü Markdown Editörü (Okuma & Yazma / Düzenleme)**:
+  - Markdown uygulaması salt okuyucu olmaktan çıkarılarak tam teşekküllü bir editöre dönüştürüldü.
+  - Üç görüntüleme modu sağlandı:
+    - **Düzenle (Edit)**: Satır numaralı ham Markdown / düz metin editörü.
+    - **Önizleme (Preview)**: Zengin biçimlendirilmiş HTML çıktısı.
+    - **Bölünmüş (Split)**: Eşzamanlı canlı düzenleme ve önizleme paneli.
+  - Araç çubuğunda `Kaydet` butonu ve `Ctrl+S` / `Cmd+S` klavye kısayolu ile Sanal Dosya Sistemine (VFS) doğrudan anlık yazma sağlandı. Kaydedilmemiş değişiklikler için sekmede `md-dirty-dot` uyarı noktası gösterilir.
+- **Dinamik & Yerelleştirilmiş Tarayıcı Sekme Başlığı (`document.title`)**:
+  - Sayfa başlığı aktif seçilen dile göre dinamik olarak güncellenir:
+    - Türkçe: `AEC — Uygulama Portfolyosu`
+    - İngilizce: `AEC — Application Portfolio`
+    - Almanca, Fransızca, İspanyolca, Rusça, Japonca dahil 7 dilde tam senkronizasyon.
+  - `index.html` başlangıç başlığı ve `App.tsx` kök reaktif dinleyicisi güncellendi.
+- **Test ve Kalite Durumu**:
+  - 13 test dosyasında 70 birim ve entegrasyon testi %100 başarıyla geçti.
+  - `npm run typecheck` monorepo genelinde 0 hata ile doğrulandı.
+  - Chrome DevTools MCP ile görsel, işlevsel ve bağlam menüsü etkileşimleri test edildi.
+
+## [2026-10-13] - Pencere Başlık Menüsü, JS IDE Bildirimleri, Çoklu Sütun & Masaüstü Sürükle-Bırak
+
+### Yapılanlar
+- **Pencere Başlık Çubuğu Sağ Tık Menüsü (`WindowFrame.tsx`, `window.css`)**:
+  - `handleTitlebarPointerDown` fonksiyonunda `e.button !== 0` filtresi eklenerek sağ tıklama anında pointer capture'ın `contextmenu` olayını yutması engellendi.
+  - Başlık çubuğu menüsü (`.window-titlebar-context-menu`) `createPortal` kullanılarak doğrudan `document.body` üzerine monte edildi. Böylece pencere çerçevesindeki `translate3d` CSS transform koordinat alanı ve taşma kırpmaları tamamen elimine edildi.
+  - Kapat, Simge Durumuna Küçült ve Ekranı Kapla / Normal Boyuta Dön seçenekleri yerelleştirilmiş olarak çalışır hale getirildi.
+- **JS IDE Yerelleştirilmiş Kaydetme & Değişiklik Bildirimi (`JsIdeApp.tsx`, `js-ide.css`)**:
+  - Kaydet butonu İngilizce sabit "Saved!" yerine yerelleştirilmiş `t('editor_saved')` ("Kaydedildi") ve yeşil onay işareti (`Check`) ile güncellendi.
+  - Kaydedilmemiş değişiklik olduğunda (`code !== currentFile.content`) dosya sekmesinde turuncu `js-dirty-dot` uyarı noktası gösterildi.
+  - `Ctrl+S` / `Cmd+S` kısayolu ile anlık VFS kaydı sağlandı; kayıt tamamlandığında nokta otomatik olarak kaybolur.
+- **Masaüstü Çoklu Sütunlu Yukarıdan Aşağıya Sarma Düzeni (`Desktop.tsx`, `desktop.css`)**:
+  - Dosya sayısı arttığında alt barın (Dock) altına taşmayı engelleyen dinamik sütun sarma algoritması (`maxRows = Math.floor((viewportHeight - START_Y - DOCK_MARGIN) / CELL_HEIGHT)`) geliştirildi.
+  - Simgeler ilk sütunu yukarıdan aşağıya doldurduktan sonra gerçek masaüstü işletim sistemlerindeki gibi sağdaki sütunlara (Sütun 1, 2, 3...) temizce sarar.
+- **Sürüklenebilir & Konumlandırılabilir Masaüstü Simgeleri (Drag-and-Drop Desktop Grid)**:
+  - Masaüstündeki tüm uygulama ve dosya simgelerine sürükle-bırak desteği kazandırıldı.
+  - `window.addEventListener('pointermove' / 'pointerup')` ile fare hızlı hareket etse dahi imleç takibi kesintiye uğramaz.
+  - Sürükleme bittiğinde simgeler en yakın ızgara hücresine kenetlenir (`grid snap`) ve konumlar `localStorage` üzerinde (`aec-desktop-icon-positions`) kalıcı olarak saklanır.
+  - Sürükleme işlemi bittiğinde istem dışı dosya/uygulama açılmasını önlemek için `justDraggedRef` tıklama koruması eklendi.
+- **Test ve Kalite Durumu**:
+  - 13 test dosyasında 72 birim ve entegrasyon testi %100 başarıyla geçti.
+  - `npm run typecheck` monorepo genelinde 0 hata ile doğrulandı.
+  - Chrome DevTools MCP ile görsel, işlevsel ve bağlam menüsü etkileşimleri test edildi.
+
+

@@ -1,5 +1,4 @@
-import React from 'react';
-import { Terminal, Settings, AppWindow } from 'lucide-react';
+import { Terminal, Settings, AppWindow, FileText, Code2 } from 'lucide-react';
 import { useWindowManager } from '#stores/window-manager.store';
 import { APP_REGISTRY } from '#apps/app-registry';
 import { useTranslation } from '#i18n/i18n.store';
@@ -15,6 +14,10 @@ const renderAppIcon = (iconName: string, size = 20) => {
       return <Terminal size={size} />;
     case 'Settings':
       return <Settings size={size} />;
+    case 'FileText':
+      return <FileText size={size} />;
+    case 'Code2':
+      return <Code2 size={size} />;
     default:
       return <AppWindow size={size} />;
   }

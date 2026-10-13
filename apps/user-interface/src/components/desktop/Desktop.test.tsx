@@ -1,16 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { Desktop } from './Desktop';
 import { useWindowManager } from '#stores/window-manager.store';
 import { useI18nStore } from '#i18n/i18n.store';
+import { useFileSystemStore } from '#stores/filesystem.store';
 
 describe('Desktop Component', () => {
   beforeEach(() => {
+    localStorage.clear();
     useI18nStore.getState().setLanguage('en');
     useWindowManager.getState().reset();
+    useFileSystemStore.getState().dismissGuiAlert();
   });
 
-  it('should render status bar with AEC brand and clock', () => {
+  it('should render status bar with AEC brand, clock, and app icons', () => {
     render(<Desktop />);
 
     expect(screen.getByText('AEC')).toBeInTheDocument();
@@ -27,4 +30,105 @@ describe('Desktop Component', () => {
     expect(useWindowManager.getState().windows['terminal']).toBeDefined();
     expect(useWindowManager.getState().windows['terminal'].isOpen).toBe(true);
   });
+
+  it('should render virtual desktop files from VFS store', () => {
+    render(<Desktop />);
+
+    expect(screen.getByTestId('desktop-file-bio.md')).toBeInTheDocument();
+    expect(screen.getByTestId('desktop-file-skills.md')).toBeInTheDocument();
+    expect(screen.getByTestId('desktop-file-demo.js')).toBeInTheDocument();
+  });
+
+  it('should open Markdown Viewer when double-clicking a markdown file', () => {
+    render(<Desktop />);
+
+    const bioFile = screen.getByTestId('desktop-file-bio.md');
+    fireEvent.doubleClick(bioFile);
+
+    expect(useWindowManager.getState().windows['markdown-viewer']).toBeDefined();
+    expect(useWindowManager.getState().windows['markdown-viewer'].isOpen).toBe(true);
+  });
+
+  it('should open JS IDE when double-clicking a js file', () => {
+    render(<Desktop />);
+
+    const jsFile = screen.getByTestId('desktop-file-demo.js');
+    fireEvent.doubleClick(jsFile);
+
+    expect(useWindowManager.getState().windows['js-ide']).toBeDefined();
+    expect(useWindowManager.getState().windows['js-ide'].isOpen).toBe(true);
+  });
+
+  it('should open context menu on right click and display Spatial Alert modal when attempting to delete protected system file', () => {
+    render(<Desktop />);
+
+    const bioFile = screen.getByTestId('desktop-file-bio.md');
+    fireEvent.contextMenu(bioFile);
+
+    expect(screen.getByRole('menu', { name: /Desktop Context Menu/i })).toBeInTheDocument();
+    expect(screen.getByText('Delete')).toBeInTheDocument();
+
+    const deleteMenuItem = screen.getByText('Delete');
+    fireEvent.click(deleteMenuItem);
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(screen.getByText(/Sistem Dosyası Korunuyor/i)).toBeInTheDocument();
+    expect(screen.getByText(/işletim sistemi için temel bir bileşendir/i)).toBeInTheDocument();
+
+    const okBtn = screen.getByRole('button', { name: /Tamam/i });
+    fireEvent.click(okBtn);
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  it('should show empty desktop context menu with new file actions without upload option', () => {
+    render(<Desktop />);
+
+    const desktopViewport = screen.getByTestId('desktop-viewport');
+    fireEvent.contextMenu(desktopViewport);
+
+    expect(screen.getByText('New Text Document (.txt)')).toBeInTheDocument();
+    expect(screen.getByText('New Markdown Document (.md)')).toBeInTheDocument();
+    expect(screen.getByText('New JavaScript File (.js)')).toBeInTheDocument();
+    expect(screen.queryByText('Upload File')).not.toBeInTheDocument();
+  });
+
+  it('should not open desktop context menu when right clicking inside an open window', () => {
+    useWindowManager.getState().openWindow({
+      id: 'terminal',
+      name: 'Terminal CLI',
+      description: 'Test',
+      iconName: 'Terminal',
+      category: 'system',
+      defaultSize: { width: 400, height: 300 },
+      minSize: { width: 200, height: 150 },
+      resizable: true,
+      singleton: true,
+    });
+
+    render(<Desktop />);
+
+    const windowEl = screen.getByTestId('window-terminal');
+    fireEvent.contextMenu(windowEl);
+
+    expect(screen.queryByRole('menu', { name: /Desktop Context Menu/i })).not.toBeInTheDocument();
+  });
+
+  it('should support pointer-based dragging and repositioning of desktop icons', () => {
+    render(<Desktop />);
+
+    const appIcon = screen.getByTestId('desktop-app-terminal');
+    const initialStyle = appIcon.getAttribute('style');
+
+    act(() => {
+      fireEvent.pointerDown(appIcon, { clientX: 24, clientY: 62, button: 0 });
+      fireEvent.pointerMove(window, { clientX: 220, clientY: 260 });
+      fireEvent.pointerUp(window, { clientX: 220, clientY: 260 });
+    });
+
+    const updatedIcon = screen.getByTestId('desktop-app-terminal');
+    expect(updatedIcon.getAttribute('style')).not.toBe(initialStyle);
+  });
 });
+
+

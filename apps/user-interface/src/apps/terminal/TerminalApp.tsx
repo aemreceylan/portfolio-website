@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { z } from 'zod';
 import { useTranslation } from '#i18n/i18n.store';
+import { useFileSystemStore, parseAllowedExtension } from '#stores/filesystem.store';
 import '#styles/terminal.css';
 
 /**
@@ -10,6 +11,17 @@ interface TerminalLine {
   id: string;
   type: 'input' | 'output' | 'error' | 'accent';
   text: string;
+}
+
+/**
+ * State of the interactive Nano in-terminal editor session
+ */
+interface NanoSession {
+  filename: string;
+  content: string;
+  initialContent: string;
+  isNew: boolean;
+  statusMessage?: string;
 }
 
 /**
@@ -28,14 +40,21 @@ const usernameSchema = z
   .regex(/^[a-zA-Z0-9_-]+$/, 'Username must contain only alphanumeric characters, underscores or dashes');
 
 /**
- * Interactive Terminal CLI component allowing visitors to explore engineering bio,
- * technical skills, contact links, and switch between simulated user accounts.
+ * Interactive Linux Terminal CLI component providing:
+ * - Real Linux commands (ls, cat, touch, rm, nano, su, whoami, clear, exit)
+ * - VFS store integration with live filesystem state
+ * - Full GNU Nano in-terminal text editor with ^O Save and ^X Exit controls
+ * - Static terminal history buffer preserving past command outputs
+ * - Strict inline Linux error outputs for system file protection and unsupported formats
  */
 export const TerminalApp: React.FC = () => {
   const { t } = useTranslation();
 
   /** Current active username in the shell; defaults to 'guest' */
   const [currentUser, setCurrentUser] = useState<string>('guest');
+
+  /** Active Nano editor session, or null when in command line mode */
+  const [nanoSession, setNanoSession] = useState<NanoSession | null>(null);
 
   /** Line history rendered in the scroll area */
   const [lines, setLines] = useState<TerminalLine[]>(() => [
@@ -50,12 +69,88 @@ export const TerminalApp: React.FC = () => {
   /** Ref for auto-scrolling to bottom on new output */
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  /** Ref for Nano textarea auto-focus */
+  const nanoTextareaRef = useRef<HTMLTextAreaElement>(null);
+
   // Auto-scroll whenever new output lines are appended
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [lines]);
+
+  // Auto-focus Nano textarea when session activates
+  useEffect(() => {
+    if (nanoSession && nanoTextareaRef.current) {
+      nanoTextareaRef.current.focus();
+    }
+  }, [nanoSession]);
+
+  /**
+   * Saves the file in Nano editor to VFS store
+   */
+  const handleNanoSave = () => {
+    if (!nanoSession) return;
+    const fs = useFileSystemStore.getState();
+    const existing = fs.getFile(nanoSession.filename);
+
+    if (existing) {
+      fs.updateFile(nanoSession.filename, nanoSession.content);
+    } else {
+      fs.createFile(nanoSession.filename, nanoSession.content);
+    }
+
+    const lineCount = nanoSession.content.split('\n').length;
+    setNanoSession((prev) =>
+      prev
+        ? {
+            ...prev,
+            initialContent: prev.content,
+            isNew: false,
+            statusMessage: `[ Wrote ${lineCount} lines to ${prev.filename} ]`,
+          }
+        : null
+    );
+  };
+
+  /**
+   * Exits Nano editor and returns to terminal prompt
+   */
+  const handleNanoExit = () => {
+    if (!nanoSession) return;
+    const isModified = nanoSession.content !== nanoSession.initialContent;
+
+    setLines((prev) => [
+      ...prev,
+      {
+        id: `nano-exit-${Date.now()}`,
+        type: 'output',
+        text: isModified
+          ? `[ Closed nano for ${nanoSession.filename} (Unsaved changes discarded) ]`
+          : `[ Closed nano for ${nanoSession.filename} ]`,
+      },
+    ]);
+    setNanoSession(null);
+  };
+
+  /**
+   * Handles keyboard shortcuts inside the Nano editor
+   */
+  const handleNanoKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Ctrl+O or Ctrl+S: WriteOut (Save)
+    if (e.ctrlKey && (e.key.toLowerCase() === 'o' || e.key.toLowerCase() === 's')) {
+      e.preventDefault();
+      handleNanoSave();
+      return;
+    }
+
+    // Ctrl+X or Esc: Exit
+    if ((e.ctrlKey && e.key.toLowerCase() === 'x') || e.key === 'Escape') {
+      e.preventDefault();
+      handleNanoExit();
+      return;
+    }
+  };
 
   /**
    * Evaluates and executes user commands entered in the prompt
@@ -75,7 +170,7 @@ export const TerminalApp: React.FC = () => {
     const command = parseResult.data;
     if (!command) return;
 
-    // Record the user command entry in history
+    // Record the user command entry in history (immutable static line)
     const inputLine: TerminalLine = {
       id: `in-${Date.now()}`,
       type: 'input',
@@ -85,35 +180,161 @@ export const TerminalApp: React.FC = () => {
     const trimmed = command.trim();
     const parts = trimmed.split(/\s+/);
     const mainCmd = parts[0].toLowerCase();
-    const cmdArg = parts.slice(1).join(' ');
+    const cmdArg = parts.slice(1).join(' ').trim();
 
+    const fs = useFileSystemStore.getState();
     const newOutputLines: TerminalLine[] = [];
 
     switch (mainCmd) {
       case 'help':
         newOutputLines.push(
           { id: `out-${Date.now()}-1`, type: 'output', text: t('terminal_help_header') },
-          { id: `out-${Date.now()}-2`, type: 'accent', text: `  ls          - List available files (bio.md, skills.md, contact.md)` },
-          { id: `out-${Date.now()}-3`, type: 'accent', text: `  cat <file>  - ${t('terminal_cmd_bio_desc')}` },
-          { id: `out-${Date.now()}-4`, type: 'accent', text: `  skills      - ${t('terminal_cmd_skills_desc')}` },
-          { id: `out-${Date.now()}-5`, type: 'accent', text: `  contact     - ${t('terminal_cmd_contact_desc')}` },
-          { id: `out-${Date.now()}-6`, type: 'accent', text: `  su <user>   - ${t('terminal_cmd_su_desc')}` },
-          { id: `out-${Date.now()}-7`, type: 'accent', text: `  whoami      - ${t('terminal_cmd_whoami_desc')}` },
-          { id: `out-${Date.now()}-8`, type: 'accent', text: `  clear       - ${t('terminal_cmd_clear_desc')}` }
+          { id: `out-${Date.now()}-2`, type: 'accent', text: `  ls          - ${t('terminal_cmd_ls_desc')}` },
+          { id: `out-${Date.now()}-3`, type: 'accent', text: `  cat <file>  - ${t('terminal_cmd_cat_desc')}` },
+          { id: `out-${Date.now()}-4`, type: 'accent', text: `  touch <file>- ${t('terminal_cmd_touch_desc')}` },
+          { id: `out-${Date.now()}-5`, type: 'accent', text: `  rm <file>   - ${t('terminal_cmd_rm_desc')}` },
+          { id: `out-${Date.now()}-6`, type: 'accent', text: `  nano <file> - ${t('terminal_cmd_nano_desc')}` },
+          { id: `out-${Date.now()}-7`, type: 'accent', text: `  su <user>   - ${t('terminal_cmd_su_desc')}` },
+          { id: `out-${Date.now()}-8`, type: 'accent', text: `  exit        - ${t('terminal_cmd_exit_desc')}` },
+          { id: `out-${Date.now()}-9`, type: 'accent', text: `  clear       - ${t('terminal_cmd_clear_desc')}` }
         );
         break;
 
-      case 'ls':
-      case 'dir':
+      case 'ls': {
+        const fileNames = Object.keys(fs.files);
         newOutputLines.push({
           id: `out-${Date.now()}-ls`,
           type: 'accent',
-          text: 'bio.md   skills.md   contact.md   welcome.txt',
+          text: fileNames.length > 0 ? fileNames.join('   ') : '(empty directory)',
         });
         break;
+      }
 
-      case 'su':
-      case 'login': {
+      case 'cat': {
+        if (!cmdArg) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: 'cat: missing file operand. Try "cat bio.md"',
+          });
+          break;
+        }
+
+        const targetFile = fs.getFile(cmdArg);
+        if (targetFile) {
+          const contentLines = targetFile.content.split('\n');
+          contentLines.forEach((cLine, idx) => {
+            newOutputLines.push({
+              id: `out-${Date.now()}-cat-${idx}`,
+              type: 'output',
+              text: cLine,
+            });
+          });
+        } else {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: `cat: ${cmdArg}: No such file. Available files: ${Object.keys(fs.files).join(', ')}`,
+          });
+        }
+        break;
+      }
+
+      case 'touch': {
+        if (!cmdArg) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: 'touch: missing file operand. Usage: touch <filename.ext>',
+          });
+          break;
+        }
+
+        const ext = parseAllowedExtension(cmdArg);
+        if (!ext) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: `touch: cannot touch '${cmdArg}': Only .txt, .md, .js supported.`,
+          });
+          break;
+        }
+
+        const createRes = fs.createFile(cmdArg);
+        if (!createRes.success) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: `touch: cannot touch '${cmdArg}': ${createRes.error}`,
+          });
+        }
+        break;
+      }
+
+      case 'rm': {
+        if (!cmdArg) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: 'rm: missing operand. Usage: rm <filename>',
+          });
+          break;
+        }
+
+        const delRes = fs.deleteFile(cmdArg);
+        if (!delRes.success) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: delRes.error || `rm: cannot remove '${cmdArg}': Operation failed`,
+          });
+        }
+        break;
+      }
+
+      case 'nano': {
+        if (!cmdArg) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: 'nano: missing file operand. Usage: nano <filename.ext>',
+          });
+          break;
+        }
+
+        const existingFile = fs.getFile(cmdArg);
+        if (existingFile) {
+          setNanoSession({
+            filename: existingFile.name,
+            content: existingFile.content,
+            initialContent: existingFile.content,
+            isNew: false,
+          });
+          return;
+        }
+
+        // New file candidate
+        const ext = parseAllowedExtension(cmdArg);
+        if (!ext) {
+          newOutputLines.push({
+            id: `out-${Date.now()}-err`,
+            type: 'error',
+            text: `nano: invalid extension for '${cmdArg}'. Only .txt, .md, .js supported.`,
+          });
+          break;
+        }
+
+        setNanoSession({
+          filename: cmdArg,
+          content: '',
+          initialContent: '',
+          isNew: true,
+          statusMessage: `[ New File: ${cmdArg} ]`,
+        });
+        return;
+      }
+
+      case 'su': {
         const userValidation = usernameSchema.safeParse(cmdArg);
         if (!userValidation.success) {
           newOutputLines.push({
@@ -133,77 +354,13 @@ export const TerminalApp: React.FC = () => {
         break;
       }
 
-      case 'whoami':
-        newOutputLines.push({
-          id: `out-${Date.now()}-who`,
-          type: 'accent',
-          text: currentUser,
-        });
-        break;
-
       case 'exit':
-      case 'logout':
         setCurrentUser('guest');
         newOutputLines.push({
           id: `out-${Date.now()}-out`,
           type: 'output',
           text: t('terminal_user_switched', { user: 'guest' }),
         });
-        break;
-
-      case 'cat':
-      case 'about': {
-        const normalized = cmdArg.toLowerCase().trim();
-        if (normalized === 'bio.md' || normalized === 'bio' || mainCmd === 'about') {
-          newOutputLines.push(
-            { id: `out-${Date.now()}-1`, type: 'output', text: t('terminal_bio_title') },
-            { id: `out-${Date.now()}-2`, type: 'output', text: t('terminal_bio_text1') },
-            { id: `out-${Date.now()}-3`, type: 'output', text: t('terminal_bio_text2') }
-          );
-        } else if (normalized === 'skills.md' || normalized === 'skills') {
-          newOutputLines.push(
-            { id: `out-${Date.now()}-1`, type: 'output', text: t('terminal_skills_fe') },
-            { id: `out-${Date.now()}-2`, type: 'output', text: t('terminal_skills_be') },
-            { id: `out-${Date.now()}-3`, type: 'output', text: t('terminal_skills_devops') }
-          );
-        } else if (normalized === 'contact.md' || normalized === 'contact') {
-          newOutputLines.push(
-            { id: `out-${Date.now()}-1`, type: 'output', text: t('terminal_contact_header') },
-            { id: `out-${Date.now()}-2`, type: 'accent', text: '  GitHub:   https://github.com' },
-            { id: `out-${Date.now()}-3`, type: 'accent', text: '  LinkedIn: https://linkedin.com' },
-            { id: `out-${Date.now()}-4`, type: 'accent', text: '  Email:    ahmet@example.com' }
-          );
-        } else if (normalized === 'welcome.txt' || normalized === 'welcome') {
-          newOutputLines.push(
-            { id: `out-${Date.now()}-1`, type: 'accent', text: t('terminal_welcome_title') },
-            { id: `out-${Date.now()}-2`, type: 'accent', text: t('terminal_welcome_subtitle') },
-            { id: `out-${Date.now()}-3`, type: 'output', text: t('terminal_welcome_help') }
-          );
-        } else {
-          newOutputLines.push({
-            id: `out-${Date.now()}-cat-err`,
-            type: 'error',
-            text: `cat: ${cmdArg || 'unknown'}: No such file. Try "ls" to list files or "cat bio.md"`,
-          });
-        }
-        break;
-      }
-
-      case 'skills':
-        newOutputLines.push(
-          { id: `out-${Date.now()}-1`, type: 'output', text: t('terminal_skills_fe') },
-          { id: `out-${Date.now()}-2`, type: 'output', text: t('terminal_skills_be') },
-          { id: `out-${Date.now()}-3`, type: 'output', text: t('terminal_skills_devops') }
-        );
-        break;
-
-      case 'contact':
-        newOutputLines.push(
-          { id: `out-${Date.now()}-1`, type: 'output', text: t('terminal_contact_header') },
-          { id: `out-${Date.now()}-2`, type: 'accent', text: '  GitHub:   https://github.com' },
-          { id: `out-${Date.now()}-3`, type: 'accent', text: '  LinkedIn: https://linkedin.com' },
-          { id: `out-${Date.now()}-4`, type: 'accent', text: '  Email:    ahmet@example.com' }
-        );
         break;
 
       case 'clear':
@@ -233,6 +390,51 @@ export const TerminalApp: React.FC = () => {
       handleCommand(inputValue);
     }
   };
+
+  // Render GNU Nano editor if session is active
+  if (nanoSession) {
+    const isModified = nanoSession.content !== nanoSession.initialContent;
+
+    return (
+      <div className="nano-container" role="region" aria-label={`GNU nano Editor - ${nanoSession.filename}`}>
+        <div className="nano-titlebar">
+          <div>
+            <span>GNU nano 7.2</span>
+            <span style={{ margin: '0 8px', opacity: 0.5 }}>|</span>
+            <span>File: {nanoSession.filename}</span>
+            {isModified && <span className="nano-modified-tag">[Modified]</span>}
+          </div>
+          {nanoSession.statusMessage && (
+            <span style={{ fontSize: 11, color: 'var(--aurora-cyan)' }}>
+              {nanoSession.statusMessage}
+            </span>
+          )}
+        </div>
+
+        <textarea
+          ref={nanoTextareaRef}
+          className="nano-textarea"
+          value={nanoSession.content}
+          onChange={(e) =>
+            setNanoSession((prev) => (prev ? { ...prev, content: e.target.value } : null))
+          }
+          onKeyDown={handleNanoKeyDown}
+          spellCheck={false}
+          autoComplete="off"
+          aria-label={`Nano editing content of ${nanoSession.filename}`}
+        />
+
+        <div className="nano-footer">
+          <button type="button" className="nano-shortcut-btn" onClick={handleNanoSave}>
+            <span className="nano-shortcut-key">^O</span> WriteOut (Save)
+          </button>
+          <button type="button" className="nano-shortcut-btn" onClick={handleNanoExit}>
+            <span className="nano-shortcut-key">^X</span> Exit
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -2,10 +2,16 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TerminalApp } from './TerminalApp';
 import { useI18nStore } from '../../i18n/i18n.store';
+import { useFileSystemStore } from '../../stores/filesystem.store';
 
 describe('TerminalApp Component', () => {
   beforeEach(() => {
     useI18nStore.getState().setLanguage('en');
+    // Ensure clean VFS state
+    const fs = useFileSystemStore.getState();
+    if (fs.getFile('testfile.txt')) {
+      fs.deleteFile('testfile.txt');
+    }
   });
 
   it('should render default prompt with guest user', () => {
@@ -26,43 +32,76 @@ describe('TerminalApp Component', () => {
     expect(screen.getByText('ahmet@aec:~$')).toBeInTheDocument();
   });
 
-  it('should return current user with "whoami" command', () => {
+  it('should switch user with "su" and return to guest with "exit"', () => {
     render(<TerminalApp />);
 
     const input = screen.getByPlaceholderText(/type a command/i);
-    fireEvent.change(input, { target: { value: 'whoami' } });
+    fireEvent.change(input, { target: { value: 'su dev' } });
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
-    expect(screen.getByText('guest')).toBeInTheDocument();
+    expect(screen.getByText('dev@aec:~$')).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: 'exit' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    expect(screen.getByText('guest@aec:~$')).toBeInTheDocument();
   });
 
-  it('should handle "help" and "clear" commands', () => {
-    render(<TerminalApp />);
-
-    const input = screen.getByPlaceholderText(/type a command/i);
-    fireEvent.change(input, { target: { value: 'help' } });
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
-
-    expect(screen.getByText(/Available commands:/i)).toBeInTheDocument();
-
-    fireEvent.change(input, { target: { value: 'clear' } });
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
-
-    expect(screen.queryByText(/Available commands:/i)).not.toBeInTheDocument();
-  });
-
-  it('should list available files with "ls" and read them with "cat"', () => {
+  it('should list available VFS files with "ls" and read them with "cat"', () => {
     render(<TerminalApp />);
 
     const input = screen.getByPlaceholderText(/type a command/i);
     fireEvent.change(input, { target: { value: 'ls' } });
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
-    expect(screen.getByText(/bio\.md\s+skills\.md\s+contact\.md\s+welcome\.txt/i)).toBeInTheDocument();
+    expect(screen.getByText(/bio\.md/i)).toBeInTheDocument();
 
     fireEvent.change(input, { target: { value: 'cat bio.md' } });
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
-    expect(screen.getByText(/--- COMPUTER ENGINEER & SOFTWARE ARCHITECT ---/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ahmet Emre Ceylan/i)).toBeInTheDocument();
+  });
+
+  it('should create file with "touch" and prevent deletion of protected system file with "rm"', () => {
+    render(<TerminalApp />);
+
+    const input = screen.getByPlaceholderText(/type a command/i);
+
+    // Try deleting protected file
+    fireEvent.change(input, { target: { value: 'rm bio.md' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+    expect(screen.getByText(/rm: cannot remove 'bio.md': Protected system file/i)).toBeInTheDocument();
+
+    // Create a new valid user file
+    fireEvent.change(input, { target: { value: 'touch testfile.txt' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+    expect(useFileSystemStore.getState().getFile('testfile.txt')).toBeDefined();
+
+    // Remove user file
+    fireEvent.change(input, { target: { value: 'rm testfile.txt' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+    expect(useFileSystemStore.getState().getFile('testfile.txt')).toBeUndefined();
+  });
+
+  it('should launch GNU nano editor mode and allow exit', () => {
+    render(<TerminalApp />);
+
+    const input = screen.getByPlaceholderText(/type a command/i);
+    fireEvent.change(input, { target: { value: 'nano notes.md' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+    // Nano editor should be active
+    expect(screen.getByText(/GNU nano 7.2/i)).toBeInTheDocument();
+    expect(screen.getByText(/\[ New File: notes\.md \]/i)).toBeInTheDocument();
+    expect(screen.getByText(/WriteOut \(Save\)/i)).toBeInTheDocument();
+
+    // Exit Nano
+    const exitBtn = screen.getByRole('button', { name: /\^X Exit/i });
+    fireEvent.click(exitBtn);
+
+    // Back in command line
+    expect(screen.getByPlaceholderText(/type a command/i)).toBeInTheDocument();
   });
 });

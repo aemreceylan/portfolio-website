@@ -65,3 +65,83 @@
 .terminal-output-accent {
   color: var(--aurora-cyan);
 }
+
+/* GNU Nano In-Terminal Editor */
+.nano-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #08090d;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.nano-titlebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  color: #f8fafc;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+}
+
+.nano-modified-tag {
+  color: #f59e0b;
+  margin-left: 6px;
+}
+
+.nano-textarea {
+  flex: 1;
+  background: transparent;
+  color: #f1f5f9;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 10px;
+  caret-color: var(--aurora-cyan);
+  white-space: pre;
+  overflow-y: auto;
+}
+
+.nano-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 6px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nano-shortcut-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.nano-shortcut-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-color: var(--aurora-cyan);
+}
+
+.nano-shortcut-key {
+  color: var(--aurora-cyan);
+  font-weight: 700;
+}
