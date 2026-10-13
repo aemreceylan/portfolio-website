@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import {
   Terminal,
   Settings,
@@ -157,23 +157,95 @@ export const Desktop: React.FC = () => {
   const maxRows = Math.max(1, Math.floor((viewportHeight - START_Y - DOCK_MARGIN) / CELL_HEIGHT));
 
   /**
-   * Computes the (x, y) coordinates for any desktop item.
-   * Items with custom positions use them; otherwise, items flow top-to-bottom,
-   * wrapping cleanly to the next column on the right above the bottom dock.
+   * Computes collision-free coordinates for all desktop items.
+   * Items with explicit custom positions retain their coordinates.
+   * Auto-positioned items reside in their natural grid slots; if a natural slot
+   * is occupied by a custom position, the item automatically shifts to the nearest
+   * unoccupied slot, completely preventing visual overlapping.
    */
-  const getItemPosition = (itemId: string, autoIndex: number) => {
+  const layoutPositions = useMemo<Record<string, { x: number; y: number }>>(() => {
+    const positions: Record<string, { x: number; y: number }> = {};
+    const occupiedKeys = new Set<string>();
+
+    // 1. Explicit user custom positions take precedence
+    Object.entries(customPositions).forEach(([id, pos]) => {
+      positions[id] = pos;
+      occupiedKeys.add(`${pos.x},${pos.y}`);
+    });
+
+    const appEntries = Object.values(APP_REGISTRY);
+    const appCount = appEntries.length;
+
+    // Helper to find next free cell if natural slot is claimed by a custom position
+    const findNextFreeCell = (startCol = 0, startRow = 0) => {
+      let c = startCol;
+      let r = startRow;
+      while (occupiedKeys.has(`${START_X + c * CELL_WIDTH},${START_Y + r * CELL_HEIGHT}`)) {
+        r++;
+        if (r >= maxRows) {
+          r = 0;
+          c++;
+        }
+      }
+      return {
+        x: START_X + c * CELL_WIDTH,
+        y: START_Y + r * CELL_HEIGHT,
+      };
+    };
+
+    // 2. Apps without custom positions
+    appEntries.forEach(({ manifest }, appIdx) => {
+      const itemId = `app-${manifest.id}`;
+      if (positions[itemId]) return;
+
+      const naturalRow = appIdx % maxRows;
+      const naturalCol = Math.floor(appIdx / maxRows);
+      const naturalKey = `${START_X + naturalCol * CELL_WIDTH},${START_Y + naturalRow * CELL_HEIGHT}`;
+
+      if (!occupiedKeys.has(naturalKey)) {
+        const pos = { x: START_X + naturalCol * CELL_WIDTH, y: START_Y + naturalRow * CELL_HEIGHT };
+        positions[itemId] = pos;
+        occupiedKeys.add(naturalKey);
+      } else {
+        const pos = findNextFreeCell(naturalCol, naturalRow);
+        positions[itemId] = pos;
+        occupiedKeys.add(`${pos.x},${pos.y}`);
+      }
+    });
+
+    // 3. Virtual files without custom positions
+    Object.values(files).forEach((file, fileIdx) => {
+      const itemId = `file-${file.id}`;
+      if (positions[itemId]) return;
+
+      const autoIndex = appCount + fileIdx;
+      const naturalRow = autoIndex % maxRows;
+      const naturalCol = Math.floor(autoIndex / maxRows);
+      const naturalKey = `${START_X + naturalCol * CELL_WIDTH},${START_Y + naturalRow * CELL_HEIGHT}`;
+
+      if (!occupiedKeys.has(naturalKey)) {
+        const pos = { x: START_X + naturalCol * CELL_WIDTH, y: START_Y + naturalRow * CELL_HEIGHT };
+        positions[itemId] = pos;
+        occupiedKeys.add(naturalKey);
+      } else {
+        const pos = findNextFreeCell(naturalCol, naturalRow);
+        positions[itemId] = pos;
+        occupiedKeys.add(`${pos.x},${pos.y}`);
+      }
+    });
+
+    return positions;
+  }, [customPositions, files, maxRows]);
+
+  /**
+   * Computes rendered (x, y) coordinates for any desktop item.
+   * If the item is actively being dragged, it tracks the pointer position.
+   */
+  const getItemPosition = (itemId: string, _autoIndex?: number) => {
     if (draggingItemState && draggingItemState.id === itemId) {
       return { x: draggingItemState.x, y: draggingItemState.y };
     }
-    if (customPositions[itemId]) {
-      return customPositions[itemId];
-    }
-    const row = autoIndex % maxRows;
-    const col = Math.floor(autoIndex / maxRows);
-    return {
-      x: START_X + col * CELL_WIDTH,
-      y: START_Y + row * CELL_HEIGHT,
-    };
+    return layoutPositions[itemId] || { x: START_X, y: START_Y };
   };
 
   const handleIconPointerDown = (
@@ -234,11 +306,49 @@ export const Desktop: React.FC = () => {
           justDraggedRef.current = false;
         }, 150);
 
-        // Snap dropped item into nearest grid cell
-        const snappedCol = Math.max(0, Math.round((currentDrag.currentX - START_X) / CELL_WIDTH));
-        const snappedRow = Math.max(0, Math.min(maxRows - 1, Math.round((currentDrag.currentY - START_Y) / CELL_HEIGHT)));
-        const finalX = START_X + snappedCol * CELL_WIDTH;
-        const finalY = START_Y + snappedRow * CELL_HEIGHT;
+        // Collect all occupied coordinates by other desktop items
+        const occupiedKeysByOthers = new Set<string>();
+        Object.entries(layoutPositions).forEach(([id, pos]) => {
+          if (id !== currentDrag.id) {
+            occupiedKeysByOthers.add(`${pos.x},${pos.y}`);
+          }
+        });
+
+        const winW = typeof window !== 'undefined' && window.innerWidth > 0 ? window.innerWidth : 1024;
+        const maxCols = Math.max(1, Math.floor((winW - START_X) / CELL_WIDTH));
+
+        const targetCol = Math.max(0, Math.round((currentDrag.currentX - START_X) / CELL_WIDTH));
+        const targetRow = Math.max(0, Math.min(maxRows - 1, Math.round((currentDrag.currentY - START_Y) / CELL_HEIGHT)));
+        const targetX = START_X + targetCol * CELL_WIDTH;
+        const targetY = START_Y + targetRow * CELL_HEIGHT;
+
+        let finalX = targetX;
+        let finalY = targetY;
+
+        // Collision Prevention: If target grid cell is occupied by another icon, snap to nearest free cell
+        if (occupiedKeysByOthers.has(`${targetX},${targetY}`)) {
+          let minDistance = Infinity;
+          let bestCandidate = { x: currentDrag.origX, y: currentDrag.origY };
+
+          for (let c = 0; c < maxCols + 5; c++) {
+            for (let r = 0; r < maxRows; r++) {
+              const candX = START_X + c * CELL_WIDTH;
+              const candY = START_Y + r * CELL_HEIGHT;
+              const key = `${candX},${candY}`;
+
+              if (!occupiedKeysByOthers.has(key)) {
+                const dist = Math.hypot(candX - currentDrag.currentX, candY - currentDrag.currentY);
+                if (dist < minDistance) {
+                  minDistance = dist;
+                  bestCandidate = { x: candX, y: candY };
+                }
+              }
+            }
+          }
+
+          finalX = bestCandidate.x;
+          finalY = bestCandidate.y;
+        }
 
         setCustomPositions((prev) => {
           const next = { ...prev, [currentDrag.id]: { x: finalX, y: finalY } };

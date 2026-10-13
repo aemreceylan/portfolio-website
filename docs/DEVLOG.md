@@ -180,9 +180,14 @@
   - `window.addEventListener('pointermove' / 'pointerup')` ile fare hızlı hareket etse dahi imleç takibi kesintiye uğramaz.
   - Sürükleme bittiğinde simgeler en yakın ızgara hücresine kenetlenir (`grid snap`) ve konumlar `localStorage` üzerinde (`aec-desktop-icon-positions`) kalıcı olarak saklanır.
   - Sürükleme işlemi bittiğinde istem dışı dosya/uygulama açılmasını önlemek için `justDraggedRef` tıklama koruması eklendi.
+- **Masaüstü Simgelerinde Çakışma Önleme & Üst Üste Binmeme Algoritması (`Desktop.tsx`, `Desktop.test.tsx`)**:
+  - Masaüstü simgeleri sürüklenip bırakılırken başka bir simgenin bulunduğu koordinatlara (`targetX, targetY`) bırakılmaya çalışıldığında çakışmayı tespit eden `occupiedKeysByOthers` kontrolü eklendi.
+  - Hedef ızgara hücresi dolu olduğunda bırakılan simgenin üzerine binmesi engellendi; bırakılan fare imlecine en yakın boş ızgara hücresine (`bestCandidate`) otomatik kenetlenme sağlandı.
+  - `layoutPositions` memoized hesaplayıcısı ile özel konumu olmayan simgelerin de özel konumu olan simgelerin yerlerini çiğnemeden sonraki boş hücrelere akması garantilendi.
 - **Test ve Kalite Durumu**:
-  - 13 test dosyasında 72 birim ve entegrasyon testi %100 başarıyla geçti.
+  - 13 test dosyasında 73 birim ve entegrasyon testi %100 başarıyla geçti (`Desktop.test.tsx`'e çakışma önleme birim testi eklendi).
   - `npm run typecheck` monorepo genelinde 0 hata ile doğrulandı.
-  - Chrome DevTools MCP ile görsel, işlevsel ve bağlam menüsü etkileşimleri test edildi.
+  - Chrome DevTools MCP ile canlı tarayıcıda simgelerin birbirinin üzerine bırakılamadığı ve en yakın boş hücreye kenetlendiği görsel olarak doğrulandı.
+
 
 

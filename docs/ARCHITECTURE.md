@@ -172,5 +172,10 @@ PersonalWebSite/
   - `window.addEventListener('pointermove' / 'pointerup')` ile kesintisiz global hareket takibi sağlanır.
   - Bırakılan simge matematiksel olarak en yakın ızgara hücresine kenetlenir (`grid snap`) ve konumlar `localStorage` üzerinde (`aec-desktop-icon-positions`) kalıcı olarak saklanır.
   - Sürükleme bittiğinde istem dışı dosya veya uygulama açılmasını engellemek için `justDraggedRef` koruması devreye girer.
+* **Masaüstü Simgelerinde Çakışma Önleme & Boş Hücreye Kenetlenme (Collision Resolution Engine)**:
+  - Bir simge başka bir simgenin bulunduğu dolu bir ızgara hücresine bırakılmaya çalışıldığında `occupiedKeysByOthers` seti ile çakışma anında algılanır.
+  - Dolu hücreye bırakılan simge asla diğer simgenin üzerine bindirilmez; bırakılan imleç koordinatlarına Öklid mesafesi (`Math.hypot`) açısından en yakın boş ızgara hücresine yönlendirilerek kenetlenir.
+  - `layoutPositions` memoized motoru sayesinde özel konumu olmayan simgeler de özel konumu olan simgelerin hücrelerini atlayarak sonraki boş hücrelere akar. Bu sayede masaüstünde hiçbir iki simge asla üst üste binemez.
+
 
 

@@ -129,6 +129,33 @@ describe('Desktop Component', () => {
     const updatedIcon = screen.getByTestId('desktop-app-terminal');
     expect(updatedIcon.getAttribute('style')).not.toBe(initialStyle);
   });
+
+  it('should prevent dropping icons on top of each other and resolve collision to unoccupied slot', () => {
+    render(<Desktop />);
+
+    const terminalIcon = screen.getByTestId('desktop-app-terminal');
+    const settingsIcon = screen.getByTestId('desktop-app-settings');
+
+    const settingsStyleBefore = settingsIcon.getAttribute('style');
+    // Settings is at row 1 (clientY: 162)
+    expect(settingsStyleBefore).toContain('top: 162px');
+
+    // Attempt to drop Terminal directly on top of Settings (24, 162)
+    act(() => {
+      fireEvent.pointerDown(terminalIcon, { clientX: 24, clientY: 62, button: 0 });
+      fireEvent.pointerMove(window, { clientX: 24, clientY: 162 });
+      fireEvent.pointerUp(window, { clientX: 24, clientY: 162 });
+    });
+
+    const updatedTerminal = screen.getByTestId('desktop-app-terminal');
+    const updatedSettings = screen.getByTestId('desktop-app-settings');
+
+    // Settings must remain in place and not be overwritten
+    expect(updatedSettings.getAttribute('style')).toBe(settingsStyleBefore);
+
+    // Terminal must NOT be placed at the exact same coordinates as Settings
+    expect(updatedTerminal.getAttribute('style')).not.toBe(updatedSettings.getAttribute('style'));
+  });
 });
 
 
