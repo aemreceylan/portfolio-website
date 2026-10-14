@@ -313,6 +313,11 @@
   - `docker/docker-compose.yml` yapılandırması `deploy.yml` içindeki `dorny/paths-filter` kurallarına (backend, frontend, admin) dahil edildi; orkestrasyon dosyası değiştiğinde etkilenen tüm servislerin senkronize derlenip dağıtılması sağlandı.
 - **Canlı Dağıtım Tetikleme & Sürüm Güncellemesi**:
   - Kök `package.json` sürümü `1.0.1` olarak güncellendi ve tüm alt sistemlerin ilk uçtan uca canlı dağıtımı tetiklendi.
+- **Git Bağımlılığı Olmayan Saf Docker Dağıtım Mimarisi (Zero-Git Server Deploy)**:
+  - Sunucuda `git` veya repo klonlama (`fatal: not a git repository`) ihtiyacı tamamen kaldırıldı.
+  - `deploy.yml` içine eklenen Base64 senkronizasyon adımı ile `docker/docker-compose.yml` doğrudan sunucuya aktarıldı.
+  - Sunucu üzerinde `docker compose` ve `docker-compose` komut sürümleri dinamik olarak algılandı; GHCR imajları çekilerek izole, güvenli ve sıfır yetki riskiyle ayağa kaldırılması sağlandı.
+
 
 
 

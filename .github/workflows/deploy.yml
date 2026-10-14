@@ -184,25 +184,48 @@ jobs:
     if: ${{ !failure() && !cancelled() && (needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.admin == 'true' || github.event_name == 'workflow_dispatch') }}
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Encode Docker Compose
+        id: compose
+        run: |
+          COMPOSE_B64=$(base64 -w 0 docker/docker-compose.yml)
+          echo "b64=$COMPOSE_B64" >> $GITHUB_OUTPUT
+
       - name: Deploy to Remote Server
         uses: appleboy/ssh-action@v1.0.3
         env:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
           CHANGED_BACKEND: ${{ needs.detect-changes.outputs.backend }}
           CHANGED_FRONTEND: ${{ needs.detect-changes.outputs.frontend }}
           CHANGED_ADMIN: ${{ needs.detect-changes.outputs.admin }}
           IS_MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+          COMPOSE_B64: ${{ steps.compose.outputs.b64 }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          envs: DEPLOY_PATH,GHCR_TOKEN,CHANGED_BACKEND,CHANGED_FRONTEND,CHANGED_ADMIN,IS_MANUAL
+          envs: DEPLOY_PATH,GHCR_TOKEN,CHANGED_BACKEND,CHANGED_FRONTEND,CHANGED_ADMIN,IS_MANUAL,COMPOSE_B64
           script: |
             set -e
             TARGET_DIR="${DEPLOY_PATH:-$HOME/portfolio-website}"
+            mkdir -p "$TARGET_DIR/docker"
             cd "$TARGET_DIR"
-            git pull origin main
+
+            # Sync docker-compose.yml directly without requiring git on server
+            echo "$COMPOSE_B64" | base64 -d > docker/docker-compose.yml
+
+            # Detect docker compose version (plugin or standalone)
+            if docker compose version >/dev/null 2>&1; then
+              DOCKER_COMPOSE="docker compose"
+            elif docker-compose version >/dev/null 2>&1; then
+              DOCKER_COMPOSE="docker-compose"
+            else
+              echo "Error: Neither 'docker compose' nor 'docker-compose' found on server."
+              exit 1
+            fi
 
             if [ -n "$GHCR_TOKEN" ]; then
               echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -221,9 +244,10 @@ jobs:
 
             if [ -n "$SERVICES" ]; then
               echo "Deploying affected services: $SERVICES"
-              docker compose -f docker/docker-compose.yml pull $SERVICES
-              docker compose -f docker/docker-compose.yml up -d --no-deps $SERVICES
+              $DOCKER_COMPOSE -f docker/docker-compose.yml pull $SERVICES
+              $DOCKER_COMPOSE -f docker/docker-compose.yml up -d --no-deps $SERVICES
               docker image prune -f
             else
               echo "No service updates required."
             fi
+

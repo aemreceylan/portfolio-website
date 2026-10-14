@@ -306,6 +306,11 @@ Docker ortamında orkestrasyonun ve konteynerin ayakta kalmasını (keep-alive) 
     - Yalnızca `apps/admin-interface/**` etkilendiyse, sadece `admin` servisi güncellenir.
     - `packages/shared/**` değiştiğinde bağımlı tüm servisler derlenip güncellenir.
   - Değişmeyen servisler asla yeniden derlenmez veya yeniden başlatılmaz; sıfır kesinti ve maksimum hız elde edilir.
+* **Sunucu Tarafında Git Bağımsızlığı (Zero-Git Server Deployment)**:
+  - Sunucu üzerinde `git` kurulu olma veya depoyu sunucuya klonlama gereksinimi tamamen ortadan kaldırılmıştır.
+  - `docker/docker-compose.yml` orkestrasyon dosyası GitHub Actions tarafından Base64 formatında doğrudan sunucuya iletilir.
+  - Sunucu yalnızca bir Docker hostu olarak davranır; `docker compose` ve `docker-compose` komutlarını dinamik olarak destekler, GitHub Container Registry'den imajları çeker ve ayağa kaldırır. Bu yaklaşım sunucunun ele geçirilmesi durumunda kaynak koda veya GitHub hesabına erişim riskini sıfıra indirir.
+
 
 
 
