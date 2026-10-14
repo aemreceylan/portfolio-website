@@ -8,7 +8,6 @@ import {
   Save,
   Plus,
   X,
-  FilePlus,
   FolderOpen,
   Check,
 } from 'lucide-react';
@@ -155,7 +154,7 @@ export const MarkdownViewerApp: React.FC = () => {
   }, [currentFile, editContent]);
 
   return (
-    <div className="md-viewer-container" role="region" aria-label="Markdown & Document Editor">
+    <section className="md-viewer-container" aria-label="Markdown & Document Editor">
       {/* Top Toolbar */}
       <div className="md-viewer-toolbar">
         {/* Document Selector Tabs */}
@@ -167,9 +166,16 @@ export const MarkdownViewerApp: React.FC = () => {
               <div
                 key={file.id}
                 role="tab"
+                tabIndex={0}
                 aria-selected={isActive}
                 className={`md-file-tab ${isActive ? 'active' : ''}`}
                 onClick={() => setActiveViewerFileId(file.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveViewerFileId(file.id);
+                  }
+                }}
               >
                 <FileText size={13} />
                 <span>{file.name}</span>
@@ -394,7 +400,7 @@ export const MarkdownViewerApp: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

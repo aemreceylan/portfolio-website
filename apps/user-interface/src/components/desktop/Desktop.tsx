@@ -8,7 +8,6 @@ import {
   Code2,
   ShieldAlert,
   FolderPlus,
-  Upload,
   Edit3,
   Trash2,
   ExternalLink,
@@ -66,6 +65,70 @@ interface PromptModalState {
   error?: string;
   targetCoords?: { x: number; y: number };
 }
+
+const CELL_WIDTH = 96;
+const CELL_HEIGHT = 100;
+const START_X = 24;
+const START_Y = 62;
+const DOCK_MARGIN = 92;
+
+/**
+ * Resolves default extension based on creation modal mode
+ */
+const getDefaultExtensionForMode = (mode: 'rename' | 'new-txt' | 'new-md' | 'new-js'): string => {
+  switch (mode) {
+    case 'new-js':
+      return '.js';
+    case 'new-md':
+      return '.md';
+    default:
+      return '.txt';
+  }
+};
+
+/**
+ * Resolves collision-free grid coordinates closest to requested target coordinates.
+ * If target cell is already occupied, searches outward for the nearest free cell.
+ */
+const resolveCollisionFreeCoordinates = (
+  targetPos: { x: number; y: number },
+  occupiedKeys: Set<string>,
+  maxRows: number,
+  fallbackPos: { x: number; y: number }
+): { x: number; y: number } => {
+  const winW = typeof window !== 'undefined' && window.innerWidth > 0 ? window.innerWidth : 1024;
+  const maxCols = Math.max(1, Math.floor((winW - START_X) / CELL_WIDTH));
+
+  const targetCol = Math.max(0, Math.round((targetPos.x - START_X) / CELL_WIDTH));
+  const targetRow = Math.max(0, Math.min(maxRows - 1, Math.round((targetPos.y - START_Y) / CELL_HEIGHT)));
+  const targetX = START_X + targetCol * CELL_WIDTH;
+  const targetY = START_Y + targetRow * CELL_HEIGHT;
+
+  if (!occupiedKeys.has(`${targetX},${targetY}`)) {
+    return { x: targetX, y: targetY };
+  }
+
+  let minDistance = Infinity;
+  let bestCandidate = fallbackPos;
+
+  for (let c = 0; c < maxCols + 5; c++) {
+    for (let r = 0; r < maxRows; r++) {
+      const candX = START_X + c * CELL_WIDTH;
+      const candY = START_Y + r * CELL_HEIGHT;
+      const key = `${candX},${candY}`;
+
+      if (!occupiedKeys.has(key)) {
+        const dist = Math.hypot(candX - targetPos.x, candY - targetPos.y);
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestCandidate = { x: candX, y: candY };
+        }
+      }
+    }
+  }
+
+  return bestCandidate;
+};
 
 /**
  * Primary Desktop Workspace Viewport orchestrating:
@@ -161,12 +224,6 @@ export const Desktop: React.FC = () => {
   const justDraggedRef = useRef<boolean>(false);
 
   const [draggingItemState, setDraggingItemState] = useState<{ id: string; x: number; y: number } | null>(null);
-
-  const CELL_WIDTH = 96;
-  const CELL_HEIGHT = 100;
-  const START_X = 24;
-  const START_Y = 62;
-  const DOCK_MARGIN = 92;
 
   const maxRows = Math.max(1, Math.floor((viewportHeight - START_Y - DOCK_MARGIN) / CELL_HEIGHT));
 
@@ -349,66 +406,34 @@ export const Desktop: React.FC = () => {
       dragRef.current = null;
       setDraggingItemState(null);
 
-      if (currentDrag.hasMoved) {
-        justDraggedRef.current = true;
-        setTimeout(() => {
-          justDraggedRef.current = false;
-        }, 150);
+      if (!currentDrag.hasMoved) return;
 
-        // Collect all occupied coordinates by other desktop items
-        const occupiedKeysByOthers = new Set<string>();
-        Object.entries(layoutPositions).forEach(([id, pos]) => {
-          if (id !== currentDrag.id) {
-            occupiedKeysByOthers.add(`${pos.x},${pos.y}`);
-          }
-        });
+      justDraggedRef.current = true;
+      setTimeout(() => {
+        justDraggedRef.current = false;
+      }, 150);
 
-        const winW = typeof window !== 'undefined' && window.innerWidth > 0 ? window.innerWidth : 1024;
-        const maxCols = Math.max(1, Math.floor((winW - START_X) / CELL_WIDTH));
-
-        const targetCol = Math.max(0, Math.round((currentDrag.currentX - START_X) / CELL_WIDTH));
-        const targetRow = Math.max(0, Math.min(maxRows - 1, Math.round((currentDrag.currentY - START_Y) / CELL_HEIGHT)));
-        const targetX = START_X + targetCol * CELL_WIDTH;
-        const targetY = START_Y + targetRow * CELL_HEIGHT;
-
-        let finalX = targetX;
-        let finalY = targetY;
-
-        // Collision Prevention: If target grid cell is occupied by another icon, snap to nearest free cell
-        if (occupiedKeysByOthers.has(`${targetX},${targetY}`)) {
-          let minDistance = Infinity;
-          let bestCandidate = { x: currentDrag.origX, y: currentDrag.origY };
-
-          for (let c = 0; c < maxCols + 5; c++) {
-            for (let r = 0; r < maxRows; r++) {
-              const candX = START_X + c * CELL_WIDTH;
-              const candY = START_Y + r * CELL_HEIGHT;
-              const key = `${candX},${candY}`;
-
-              if (!occupiedKeysByOthers.has(key)) {
-                const dist = Math.hypot(candX - currentDrag.currentX, candY - currentDrag.currentY);
-                if (dist < minDistance) {
-                  minDistance = dist;
-                  bestCandidate = { x: candX, y: candY };
-                }
-              }
-            }
-          }
-
-          finalX = bestCandidate.x;
-          finalY = bestCandidate.y;
+      // Collect all occupied coordinates by other desktop items
+      const occupiedKeysByOthers = new Set<string>();
+      Object.entries(layoutPositions).forEach(([id, pos]) => {
+        if (id !== currentDrag.id) {
+          occupiedKeysByOthers.add(`${pos.x},${pos.y}`);
         }
+      });
 
-        setCustomPositions((prev) => {
-          const next = { ...prev, [currentDrag.id]: { x: finalX, y: finalY } };
-          try {
-            localStorage.setItem('aec-desktop-icon-positions', JSON.stringify(next));
-          } catch {
-            // ignore
-          }
-          return next;
-        });
-      }
+      const currentPos = { x: currentDrag.currentX, y: currentDrag.currentY };
+      const fallbackPos = { x: currentDrag.origX, y: currentDrag.origY };
+      const finalPos = resolveCollisionFreeCoordinates(currentPos, occupiedKeysByOthers, maxRows, fallbackPos);
+
+      setCustomPositions((prev) => {
+        const next = { ...prev, [currentDrag.id]: finalPos };
+        try {
+          localStorage.setItem('aec-desktop-icon-positions', JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
     };
 
     window.addEventListener('pointermove', onPointerMove);
@@ -569,6 +594,52 @@ export const Desktop: React.FC = () => {
     e.target.value = '';
   };
 
+  const handleRenameSubmit = (rawName: string): boolean => {
+    if (!promptModal.file) return true;
+    const res = renameFile(promptModal.file.name, rawName);
+    if (!res.success) {
+      setPromptModal((prev) => ({ ...prev, error: res.error }));
+      return false;
+    }
+    return true;
+  };
+
+  const handleNewFileSubmit = (rawName: string): boolean => {
+    let finalName = rawName;
+    const ext = parseAllowedExtension(rawName);
+    if (!ext) {
+      const defaultExt = getDefaultExtensionForMode(promptModal.mode);
+      finalName = `${rawName}${defaultExt}`;
+    }
+    const res = createFile(finalName, '');
+    if (!res.success) {
+      setPromptModal((prev) => ({ ...prev, error: res.error }));
+      return false;
+    }
+
+    if (res.file && promptModal.targetCoords) {
+      const occupiedKeys = new Set<string>();
+      Object.values(layoutPositions).forEach((pos) => {
+        occupiedKeys.add(`${pos.x},${pos.y}`);
+      });
+
+      const targetPos = promptModal.targetCoords;
+      const coords = resolveCollisionFreeCoordinates(targetPos, occupiedKeys, maxRows, targetPos);
+
+      setCustomPositions((prev) => {
+        const next = { ...prev, [`file-${res.file!.id}`]: coords };
+        try {
+          localStorage.setItem('aec-desktop-icon-positions', JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      });
+    }
+
+    return true;
+  };
+
   /**
    * Submits prompt modal (rename or new file)
    */
@@ -577,82 +648,13 @@ export const Desktop: React.FC = () => {
     const rawName = promptModal.filename.trim();
     if (!rawName) return;
 
-    if (promptModal.mode === 'rename') {
-      if (!promptModal.file) return;
-      const res = renameFile(promptModal.file.name, rawName);
-      if (!res.success) {
-        setPromptModal((prev) => ({ ...prev, error: res.error }));
-        return;
-      }
-    } else {
-      let finalName = rawName;
-      const ext = parseAllowedExtension(rawName);
-      if (!ext) {
-        const defaultExt =
-          promptModal.mode === 'new-js' ? '.js' : promptModal.mode === 'new-md' ? '.md' : '.txt';
-        finalName = `${rawName}${defaultExt}`;
-      }
-      const res = createFile(finalName, '');
-      if (!res.success) {
-        setPromptModal((prev) => ({ ...prev, error: res.error }));
-        return;
-      }
+    const success = promptModal.mode === 'rename'
+      ? handleRenameSubmit(rawName)
+      : handleNewFileSubmit(rawName);
 
-      // If created via right-click with targetCoords, place file at clicked grid cell with collision protection
-      if (res.file && promptModal.targetCoords) {
-        const winW = typeof window !== 'undefined' && window.innerWidth > 0 ? window.innerWidth : 1024;
-        const maxCols = Math.max(1, Math.floor((winW - START_X) / CELL_WIDTH));
-
-        const targetCol = Math.max(0, Math.round((promptModal.targetCoords.x - START_X) / CELL_WIDTH));
-        const targetRow = Math.max(0, Math.min(maxRows - 1, Math.round((promptModal.targetCoords.y - START_Y) / CELL_HEIGHT)));
-        const targetX = START_X + targetCol * CELL_WIDTH;
-        const targetY = START_Y + targetRow * CELL_HEIGHT;
-
-        let finalX = targetX;
-        let finalY = targetY;
-
-        // Current occupied keys across all desktop items
-        const occupiedKeys = new Set<string>();
-        Object.values(layoutPositions).forEach((pos) => {
-          occupiedKeys.add(`${pos.x},${pos.y}`);
-        });
-
-        if (occupiedKeys.has(`${targetX},${targetY}`)) {
-          let minDistance = Infinity;
-          let bestCandidate = { x: targetX, y: targetY };
-
-          for (let c = 0; c < maxCols + 5; c++) {
-            for (let r = 0; r < maxRows; r++) {
-              const candX = START_X + c * CELL_WIDTH;
-              const candY = START_Y + r * CELL_HEIGHT;
-              const key = `${candX},${candY}`;
-
-              if (!occupiedKeys.has(key)) {
-                const dist = Math.hypot(candX - promptModal.targetCoords.x, candY - promptModal.targetCoords.y);
-                if (dist < minDistance) {
-                  minDistance = dist;
-                  bestCandidate = { x: candX, y: candY };
-                }
-              }
-            }
-          }
-          finalX = bestCandidate.x;
-          finalY = bestCandidate.y;
-        }
-
-        setCustomPositions((prev) => {
-          const next = { ...prev, [`file-${res.file!.id}`]: { x: finalX, y: finalY } };
-          try {
-            localStorage.setItem('aec-desktop-icon-positions', JSON.stringify(next));
-          } catch {
-            // ignore
-          }
-          return next;
-        });
-      }
+    if (success) {
+      setPromptModal((prev) => ({ ...prev, isOpen: false }));
     }
-
-    setPromptModal((prev) => ({ ...prev, isOpen: false }));
   };
 
   return (

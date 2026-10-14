@@ -2,6 +2,7 @@
   "name": "personal-web-os-monorepo",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Modular Monorepo for Spatial Dark Glass Personal Portfolio WebOS",
   "workspaces": [
     "packages/*",
@@ -16,7 +17,8 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "overrides": {
     "tinypool": "2.2.0",
@@ -31,5 +33,11 @@
     "modular-monolith"
   ],
   "author": "Ahmet",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "eslint-plugin-sonarjs": "^4.2.2",
+    "globals": "^17.13.0",
+    "typescript-eslint": "^8.71.2"
+  }
 }

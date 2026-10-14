@@ -74,7 +74,7 @@ interface FileSystemStoreState {
 export function parseAllowedExtension(filename: string): AllowedExtension | null {
   const parts = filename.split('.');
   if (parts.length < 2) return null;
-  const ext = parts[parts.length - 1].toLowerCase();
+  const ext = parts.at(-1)?.toLowerCase();
   if (ext === 'txt' || ext === 'md' || ext === 'js') {
     return ext;
   }
@@ -226,6 +226,15 @@ function createInitialFileMap(): Record<string, VFSFile> {
   return map;
 }
 
+let fileIdCounter = 0;
+function generateSafeFileId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `file-${crypto.randomUUID()}`;
+  }
+  fileIdCounter += 1;
+  return `file-${Date.now()}-${fileIdCounter}`;
+}
+
 /**
  * Reactive Zustand store powering the Virtual File System
  */
@@ -257,7 +266,7 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
     }
 
     const newFile: VFSFile = {
-      id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      id: generateSafeFileId(),
       name: trimmed,
       extension: ext,
       content,

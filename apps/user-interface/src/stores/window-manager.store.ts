@@ -46,6 +46,16 @@ interface WindowManagerStore {
   reset: () => void;
 }
 
+function resolveScreenDimensions(screenBounds?: WindowSize): { width: number; height: number } {
+  if (screenBounds) {
+    return { width: screenBounds.width, height: screenBounds.height };
+  }
+  if (typeof window !== 'undefined') {
+    return { width: window.innerWidth, height: window.innerHeight };
+  }
+  return { width: 1200, height: 800 };
+}
+
 export const useWindowManager = create<WindowManagerStore>((set, get) => ({
   windows: {},
   activeWindowId: null,
@@ -233,16 +243,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
     } else {
       // Maximize window directly below the statusbar
       const currentBounds = { ...target.bounds };
-      const maximizedWidth = screenBounds
-        ? screenBounds.width
-        : typeof window !== 'undefined'
-          ? window.innerWidth
-          : 1200;
-      const screenHeight = screenBounds
-        ? screenBounds.height
-        : typeof window !== 'undefined'
-          ? window.innerHeight
-          : 800;
+      const { width: maximizedWidth, height: screenHeight } = resolveScreenDimensions(screenBounds);
 
       // Ensure window titlebar sits cleanly right below the 42px top statusbar
       const maximizedHeight = screenHeight - STATUSBAR_HEIGHT;
@@ -295,7 +296,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
   updateBounds: (windowId, partialBounds) => {
     const { windows } = get();
     const target = windows[windowId];
-    if (!target || !target.resizable) return;
+    if (!target?.resizable) return;
 
     const nextWidth =
       partialBounds.width !== undefined

@@ -14,6 +14,161 @@ interface TerminalLine {
   text: string;
 }
 
+import { Translations } from '#i18n/translations';
+
+function buildHelpLines(t: (key: keyof Translations) => string): TerminalLine[] {
+  const ts = Date.now();
+  return [
+    { id: `out-${ts}-1`, type: 'output', text: t('terminal_help_header') },
+    { id: `out-${ts}-2`, type: 'accent', text: `  ls          - ${t('terminal_cmd_ls_desc')}` },
+    { id: `out-${ts}-3`, type: 'accent', text: `  cat <file>  - ${t('terminal_cmd_cat_desc')}` },
+    { id: `out-${ts}-4`, type: 'accent', text: `  touch <file>- ${t('terminal_cmd_touch_desc')}` },
+    { id: `out-${ts}-5`, type: 'accent', text: `  rm <file>   - ${t('terminal_cmd_rm_desc')}` },
+    { id: `out-${ts}-6`, type: 'accent', text: `  nano <file> - ${t('terminal_cmd_nano_desc')}` },
+    { id: `out-${ts}-7`, type: 'accent', text: `  su <user>   - ${t('terminal_cmd_su_desc')}` },
+    { id: `out-${ts}-8`, type: 'accent', text: `  exit        - ${t('terminal_cmd_exit_desc')}` },
+    { id: `out-${ts}-9`, type: 'accent', text: `  clear       - ${t('terminal_cmd_clear_desc')}` },
+    { id: `out-${ts}-10`, type: 'accent', text: `  sudo rm -rf - ${t('terminal_cmd_reset_desc')}` },
+  ];
+}
+
+function buildCatLines(cmdArg: string, fs: ReturnType<typeof useFileSystemStore.getState>): TerminalLine[] {
+  if (!cmdArg) {
+    return [
+      {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: 'cat: missing file operand. Try "cat bio.md"',
+      },
+    ];
+  }
+
+  const targetFile = fs.getFile(cmdArg);
+  if (!targetFile) {
+    return [
+      {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: `cat: ${cmdArg}: No such file. Available files: ${Object.keys(fs.files).join(', ')}`,
+      },
+    ];
+  }
+
+  return targetFile.content.split('\n').map((cLine, idx) => ({
+    id: `out-${Date.now()}-cat-${idx}`,
+    type: 'output',
+    text: cLine,
+  }));
+}
+
+function buildTouchLines(cmdArg: string, fs: ReturnType<typeof useFileSystemStore.getState>): TerminalLine[] {
+  if (!cmdArg) {
+    return [
+      {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: 'touch: missing file operand. Usage: touch <filename.ext>',
+      },
+    ];
+  }
+
+  const ext = parseAllowedExtension(cmdArg);
+  if (!ext) {
+    return [
+      {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: `touch: cannot touch '${cmdArg}': Only .txt, .md, .js supported.`,
+      },
+    ];
+  }
+
+  const createRes = fs.createFile(cmdArg);
+  if (!createRes.success) {
+    return [
+      {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: `touch: cannot touch '${cmdArg}': ${createRes.error}`,
+      },
+    ];
+  }
+  return [];
+}
+
+function buildRmLines(cmdArg: string, fs: ReturnType<typeof useFileSystemStore.getState>): TerminalLine[] {
+  if (!cmdArg) {
+    return [
+      {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: 'rm: missing operand. Usage: rm <filename>',
+      },
+    ];
+  }
+
+  const rmParts = cmdArg.split(/\s+/);
+  const firstPart = rmParts[0]?.toLowerCase();
+  if (firstPart?.startsWith('-rf') || firstPart?.startsWith('-fr')) {
+    return [
+      {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: 'rm: cannot remove root filesystem: Permission denied. Try "sudo rm -rf /"',
+      },
+    ];
+  }
+
+  const delRes = fs.deleteFile(cmdArg);
+  if (!delRes.success) {
+    return [
+      {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: delRes.error || `rm: cannot remove '${cmdArg}': Operation failed`,
+      },
+    ];
+  }
+  return [];
+}
+
+function buildSudoLines(
+  cmdArg: string,
+  t: (key: keyof Translations) => string,
+  onReset: () => void
+): TerminalLine[] {
+  const subParts = cmdArg.split(/\s+/);
+  const subCmd = subParts[0]?.toLowerCase();
+  const subFlags = subParts.slice(1).join(' ').trim().toLowerCase();
+
+  const isResetRm =
+    subCmd === 'rm' &&
+    (subFlags.startsWith('-rf') ||
+      subFlags.startsWith('-fr') ||
+      subFlags === '-r' ||
+      subFlags === '-f' ||
+      subFlags === '');
+
+  if (isResetRm) {
+    onReset();
+    return [
+      {
+        id: `out-${Date.now()}-status`,
+        type: 'accent',
+        text: t('terminal_reset_status'),
+      },
+    ];
+  }
+
+  return [
+    {
+      id: `out-${Date.now()}-err`,
+      type: 'error',
+      text: `sudo: '${cmdArg}' is not permitted. Try 'sudo rm -rf /' to reset the system.`,
+    },
+  ];
+}
+
 /**
  * State of the interactive Nano in-terminal editor session
  */
@@ -137,6 +292,57 @@ export const TerminalApp: React.FC = () => {
   /**
    * Handles keyboard shortcuts inside the Nano editor
    */
+function handleNanoCommand(
+  cmdArg: string,
+  fs: ReturnType<typeof useFileSystemStore.getState>
+): { session?: NanoSession; errorLine?: TerminalLine } {
+  if (!cmdArg) {
+    return {
+      errorLine: {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: 'nano: missing file operand. Usage: nano <filename.ext>',
+      },
+    };
+  }
+
+  const existingFile = fs.getFile(cmdArg);
+  if (existingFile) {
+    return {
+      session: {
+        filename: existingFile.name,
+        content: existingFile.content,
+        initialContent: existingFile.content,
+        isNew: false,
+      },
+    };
+  }
+
+  const ext = parseAllowedExtension(cmdArg);
+  if (!ext) {
+    return {
+      errorLine: {
+        id: `out-${Date.now()}-err`,
+        type: 'error',
+        text: `nano: invalid extension for '${cmdArg}'. Only .txt, .md, .js supported.`,
+      },
+    };
+  }
+
+  return {
+    session: {
+      filename: cmdArg,
+      content: '',
+      initialContent: '',
+      isNew: true,
+      statusMessage: `[ New File: ${cmdArg} ]`,
+    },
+  };
+}
+
+  /**
+   * Handles keyboard shortcuts inside the Nano editor
+   */
   const handleNanoKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Ctrl+O or Ctrl+S: WriteOut (Save)
     if (e.ctrlKey && (e.key.toLowerCase() === 'o' || e.key.toLowerCase() === 's')) {
@@ -149,7 +355,6 @@ export const TerminalApp: React.FC = () => {
     if ((e.ctrlKey && e.key.toLowerCase() === 'x') || e.key === 'Escape') {
       e.preventDefault();
       handleNanoExit();
-      return;
     }
   };
 
@@ -188,18 +393,7 @@ export const TerminalApp: React.FC = () => {
 
     switch (mainCmd) {
       case 'help':
-        newOutputLines.push(
-          { id: `out-${Date.now()}-1`, type: 'output', text: t('terminal_help_header') },
-          { id: `out-${Date.now()}-2`, type: 'accent', text: `  ls          - ${t('terminal_cmd_ls_desc')}` },
-          { id: `out-${Date.now()}-3`, type: 'accent', text: `  cat <file>  - ${t('terminal_cmd_cat_desc')}` },
-          { id: `out-${Date.now()}-4`, type: 'accent', text: `  touch <file>- ${t('terminal_cmd_touch_desc')}` },
-          { id: `out-${Date.now()}-5`, type: 'accent', text: `  rm <file>   - ${t('terminal_cmd_rm_desc')}` },
-          { id: `out-${Date.now()}-6`, type: 'accent', text: `  nano <file> - ${t('terminal_cmd_nano_desc')}` },
-          { id: `out-${Date.now()}-7`, type: 'accent', text: `  su <user>   - ${t('terminal_cmd_su_desc')}` },
-          { id: `out-${Date.now()}-8`, type: 'accent', text: `  exit        - ${t('terminal_cmd_exit_desc')}` },
-          { id: `out-${Date.now()}-9`, type: 'accent', text: `  clear       - ${t('terminal_cmd_clear_desc')}` },
-          { id: `out-${Date.now()}-10`, type: 'accent', text: `  sudo rm -rf - ${t('terminal_cmd_reset_desc')}` }
-        );
+        newOutputLines.push(...buildHelpLines(t));
         break;
 
       case 'ls': {
@@ -212,138 +406,28 @@ export const TerminalApp: React.FC = () => {
         break;
       }
 
-      case 'cat': {
-        if (!cmdArg) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: 'cat: missing file operand. Try "cat bio.md"',
-          });
-          break;
-        }
-
-        const targetFile = fs.getFile(cmdArg);
-        if (targetFile) {
-          const contentLines = targetFile.content.split('\n');
-          contentLines.forEach((cLine, idx) => {
-            newOutputLines.push({
-              id: `out-${Date.now()}-cat-${idx}`,
-              type: 'output',
-              text: cLine,
-            });
-          });
-        } else {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: `cat: ${cmdArg}: No such file. Available files: ${Object.keys(fs.files).join(', ')}`,
-          });
-        }
+      case 'cat':
+        newOutputLines.push(...buildCatLines(cmdArg, fs));
         break;
-      }
 
-      case 'touch': {
-        if (!cmdArg) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: 'touch: missing file operand. Usage: touch <filename.ext>',
-          });
-          break;
-        }
-
-        const ext = parseAllowedExtension(cmdArg);
-        if (!ext) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: `touch: cannot touch '${cmdArg}': Only .txt, .md, .js supported.`,
-          });
-          break;
-        }
-
-        const createRes = fs.createFile(cmdArg);
-        if (!createRes.success) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: `touch: cannot touch '${cmdArg}': ${createRes.error}`,
-          });
-        }
+      case 'touch':
+        newOutputLines.push(...buildTouchLines(cmdArg, fs));
         break;
-      }
 
-      case 'rm': {
-        if (!cmdArg) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: 'rm: missing operand. Usage: rm <filename>',
-          });
-          break;
-        }
-
-        const rmParts = cmdArg.split(/\s+/);
-        if (rmParts[0]?.toLowerCase().startsWith('-rf') || rmParts[0]?.toLowerCase().startsWith('-fr')) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: 'rm: cannot remove root filesystem: Permission denied. Try "sudo rm -rf /"',
-          });
-          break;
-        }
-
-        const delRes = fs.deleteFile(cmdArg);
-        if (!delRes.success) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: delRes.error || `rm: cannot remove '${cmdArg}': Operation failed`,
-          });
-        }
+      case 'rm':
+        newOutputLines.push(...buildRmLines(cmdArg, fs));
         break;
-      }
 
       case 'nano': {
-        if (!cmdArg) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: 'nano: missing file operand. Usage: nano <filename.ext>',
-          });
-          break;
-        }
-
-        const existingFile = fs.getFile(cmdArg);
-        if (existingFile) {
-          setNanoSession({
-            filename: existingFile.name,
-            content: existingFile.content,
-            initialContent: existingFile.content,
-            isNew: false,
-          });
+        const nanoResult = handleNanoCommand(cmdArg, fs);
+        if (nanoResult.session) {
+          setNanoSession(nanoResult.session);
           return;
         }
-
-        // New file candidate
-        const ext = parseAllowedExtension(cmdArg);
-        if (!ext) {
-          newOutputLines.push({
-            id: `out-${Date.now()}-err`,
-            type: 'error',
-            text: `nano: invalid extension for '${cmdArg}'. Only .txt, .md, .js supported.`,
-          });
-          break;
+        if (nanoResult.errorLine) {
+          newOutputLines.push(nanoResult.errorLine);
         }
-
-        setNanoSession({
-          filename: cmdArg,
-          content: '',
-          initialContent: '',
-          isNew: true,
-          statusMessage: `[ New File: ${cmdArg} ]`,
-        });
-        return;
+        break;
       }
 
       case 'su': {
@@ -375,36 +459,14 @@ export const TerminalApp: React.FC = () => {
         });
         break;
 
-      case 'sudo': {
-        const subParts = cmdArg.split(/\s+/);
-        const subCmd = subParts[0]?.toLowerCase();
-        const subFlags = subParts.slice(1).join(' ').trim().toLowerCase();
-
-        if (
-          subCmd === 'rm' &&
-          (subFlags.startsWith('-rf') ||
-            subFlags.startsWith('-fr') ||
-            subFlags === '-r' ||
-            subFlags === '-f' ||
-            subFlags === '')
-        ) {
-          performSystemReset();
-          setCurrentUser('guest');
-          newOutputLines.push({
-            id: `out-${Date.now()}-status`,
-            type: 'accent',
-            text: t('terminal_reset_status'),
-          });
-          break;
-        }
-
-        newOutputLines.push({
-          id: `out-${Date.now()}-err`,
-          type: 'error',
-          text: `sudo: '${cmdArg}' is not permitted. Try 'sudo rm -rf /' to reset the system.`,
-        });
+      case 'sudo':
+        newOutputLines.push(
+          ...buildSudoLines(cmdArg, t, () => {
+            performSystemReset();
+            setCurrentUser('guest');
+          })
+        );
         break;
-      }
 
       case 'clear':
         setLines([]);
@@ -439,7 +501,7 @@ export const TerminalApp: React.FC = () => {
     const isModified = nanoSession.content !== nanoSession.initialContent;
 
     return (
-      <div className="nano-container" role="region" aria-label={`GNU nano Editor - ${nanoSession.filename}`}>
+      <section className="nano-container" aria-label={`GNU nano Editor - ${nanoSession.filename}`}>
         <div className="nano-titlebar">
           <div>
             <span>GNU nano 7.2</span>
@@ -475,15 +537,18 @@ export const TerminalApp: React.FC = () => {
             <span className="nano-shortcut-key">^X</span> Exit
           </button>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div
+    <section
       className="terminal-container"
       onClick={() => document.getElementById('term-input')?.focus()}
-      role="region"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') document.getElementById('term-input')?.focus();
+      }}
+      tabIndex={0}
       aria-label="AEC Interactive Terminal"
     >
       <div className="terminal-scroll-area" ref={scrollRef}>
@@ -510,6 +575,6 @@ export const TerminalApp: React.FC = () => {
           />
         </div>
       </div>
-    </div>
+    </section>
   );
 };

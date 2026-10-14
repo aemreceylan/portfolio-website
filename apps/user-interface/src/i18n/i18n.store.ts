@@ -10,7 +10,7 @@ const STORAGE_KEY = 'aec_portfolio_lang';
 /**
  * Supported language codes array for quick membership lookup
  */
-const SUPPORTED_LANGUAGES: SupportedLanguage[] = ['en', 'tr', 'de', 'fr', 'es', 'ru', 'ja'];
+const SUPPORTED_LANGUAGES = new Set<SupportedLanguage>(['en', 'tr', 'de', 'fr', 'es', 'ru', 'ja']);
 
 /**
  * Detects the most appropriate language from browser settings or defaults to 'en'
@@ -22,7 +22,7 @@ export function detectBrowserLanguage(candidate?: string): SupportedLanguage {
   const rawLang = candidate || (typeof navigator !== 'undefined' ? navigator.language : 'en');
   const normalized = rawLang.toLowerCase().split('-')[0] as SupportedLanguage;
 
-  if (SUPPORTED_LANGUAGES.includes(normalized)) {
+  if (SUPPORTED_LANGUAGES.has(normalized)) {
     return normalized;
   }
   return 'en';
@@ -43,7 +43,7 @@ interface I18nStoreState {
 function getInitialLanguage(): SupportedLanguage {
   if (typeof localStorage !== 'undefined') {
     const saved = localStorage.getItem(STORAGE_KEY) as SupportedLanguage | null;
-    if (saved && SUPPORTED_LANGUAGES.includes(saved)) {
+    if (saved && SUPPORTED_LANGUAGES.has(saved)) {
       return saved;
     }
   }
@@ -74,7 +74,7 @@ export const useI18nStore = create<I18nStoreState>((set, get) => ({
 
     if (params) {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
-        translation = translation.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+        translation = translation.replace(new RegExp(String.raw`\{${paramKey}\}`, 'g'), String(paramValue));
       });
     }
 
@@ -97,7 +97,7 @@ export function useTranslation() {
 
       if (params) {
         Object.entries(params).forEach(([paramKey, paramValue]) => {
-          translation = translation.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+          translation = translation.replace(new RegExp(String.raw`\{${paramKey}\}`, 'g'), String(paramValue));
         });
       }
 

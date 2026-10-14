@@ -224,3 +224,34 @@
   - 14 test dosyasında 82 birim ve entegrasyon testi güncellenen beklentilerle %100 başarıyla geçti.
   - Chrome DevTools MCP ile canlı ortamda hem Terminal `sudo rm -rf` tek satırlık durum bildirimi hem de Ayarlar penceresindeki parantezsiz buton metni doğrulandı.
 
+## [2026-10-14] - SonarQube / SonarJS Kapsamlı Kod Kalitesi Denetimi & Bilişsel Karmaşıklık İyileştirmeleri
+
+### Yapılanlar
+- **SonarQube MCP & ESLint SonarJS Altyapısı**:
+  - Proje kökünde modern ESLint 9 Flat Config (`eslint.config.js`) yapılandırıldı.
+  - `eslint-plugin-sonarjs@4.2.2`, `@typescript-eslint/eslint-plugin` ve `@typescript-eslint/parser` entegrasyonu sağlandı.
+  - Bilişsel karmaşıklık kuralı üst sınırı 15 (`sonarjs/cognitive-complexity: ['error', 15]`) olarak katı kurallaştırıldı.
+  - `npm run lint` ve `npm run lint:fix` betikleri `package.json`'a eklendi.
+- **Masaüstü Sürükleme ve Modal Mantığı Refaktörü (`Desktop.tsx`)**:
+  - `onPointerUp` içerisindeki karmaşık ızgara çakışma önleme döngüsü ve `handlePromptSubmit` içerisindeki kopya çakışma mantığı tekilleştirilerek `resolveCollisionFreeCoordinates` fonksiyonu oluşturuldu.
+  - `Upload` kullanılmayan import'u temizlendi (`sonarjs/unused-import`).
+  - İç içe ternary ifadeleri ortadan kaldıran `getDefaultExtensionForMode` tablosu yazıldı.
+  - `handlePromptSubmit` fonksiyonu `handleRenameSubmit` ve `handleNewFileSubmit` olarak ayrıştırılarak bilişsel karmaşıklık 50'den 3'e indirildi.
+- **Terminal Komut Yürütücüsü Ayrıştırma (`TerminalApp.tsx`)**:
+  - 34 bilişsel karmaşıklığa sahip `handleCommand` devasa switch bloğu, tekil komut oluşturuculara (`buildHelpLines`, `buildCatLines`, `buildTouchLines`, `buildRmLines`, `buildSudoLines`, `handleNanoCommand`) bölünerek karmaşıklık 8'e düşürüldü.
+  - `break` öncesi gereksiz atlama (`sonarjs/no-redundant-jump`) temizlendi.
+- **JS IDE Güvenliği & Modülerleştirme (`JsIdeApp.tsx`)**:
+  - Log seviyesi tespiti (`parseLogLevel`) ve güvenli log kimliği üretimi (`generateSafeLogId`) harici fonksiyonlara çıkarıldı.
+  - Iframe `postMessage` dinleyicisinde kaynak doğrulama (`event.source === iframeRef.current.contentWindow`) eklenerek OWASP standartlarında çapraz pencere veri sızıntılarına karşı koruma güçlendirildi.
+- **Sanal Dosya Sistemi Güvenlik Sertleştirmesi (`filesystem.store.ts`)**:
+  - `Math.random()` yerine Web Crypto API tabanlı `crypto.getRandomValues` (`generateSafeFileId`) uygulanarak SonarQube S2245 (güvensiz sözde rastgele sayı üreticisi) zafiyeti giderildi.
+  - Dizi erişimlerinde `parts.at(-1)` modern ECMAScript standardına geçildi.
+- **Pencere Yöneticisi & Dil Motoru İyileştirmeleri**:
+  - `window-manager.store.ts` içinde 4 katmanlı iç içe geçmiş ternary ifadeler `resolveScreenDimensions` yardımcısı ile çözüldü, `target?.resizable` isteğe bağlı zincirleme eklendi.
+  - `i18n.store.ts` dil listesi `Set` veri yapısına taşınarak `has()` ile optimize edildi, dinamik regex için `String.raw` uygulandı.
+- **Test ve Kalite Durumu**:
+  - `npm run lint`: **0 hata, 0 uyarı** (Monorepo genelinde tam temizlik).
+  - Vitest: **14 test dosyasında 82 testin tamamı (%100) başarıyla geçti**.
+  - `npm run build`: Monorepo TypeScript ve Vite üretim derlemesi 0 hata ile tamamlandı.
+
+

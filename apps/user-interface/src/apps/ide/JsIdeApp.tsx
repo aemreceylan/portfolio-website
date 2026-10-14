@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Play,
   Save,
@@ -23,6 +23,21 @@ interface ConsoleLog {
   type: 'log' | 'warn' | 'error' | 'system';
   message: string;
   timestamp: string;
+}
+
+function parseLogLevel(level: string): ConsoleLog['type'] {
+  if (level === 'error') return 'error';
+  if (level === 'warn') return 'warn';
+  return 'log';
+}
+
+let ideLogCounter = 0;
+function generateSafeLogId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `log-${crypto.randomUUID()}`;
+  }
+  ideLogCounter += 1;
+  return `log-${Date.now()}-${ideLogCounter}`;
 }
 
 /**
@@ -84,6 +99,8 @@ export const JsIdeApp: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [executionError, setExecutionError] = useState<string | null>(null);
 
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
   // New script dialog state
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
   const [newScriptName, setNewScriptName] = useState<string>('');
@@ -109,10 +126,13 @@ export const JsIdeApp: React.FC = () => {
   // Handle postMessage logs coming from the sandbox iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.source === 'aec-js-sandbox') {
+      if (iframeRef.current?.contentWindow && event.source && event.source !== iframeRef.current.contentWindow) {
+        return;
+      }
+      if (event.data?.source === 'aec-js-sandbox') {
         const { level, args } = event.data;
-        const msg = args
-          .map((arg: unknown) => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg)))
+        const msg = (Array.isArray(args) ? args : [])
+          .map((arg: unknown) => (typeof arg === 'object' && arg !== null ? JSON.stringify(arg) : String(arg)))
           .join(' ');
 
         if (level === 'error') {
@@ -122,8 +142,8 @@ export const JsIdeApp: React.FC = () => {
         setLogs((prev) => [
           ...prev,
           {
-            id: `log-${Date.now()}-${Math.random()}`,
-            type: level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log',
+            id: generateSafeLogId(),
+            type: parseLogLevel(level),
             message: msg,
             timestamp: new Date().toLocaleTimeString(),
           },
@@ -145,13 +165,14 @@ export const JsIdeApp: React.FC = () => {
    */
   const validateSyntax = (sourceCode: string): string | null => {
     try {
+      // eslint-disable-next-line sonarjs/code-eval -- Pure compile-time syntax validation without executing the function
       new Function(sourceCode);
       return null;
     } catch (err: unknown) {
       if (err instanceof Error) {
         return err.message;
       }
-      return String(err);
+      return typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err);
     }
   };
 
@@ -322,7 +343,7 @@ export const JsIdeApp: React.FC = () => {
   };
 
   return (
-    <div className="js-ide-container" role="region" aria-label="JavaScript IDE">
+    <section className="js-ide-container" aria-label="JavaScript IDE">
       {/* Top Toolbar */}
       <div className="js-ide-toolbar">
         {/* Open Scripts Tabs */}
@@ -334,9 +355,16 @@ export const JsIdeApp: React.FC = () => {
               <div
                 key={f.id}
                 role="tab"
+                tabIndex={0}
                 aria-selected={isActive}
                 className={`js-file-tab ${isActive ? 'active' : ''}`}
                 onClick={() => setActiveIdeFileId(f.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveIdeFileId(f.id);
+                  }
+                }}
               >
                 <FileCode size={13} />
                 <span>{f.name}</span>
@@ -483,7 +511,7 @@ export const JsIdeApp: React.FC = () => {
           </div>
 
           {/* Bottom Console Output Panel */}
-          <div className="js-console-panel" role="region" aria-label="Console Output">
+          <section className="js-console-panel" aria-label="Console Output">
             <div className="js-console-header">
               <span>OUTPUT CONSOLE</span>
               <button
@@ -508,7 +536,7 @@ export const JsIdeApp: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         </div>
       )}
 
@@ -555,6 +583,7 @@ export const JsIdeApp: React.FC = () => {
       {/* Hidden isolated sandbox execution frame */}
       {sandboxHtml && (
         <iframe
+          ref={iframeRef}
           key={sandboxHtml}
           srcDoc={sandboxHtml}
           sandbox="allow-scripts"
@@ -563,7 +592,7 @@ export const JsIdeApp: React.FC = () => {
           data-testid="js-sandbox-iframe"
         />
       )}
-    </div>
+    </section>
   );
 };
 
