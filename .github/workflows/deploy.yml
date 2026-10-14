@@ -1,18 +1,18 @@
-name: Build & Deploy Backend (GHCR + Docker)
+name: "Build & Deploy Portfolio WebOS (Selective CI/CD)"
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'apps/backend/**'
-      - 'packages/shared/**'
-      - 'docker/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'tsconfig.base.json'
-      - 'tsconfig.json'
-      - '.github/workflows/deploy.yml'
+      - "apps/**"
+      - "packages/shared/**"
+      - "docker/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.base.json"
+      - "tsconfig.json"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
 permissions:
@@ -20,10 +20,48 @@ permissions:
   packages: write
 
 jobs:
-  build-and-push:
-    name: Build & Push Image to GHCR
+  detect-changes:
+    name: Detect Changed Services
     runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      admin: ${{ steps.filter.outputs.admin }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
+      - name: Check Paths Filter
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'apps/backend/**'
+              - 'packages/shared/**'
+              - 'docker/Dockerfile.backend'
+              - 'package.json'
+              - 'package-lock.json'
+            frontend:
+              - 'apps/user-interface/**'
+              - 'packages/shared/**'
+              - 'docker/Dockerfile.frontend'
+              - 'docker/nginx.frontend.conf'
+              - 'package.json'
+              - 'package-lock.json'
+            admin:
+              - 'apps/admin-interface/**'
+              - 'packages/shared/**'
+              - 'docker/Dockerfile.admin'
+              - 'docker/nginx.admin.conf'
+              - 'package.json'
+              - 'package-lock.json'
+
+  build-backend:
+    name: Build & Push Backend
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -38,7 +76,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker Metadata
+      - name: Extract Backend Metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -47,7 +85,7 @@ jobs:
             type=raw,value=latest
             type=sha,format=short
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Backend Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -58,10 +96,89 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    name: Deploy to Server via SSH
+  build-frontend:
+    name: Build & Push Frontend
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    needs: build-and-push
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Frontend Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/frontend
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile.frontend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-admin:
+    name: Build & Push Admin
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.admin == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Admin Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/admin
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build and Push Admin Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile.admin
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Selective Deploy via SSH
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-backend, build-frontend, build-admin]
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure') && (needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.admin == 'true' || github.event_name == 'workflow_dispatch')
 
     steps:
       - name: Deploy to Remote Server
@@ -69,19 +186,41 @@ jobs:
         env:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          CHANGED_BACKEND: ${{ needs.detect-changes.outputs.backend }}
+          CHANGED_FRONTEND: ${{ needs.detect-changes.outputs.frontend }}
+          CHANGED_ADMIN: ${{ needs.detect-changes.outputs.admin }}
+          IS_MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          envs: DEPLOY_PATH,GHCR_TOKEN
+          envs: DEPLOY_PATH,GHCR_TOKEN,CHANGED_BACKEND,CHANGED_FRONTEND,CHANGED_ADMIN,IS_MANUAL
           script: |
             set -e
             TARGET_DIR="${DEPLOY_PATH:-$HOME/portfolio-website}"
             cd "$TARGET_DIR"
             git pull origin main
+
             if [ -n "$GHCR_TOKEN" ]; then
               echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             fi
-            docker compose -f docker/docker-compose.yml pull backend
-            docker compose -f docker/docker-compose.yml up -d backend
-            docker image prune -f
+
+            SERVICES=""
+            if [ "$CHANGED_BACKEND" = "true" ] || [ "$IS_MANUAL" = "true" ]; then
+              SERVICES="$SERVICES backend"
+            fi
+            if [ "$CHANGED_FRONTEND" = "true" ] || [ "$IS_MANUAL" = "true" ]; then
+              SERVICES="$SERVICES frontend"
+            fi
+            if [ "$CHANGED_ADMIN" = "true" ] || [ "$IS_MANUAL" = "true" ]; then
+              SERVICES="$SERVICES admin"
+            fi
+
+            if [ -n "$SERVICES" ]; then
+              echo "Deploying affected services: $SERVICES"
+              docker compose -f docker/docker-compose.yml pull $SERVICES
+              docker compose -f docker/docker-compose.yml up -d --no-deps $SERVICES
+              docker image prune -f
+            else
+              echo "No service updates required."
+            fi

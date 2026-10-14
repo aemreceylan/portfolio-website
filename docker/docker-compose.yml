@@ -1,4 +1,24 @@
 services:
+  frontend:
+    image: ghcr.io/aemreceylan/portfolio-website/frontend:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: personal-os-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"
+
+  admin:
+    image: ghcr.io/aemreceylan/portfolio-website/admin:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.admin
+    container_name: personal-os-admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3002:80"
+
   backend:
     image: ghcr.io/aemreceylan/portfolio-website/backend:latest
     build:
@@ -7,9 +27,9 @@ services:
     container_name: personal-os-backend
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
       - HOST=0.0.0.0
-      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3002,http://127.0.0.1:3000,http://127.0.0.1:3002

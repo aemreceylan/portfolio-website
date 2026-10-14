@@ -288,16 +288,22 @@
   - `docker/Dockerfile.backend`: `node:22-bookworm-slim` multi-stage (builder & runner) imajı ve `HEALTHCHECK` direktifi yazıldı.
   - `docker/docker-compose.yml`: Yerel geliştirme ve konteyner orkestrasyonu yapılandırıldı.
   - `.dockerignore`: `node_modules` ve dist kalıntılarının imaja kopyalanmasını önleyen kurallar eklendi.
-- **GitHub Actions CI/CD & GHCR Entegrasyonu (`.github/workflows/deploy.yml`)**:
-  - `main` dalına push yapıldığında GitHub runner üzerinde Docker Buildx ile derleme yapan ve `ghcr.io/aemreceylan/portfolio-website/backend:latest` imajını GHCR'a yükleyen iş akışı yazıldı.
-  - İkinci aşamada sunucuya SSH bağlantısı kurarak sadece `docker compose pull backend` ve `docker compose up -d backend` çalıştıran, sunucuyu derleme yükünden kurtaran dağıtım mimarisi kuruldu.
-  - `docker/docker-compose.yml` dosyasına `image: ghcr.io/aemreceylan/portfolio-website/backend:latest` tanımı eklendi.
+- **3 Alt Uygulamalı (Tri-App) Docker & Host Nginx Reverse Proxy Mimarisi**:
+  - `apps/admin-interface`: React 19 + Vite + TypeScript ile bağımsız, izole CMS & Telemetri konsolu iskeleti ve birim testleri oluşturuldu.
+  - `docker/Dockerfile.admin` & `docker/nginx.admin.conf`: Admin konsolu için multi-stage Dockerfile ve SPA yönlendirmeli Nginx yapılandırması eklendi.
+  - `docker/Dockerfile.frontend` & `docker/nginx.frontend.conf`: Kullanıcı arayüzü için multi-stage Dockerfile ve Nginx yapılandırması eklendi.
+  - `docker/docker-compose.yml`: Üç servis (`frontend: 3000`, `admin: 3002`, `backend: 3001`) yerel IP'ye (`127.0.0.1`) bağlanarak Host Nginx tersine vekil mimarisine tam uyumlu hale getirildi.
+- **Akıllı Monorepo Değişiklik Tespiti & Seçici Dağıtım (Selective CI/CD - `.github/workflows/deploy.yml`)**:
+  - `dorny/paths-filter@v3` entegre edilerek `main` dalına gelen commit'lerin hangi alt uygulamayı etkilediği izole edildi (`backend`, `frontend`, `admin`).
+  - Hangi servis değiştiyse sadece o servisin Docker imajı derlenip GHCR'a yüklenir; değişmeyen servisler build edilmez.
+  - SSH dağıtım adımında sunucuda sadece değişen servisler `docker compose up -d --no-deps $SERVICES` ile güncellenir; diğer konteynerler kesintisiz çalışmaya devam eder.
 - **Test ve Kalite Durumu**:
-  - `apps/backend/src/app.test.ts`: Ephemeral port üzerinde çalışan 4 birim ve entegrasyon testi eklendi.
-  - `npm run test`: Monorepo genelinde **15 test dosyasında 88 testin tamamı (%100) başarıyla geçti** (8 shared, 4 backend, 84 user-interface).
-  - `npm run typecheck`: Monorepo genelinde 0 hata.
+  - `apps/admin-interface/src/App.test.tsx`: Admin konsolu için 2 birim testi eklendi.
+  - `npm run test`: Monorepo genelinde **16 test dosyasında 90 testin tamamı (%100) başarıyla geçti** (8 shared, 2 admin, 4 backend, 84 user-interface).
+  - `npm run typecheck`: 4 pakette (`shared`, `admin-interface`, `backend`, `user-interface`) **0 hata**.
   - `npm run lint`: ESLint ve SonarJS kontrollerinde **0 hata, 0 uyarı**.
-  - `npm run build`: `@personal-os/backend` ve `@personal-os/user-interface` sorunsuz derlendi.
+  - `npm run build`: 3 uygulamanın tamamı temiz üretim derlemesi üretti.
+
 
 
 

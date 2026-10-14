@@ -4,6 +4,7 @@
   "references": [
     { "path": "./packages/shared" },
     { "path": "./apps/user-interface" },
+    { "path": "./apps/admin-interface" },
     { "path": "./apps/backend" }
   ]
 }

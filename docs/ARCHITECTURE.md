@@ -284,27 +284,28 @@ Docker ortamında orkestrasyonun ve konteynerin ayakta kalmasını (keep-alive) 
   - Docker tarafından gönderilen `SIGINT` ve `SIGTERM` sinyalleri yakalanarak aktif HTTP bağlantıları boşaltılır ve konteyner güvenli bir şekilde kapatılır (10 saniyelik emniyet zaman aşımı koruması ile).
 * **Multi-Stage Docker Mimarisi**:
   - `docker/Dockerfile.backend`: `node:22-bookworm-slim` temelinde iki aşamalı (builder & runner) optimize imaj. Root kullanıcı yerine `node` kullanıcısı ile çalıştırılarak container güvenliği pekiştirilmiştir.
-  - `docker/docker-compose.yml`: Servisi `3001` portundan ayağa kaldıran standartlaştırılmış yerel orkestrasyon yapılandırması.
+  - `docker/Dockerfile.frontend`: `node:22-bookworm-slim` ile Vite derlemesi alıp `nginx:alpine` ile sunan yüksek performanslı hafif statik sunucu imajı.
+  - `docker/nginx.frontend.conf`: SPA routing (`try_files`), gzip sıkıştırması ve statik varlık önbellek kurallarını içeren konteyner içi Nginx yapılandırması.
+  - `docker/docker-compose.yml`: Frontend (`127.0.0.1:3000:80`) ve Backend (`127.0.0.1:3001:3001`) servislerini izole biçimde ayağa kaldıran standart yerel/sunucu orkestrasyonu.
 
 ---
 
-## 17. GitHub Actions CI/CD & GHCR (Container Registry) Dağıtım Hattı
+## 17. Tam Yığın (Full-Stack) Docker, Host Nginx Reverse Proxy & GHCR Dağıtım Hattı
 
-Üretim sunucusunda derleme yükü (CPU/RAM darboğazı) oluşturmadan, her `main` dalı güncellemesinde backend konteynerini sıfır kesintiyle güncellemek için **GitHub Container Registry (GHCR)** tabanlı modern CI/CD boru hattı kurulmuştur (`.github/workflows/deploy.yml`):
+Üretim sunucusunda derleme yükü (CPU/RAM darboğazı) oluşturmadan, her `main` dalı güncellemesinde hem frontend hem de backend konteynerlerini sıfır kesintiyle güncellemek için **GitHub Container Registry (GHCR)** tabanlı modern CI/CD boru hattı kurulmuştur (`.github/workflows/deploy.yml`):
 
-* **İki Aşamalı Dağıtım Akışı**:
-  1. **Build & Push (GitHub Actions Runner)**:
-     - `main` dalına kod gönderildiğinde (`push`) çalışır.
-     - Docker Buildx ve GitHub Actions Cache (`type=gha`) kullanılarak `docker/Dockerfile.backend` imajı inşa edilir.
-     - İmaj `ghcr.io/aemreceylan/portfolio-website/backend:latest` ve commit hash etiketiyle GitHub Packages / GHCR'a güvenle push'lanır.
-  2. **Deploy (Remote Server via SSH)**:
-     - `appleboy/ssh-action` ile sunucuya güvenli SSH bağlantısı açılır.
-     - Sunucuda `git pull origin main` ile `docker-compose.yml` senkronize edilir.
-     - `docker compose pull backend` ile hazır derlenmiş hafif imaj GHCR'dan çekilir.
-     - `docker compose up -d backend` ile konteyner yeniden başlatılır.
-     - `docker image prune -f` ile eski etiketli imajlar temizlenerek disk tasarrufu sağlanır.
-* **Sunucu Kaynak Koruması**:
-  - Sunucu üzerinde `npm install`, TypeScript derlemesi (`tsc`) veya Docker build işlemi yapılmaz.
-  - 1 GB gibi düşük kaynaklı VPS sunucularda dahi bellek yetersizliği (OOM) riski tamamen ortadan kalkar.
+* **Host Nginx Tersine Vekil (Reverse Proxy) Mimarisi (3 Alt Uygulama)**:
+  - **`frontend` (Kullanıcı Arayüzü)**: `127.0.0.1:3000:80` portunda çalışır. Host Nginx `location /` isteklerini yönlendirir.
+  - **`admin` (Yönetim & Telemetri Paneli)**: `127.0.0.1:3002:80` portunda çalışır. Host Nginx `location /admin/` isteklerini yönlendirir.
+  - **`backend` (Express API Servisi)**: `127.0.0.1:3001:3001` portunda çalışır. Host Nginx `location /api/` isteklerini yönlendirir.
+  - Tüm konteyner portları yerel döngüye (`127.0.0.1`) kilitli olup dış internete kapalıdır.
+* **Akıllı Monorepo Değişiklik Tespiti & Seçici Dağıtım (Selective CI/CD)**:
+  - `dorny/paths-filter@v3` ile commit'teki dosya yolları taranır:
+    - Yalnızca `apps/backend/**` etkilendiyse, sadece `backend` imajı inşa edilir ve sunucuda sadece `backend` servisi yenilenir (`docker compose up -d --no-deps backend`).
+    - Yalnızca `apps/user-interface/**` etkilendiyse, sadece `frontend` servisi güncellenir.
+    - Yalnızca `apps/admin-interface/**` etkilendiyse, sadece `admin` servisi güncellenir.
+    - `packages/shared/**` değiştiğinde bağımlı tüm servisler derlenip güncellenir.
+  - Değişmeyen servisler asla yeniden derlenmez veya yeniden başlatılmaz; sıfır kesinti ve maksimum hız elde edilir.
+
 
 
