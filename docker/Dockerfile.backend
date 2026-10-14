@@ -1,0 +1,43 @@
+# Multi-stage Debian-slim Dockerfile for Portfolio WebOS Backend
+# Stage 1: Build
+FROM node:22-bookworm-slim AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json tsconfig.base.json tsconfig.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/backend/package.json ./apps/backend/
+
+RUN npm ci
+
+COPY packages/shared/ ./packages/shared/
+COPY apps/backend/ ./apps/backend/
+
+RUN npm run build --workspace=@personal-os/backend
+
+# Stage 2: Production Runtime
+FROM node:22-bookworm-slim AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3001
+ENV HOST=0.0.0.0
+
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/backend/package.json ./apps/backend/
+
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/packages/shared/src ./packages/shared/src
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+
+USER node
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3001/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
+
+CMD ["node", "apps/backend/dist/index.js"]

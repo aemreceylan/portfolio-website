@@ -73,7 +73,7 @@ PersonalWebSite/
 ├── apps/
 │   ├── user-interface/     # React 19 + Vite + React Compiler (AEC Spatial Dark Glass Deneyimi)
 │   ├── admin-interface/    # React 19 + Vite (Minimal, standart, güvenli CMS & Telemetri Paneli)
-│   └── backend/            # Node.js 22 + Fastify + SQLite (API, Auth, Telemetri Endpoints)
+│   └── backend/            # Node.js 22 + Express (Minimal HTTP & Healthcheck Sunucusu, Docker Container Yaşam Döngüsü)
 ├── packages/
 │   └── shared/             # TypeScript Tipleri, DTO'lar, Zod Şemaları, Manifest Sözleşmeleri
 ├── docker/
@@ -262,3 +262,49 @@ Sistem genelinde yazılım mühendisliği disiplini ve SonarQube / SonarJS kalit
   - Dil değişiminde `meta[name="description"]`, `og:title`, `og:description`, `og:locale` (`tr_TR`, `en_US`, `de_DE`, `fr_FR`, `es_ES`, `ru_RU`, `ja_JP`), `twitter:title` ve `twitter:description` anında reaktif olarak güncellenir.
 * **SPA SEO ve Hreflang Standartları Uyumu**:
   - Tek URL (`/`) üzerinde çalışan ve dil tercihini yerel depolama / tarayıcı tespit mekanizmasıyla yöneten SPA mimarisinde, farklı bağımsız URL'lere sahip olmadan statik `hreflang` linkleri tanımlamak Google Webmaster yönergelerine göre çakışma (duplicate content conflict) yaratacağından ötürü; sayfa içi meta ve DOM dil etiketlerinin dinamik senkronizasyonu modeli benimsenmiştir.
+
+---
+
+## 16. Minimal Express Backend & Docker Container Yaşam Döngüsü
+
+Docker ortamında orkestrasyonun ve konteynerin ayakta kalmasını (keep-alive) temin eden yalın, modern ve güvenli Node.js 22 + Express tabanlı bir backend servisi devreye alınmıştır:
+
+* **Amaç ve Sorumluluk**:
+  - Konteynerin başlangıçta hemen kapanmasını engellemek ve sürekli bir HTTP dinleyicisi ile konteyner yaşam döngüsünü canlı tutmak.
+  - İleride eklenecek API, telemetri veya yetkilendirme servisleri için temiz ve ölçeklenebilir bir başlangıç iskeleti sunmak.
+* **Güvenlik & DevSecOps Standartları (SonarJS / OWASP)**:
+  - **`helmet`**: Standart güvenlik başlıkları (X-Content-Type-Options, DNS prefetch, frameguard vb.) etkinleştirilmiş, `X-Powered-By` sızıntısı engellenmiştir.
+  - **Kısıtlı & Güvenli CORS**: SonarJS `sonarjs/cors` kuralına tam uyumlu biçimde joker (`*`) yerine beyaz liste (`ALLOWED_ORIGINS` / `localhost:5173`, `localhost:3000`) ve origin doğrulama mekanizması ile yapılandırılmıştır.
+  - **Merkezi Hata Yakalama**: Beklenmeyen 500 hatalarında üretim ortamında dahili hata ayrıntısı istemciye sızdırılmaz.
+* **Uç Noktalar (Endpoints)**:
+  - `GET /`: Servis adı, sürüm ve durum döndüren kök bilgi uç noktası.
+  - `GET /health`: Docker `HEALTHCHECK` ve orkestratör probları için `status: "healthy"` ve `uptime` döndüren sağlık denetim noktası.
+  - `404 Handler`: Eşleşmeyen tüm rotalar için JSON formatında standartlaştırılmış hata cevabı.
+* **Zarif Kapanma (Graceful Shutdown)**:
+  - Docker tarafından gönderilen `SIGINT` ve `SIGTERM` sinyalleri yakalanarak aktif HTTP bağlantıları boşaltılır ve konteyner güvenli bir şekilde kapatılır (10 saniyelik emniyet zaman aşımı koruması ile).
+* **Multi-Stage Docker Mimarisi**:
+  - `docker/Dockerfile.backend`: `node:22-bookworm-slim` temelinde iki aşamalı (builder & runner) optimize imaj. Root kullanıcı yerine `node` kullanıcısı ile çalıştırılarak container güvenliği pekiştirilmiştir.
+  - `docker/docker-compose.yml`: Servisi `3001` portundan ayağa kaldıran standartlaştırılmış yerel orkestrasyon yapılandırması.
+
+---
+
+## 17. GitHub Actions CI/CD & GHCR (Container Registry) Dağıtım Hattı
+
+Üretim sunucusunda derleme yükü (CPU/RAM darboğazı) oluşturmadan, her `main` dalı güncellemesinde backend konteynerini sıfır kesintiyle güncellemek için **GitHub Container Registry (GHCR)** tabanlı modern CI/CD boru hattı kurulmuştur (`.github/workflows/deploy.yml`):
+
+* **İki Aşamalı Dağıtım Akışı**:
+  1. **Build & Push (GitHub Actions Runner)**:
+     - `main` dalına kod gönderildiğinde (`push`) çalışır.
+     - Docker Buildx ve GitHub Actions Cache (`type=gha`) kullanılarak `docker/Dockerfile.backend` imajı inşa edilir.
+     - İmaj `ghcr.io/aemreceylan/portfolio-website/backend:latest` ve commit hash etiketiyle GitHub Packages / GHCR'a güvenle push'lanır.
+  2. **Deploy (Remote Server via SSH)**:
+     - `appleboy/ssh-action` ile sunucuya güvenli SSH bağlantısı açılır.
+     - Sunucuda `git pull origin main` ile `docker-compose.yml` senkronize edilir.
+     - `docker compose pull backend` ile hazır derlenmiş hafif imaj GHCR'dan çekilir.
+     - `docker compose up -d backend` ile konteyner yeniden başlatılır.
+     - `docker image prune -f` ile eski etiketli imajlar temizlenerek disk tasarrufu sağlanır.
+* **Sunucu Kaynak Koruması**:
+  - Sunucu üzerinde `npm install`, TypeScript derlemesi (`tsc`) veya Docker build işlemi yapılmaz.
+  - 1 GB gibi düşük kaynaklı VPS sunucularda dahi bellek yetersizliği (OOM) riski tamamen ortadan kalkar.
+
+

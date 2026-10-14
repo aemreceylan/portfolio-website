@@ -271,5 +271,35 @@
   - Vitest: **14 test dosyasında 84 testin tamamı (%100) başarıyla geçti**.
   - `npm run build`: Sorunsuz tamamlandı.
 
+## [2026-10-14] - Minimal Express Backend Başlatma & Docker Container Yaşam Döngüsü
+
+### Yapılanlar
+- **Yalın Express Sunucusu (`apps/backend`)**:
+  - `apps/backend` paketi monorepo mimarisine (`@personal-os/backend`) entegre edildi.
+  - Sadece konteyneri ayakta tutmak ve temel servis durumunu raporlamak amacıyla minimal, hızlı ve güvenli Express HTTP sunucusu yazıldı (`src/app.ts`, `src/index.ts`).
+  - Kök (`GET /`) ve konteyner/orkestratör sağlık denetimi (`GET /health`) uç noktaları tanımlandı.
+- **DevSecOps & SonarJS Kuralları**:
+  - `helmet` ile standart güvenlik başlıkları ve `X-Powered-By` engellemesi sağlandı.
+  - SonarJS `sonarjs/cors` kuralına tam uyum için güvenli beyaz liste (`ALLOWED_ORIGINS` / `localhost:5173`, `localhost:3000`) ve origin doğrulayıcı middleware uygulandı.
+  - Global hata işleyici ile üretim ortamında iç stack trace sızıntıları engellendi.
+- **Konteyner Yaşam Döngüsü & Zarif Kapanma (Graceful Shutdown)**:
+  - `SIGINT` ve `SIGTERM` sinyalleri dinlenerek konteyner durdurulurken HTTP soketlerinin temiz kapatılması sağlandı (10 saniyelik emniyet zaman aşımı koruması ile).
+- **Multi-Stage Docker Yapılandırması**:
+  - `docker/Dockerfile.backend`: `node:22-bookworm-slim` multi-stage (builder & runner) imajı ve `HEALTHCHECK` direktifi yazıldı.
+  - `docker/docker-compose.yml`: Yerel geliştirme ve konteyner orkestrasyonu yapılandırıldı.
+  - `.dockerignore`: `node_modules` ve dist kalıntılarının imaja kopyalanmasını önleyen kurallar eklendi.
+- **GitHub Actions CI/CD & GHCR Entegrasyonu (`.github/workflows/deploy.yml`)**:
+  - `main` dalına push yapıldığında GitHub runner üzerinde Docker Buildx ile derleme yapan ve `ghcr.io/aemreceylan/portfolio-website/backend:latest` imajını GHCR'a yükleyen iş akışı yazıldı.
+  - İkinci aşamada sunucuya SSH bağlantısı kurarak sadece `docker compose pull backend` ve `docker compose up -d backend` çalıştıran, sunucuyu derleme yükünden kurtaran dağıtım mimarisi kuruldu.
+  - `docker/docker-compose.yml` dosyasına `image: ghcr.io/aemreceylan/portfolio-website/backend:latest` tanımı eklendi.
+- **Test ve Kalite Durumu**:
+  - `apps/backend/src/app.test.ts`: Ephemeral port üzerinde çalışan 4 birim ve entegrasyon testi eklendi.
+  - `npm run test`: Monorepo genelinde **15 test dosyasında 88 testin tamamı (%100) başarıyla geçti** (8 shared, 4 backend, 84 user-interface).
+  - `npm run typecheck`: Monorepo genelinde 0 hata.
+  - `npm run lint`: ESLint ve SonarJS kontrollerinde **0 hata, 0 uyarı**.
+  - `npm run build`: `@personal-os/backend` ve `@personal-os/user-interface` sorunsuz derlendi.
+
+
+
 
 

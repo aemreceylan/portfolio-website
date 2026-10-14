@@ -1,0 +1,15 @@
+services:
+  backend:
+    image: ghcr.io/aemreceylan/portfolio-website/backend:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: personal-os-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOST=0.0.0.0
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
