@@ -40,6 +40,7 @@ jobs:
               - 'apps/backend/**'
               - 'packages/shared/**'
               - 'docker/Dockerfile.backend'
+              - 'docker/docker-compose.yml'
               - 'package.json'
               - 'package-lock.json'
             frontend:
@@ -47,6 +48,7 @@ jobs:
               - 'packages/shared/**'
               - 'docker/Dockerfile.frontend'
               - 'docker/nginx.frontend.conf'
+              - 'docker/docker-compose.yml'
               - 'package.json'
               - 'package-lock.json'
             admin:
@@ -54,6 +56,7 @@ jobs:
               - 'packages/shared/**'
               - 'docker/Dockerfile.admin'
               - 'docker/nginx.admin.conf'
+              - 'docker/docker-compose.yml'
               - 'package.json'
               - 'package-lock.json'
 

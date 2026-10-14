@@ -304,6 +304,17 @@
   - `npm run lint`: ESLint ve SonarJS kontrollerinde **0 hata, 0 uyarı**.
   - `npm run build`: 3 uygulamanın tamamı temiz üretim derlemesi üretti.
 
+## [2026-10-14] - CI/CD Pipeline Doğrulaması & Canlı Dağıtım Orkestrasyonu
+
+### Yapılanlar
+- **GitHub Actions & Public Repo Entegrasyonu**:
+  - GitHub Actions kuyruk kısıtlamalarını aşmak ve sınırsız CI/CD kullanımına geçmek üzere depo görünürlüğü açık kaynak (Public) olarak yapılandırıldı.
+- **Değişiklik Algılama & Orkestrasyon Filtre Genişletmesi**:
+  - `docker/docker-compose.yml` yapılandırması `deploy.yml` içindeki `dorny/paths-filter` kurallarına (backend, frontend, admin) dahil edildi; orkestrasyon dosyası değiştiğinde etkilenen tüm servislerin senkronize derlenip dağıtılması sağlandı.
+- **Canlı Dağıtım Tetikleme & Sürüm Güncellemesi**:
+  - Kök `package.json` sürümü `1.0.1` olarak güncellendi ve tüm alt sistemlerin ilk uçtan uca canlı dağıtımı tetiklendi.
+
+
 
 
 
