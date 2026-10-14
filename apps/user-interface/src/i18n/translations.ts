@@ -37,8 +37,9 @@ export interface Translations {
   appName_ide: string;
   appDesc_ide: string;
 
-  // Browser Tab Title
+  // Browser Tab Title & Meta
   browser_tab_title: string;
+  browser_meta_description: string;
 
   // Window Controls & Context Menu
   window_close: string;
@@ -128,6 +129,8 @@ export interface Translations {
 export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
   en: {
     browser_tab_title: 'AEC — Application Portfolio',
+    browser_meta_description:
+      'AEC portfolio experience. React 19, TypeScript, high-performance SPA architecture, and interactive engineering showcase.',
     appName_terminal: 'Terminal CLI',
     appDesc_terminal: 'Interactive Linux-like command-line interface',
     appName_settings: 'Settings',
@@ -207,6 +210,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
   },
   tr: {
     browser_tab_title: 'AEC — Uygulama Portfolyosu',
+    browser_meta_description:
+      'AEC portfolyo deneyimi. React 19, TypeScript, yüksek performanslı SPA mimarileri ve interaktif mühendislik vitrini.',
     appName_terminal: 'Terminal CLI',
     appDesc_terminal: 'Linux standartlarında interaktif komut satırı arayüzü',
     appName_settings: 'Ayarlar',
@@ -286,6 +291,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
   },
   de: {
     browser_tab_title: 'AEC — Anwendungsportfolio',
+    browser_meta_description:
+      'AEC Portfolio-Erlebnis. React 19, TypeScript, hochperformante SPA-Architektur und interaktives Engineering-Showcase.',
     appName_terminal: 'Terminal CLI',
     appDesc_terminal: 'Interaktive Linux-ähnliche Befehlszeilenschnittstelle',
     appName_settings: 'Einstellungen',
@@ -365,6 +372,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
   },
   fr: {
     browser_tab_title: "AEC — Portfolio d'Applications",
+    browser_meta_description:
+      "Expérience portfolio AEC. React 19, TypeScript, architecture SPA haute performance et vitrine d'ingénierie interactive.",
     appName_terminal: 'Terminal CLI',
     appDesc_terminal: 'Interface en ligne de commande interactive de type Linux',
     appName_settings: 'Paramètres',
@@ -444,6 +453,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
   },
   es: {
     browser_tab_title: 'AEC — Portafolio de Aplicaciones',
+    browser_meta_description:
+      'Experiencia de portafolio AEC. React 19, TypeScript, arquitectura SPA de alto rendimiento y vitrina de ingeniería interactiva.',
     appName_terminal: 'Terminal CLI',
     appDesc_terminal: 'Interfaz de línea de comandos interactiva tipo Linux',
     appName_settings: 'Ajustes',
@@ -523,6 +534,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
   },
   ru: {
     browser_tab_title: 'AEC — Портфолио Приложений',
+    browser_meta_description:
+      'Портфолио AEC. React 19, TypeScript, высокопроизводительная архитектура SPA и интерактивная витрина инженерии.',
     appName_terminal: 'Терминал CLI',
     appDesc_terminal: 'Интерактивный командный интерфейс в стиле Linux',
     appName_settings: 'Настройки',
@@ -602,6 +615,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
   },
   ja: {
     browser_tab_title: 'AEC — アプリケーションポートフォリオ',
+    browser_meta_description:
+      'AEC ポートフォリオ体験。React 19、TypeScript、高パフォーマンスSPAアーキテクチャ、インタラクティブなエンジニアリングショーケース。',
     appName_terminal: 'ターミナル CLI',
     appDesc_terminal: 'Linux準拠のインタラクティブなコマンドライン',
     appName_settings: '設定',

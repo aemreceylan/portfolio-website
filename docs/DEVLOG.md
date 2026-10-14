@@ -254,4 +254,22 @@
   - Vitest: **14 test dosyasında 82 testin tamamı (%100) başarıyla geçti**.
   - `npm run build`: Monorepo TypeScript ve Vite üretim derlemesi 0 hata ile tamamlandı.
 
+## [2026-10-14] - Dinamik DOM Başlık Metadata, `<html lang>` & Çok Dilli SEO/A11y Entegrasyonu
+
+### Yapılanlar
+- **`<html lang>` ve Ekran Okuyucu Senkronizasyonu (`App.tsx`)**:
+  - Aktif dil değiştiğinde veya tarayıcı dili otomatik algılandığında `document.documentElement.lang = currentLanguage` ile DOM kök dil niteliği eşzamanlı senkronize edildi.
+- **7 Dilli Meta Description Sözlüğü (`translations.ts`)**:
+  - `Translations` arayüzüne `browser_meta_description` anahtarı eklenerek 7 desteklenen dil için (İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça, Japonca) optimize açıklamalar tanımlandı.
+- **Sosyal Medya & Open Graph / Twitter Card Etiketleri (`index.html` & `App.tsx`)**:
+  - `index.html` içerisine Open Graph (`og:type`, `og:title`, `og:description`, `og:locale`, `og:locale:alternate`) ve Twitter Card etiketleri yerleştirildi.
+  - `updateDocumentMetadata` fonksiyonu ile `meta[name="description"]`, `og:title`, `og:description`, `og:locale` (`en_US`, `tr_TR`, `de_DE`, `fr_FR`, `es_ES`, `ru_RU`, `ja_JP`), `twitter:title` ve `twitter:description` reaktif olarak güncellendi.
+- **Kapsamlı Birim Testleri (`App.test.tsx`)**:
+  - `App.test.tsx` dosyasına `html lang`, `document.title`, `meta description` ve `og:locale` etiketlerinin ilk açılışta ve dil geçişlerinde anlık güncellendiğini doğrulayan 2 yeni test eklendi.
+- **Test ve Kalite Durumu**:
+  - `npm run lint`: **0 hata, 0 uyarı**.
+  - Vitest: **14 test dosyasında 84 testin tamamı (%100) başarıyla geçti**.
+  - `npm run build`: Sorunsuz tamamlandı.
+
+
 

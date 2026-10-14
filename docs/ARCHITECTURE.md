@@ -247,3 +247,18 @@ Sistem genelinde yazılım mühendisliği disiplini ve SonarQube / SonarJS kalit
   - `npm run lint` tüm monorepo genelinde sıfır hata ve sıfır uyarı vermektedir.
   - 14 test dosyasında 82 birim ve entegrasyon testinin tamamı (%100) Vitest üzerinde başarıyla çalışmaktadır.
   - Üretim derlemesi (`npm run build`) eksiksiz ve optimize şekilde tamamlanmaktadır.
+
+---
+
+## 15. Dinamik DOM Başlık Metadata & Çok Dilli A11y / SEO Mimarisi
+
+Çok dilli tek sayfa uygulaması (SPA) yapısında erişilebilirlik (A11y) standartları ve arama motoru optimizasyonu (SEO) gereksinimleri dinamik başlık senkronizasyonu ile güvenceye alınmıştır:
+
+* **`<html lang="...">` ve Ekran Okuyucu Senkronizasyonu (`App.tsx`)**:
+  - `index.html` dosyasındaki statik kök dil tanımı, kullanıcının aktif olarak seçtiği dile göre `document.documentElement.lang = currentLanguage` ile eşzamanlı güncellenir.
+  - Bu mimari adım, ekran okuyucu yazılımların (NVDA, VoiceOver, JAWS) metinleri yanlış dilde telaffuz etmesini önler ve tarayıcı otomatik çeviri motorlarına (Chrome Translate) doğru dil sinyali iletir.
+* **Dinamik Meta Açıklama & Sosyal Medya Etiketleri (Open Graph & Twitter Card)**:
+  - `updateDocumentMetadata` yardımcı fonksiyonu ile 7 dil için özelleştirilmiş `browser_meta_description` sözlük anahtarları devreye alınmıştır.
+  - Dil değişiminde `meta[name="description"]`, `og:title`, `og:description`, `og:locale` (`tr_TR`, `en_US`, `de_DE`, `fr_FR`, `es_ES`, `ru_RU`, `ja_JP`), `twitter:title` ve `twitter:description` anında reaktif olarak güncellenir.
+* **SPA SEO ve Hreflang Standartları Uyumu**:
+  - Tek URL (`/`) üzerinde çalışan ve dil tercihini yerel depolama / tarayıcı tespit mekanizmasıyla yöneten SPA mimarisinde, farklı bağımsız URL'lere sahip olmadan statik `hreflang` linkleri tanımlamak Google Webmaster yönergelerine göre çakışma (duplicate content conflict) yaratacağından ötürü; sayfa içi meta ve DOM dil etiketlerinin dinamik senkronizasyonu modeli benimsenmiştir.
