@@ -632,6 +632,33 @@
   - TypeScript: `npm run typecheck` **0 hata**.
   - Üretim Paketi: `npm run build` 10 saniyede hatasız tamamlandı; `GameHubApp` bağımsız dinamik chunk olarak optimize edildi (`46.96 kB`, gzip `11.87 kB`).
 
+## [2026-10-15] - Pencere ve Dock Sağ Tık Bağlam Menüsü Entegrasyonu & Doğrudan Kapatma Mekanizması
+
+### Yapılanlar
+- **Uygulama İçi Sağ Tık Tarayıcı Menüsü Engellemesi & WebOS Pencere Bağlam Menüsü (`WindowFrame.tsx`)**:
+  - `WindowFrame` bileşeni güncellenerek tüm pencere yüzeyinde (hem başlık çubuğu hem de `window-content` uygulama içerik alanı) sağ tıklama tarayıcı varsayılan menüsü (`e.preventDefault()`) engellendi.
+  - Sağ tıklama yapıldığında pencere otomatik olarak aktif odak düzeyine (`focusWindow`) getirilir ve imleç koordinatlarında temaya duyarlı WebOS pencere bağlam menüsü açılır.
+  - Bağlam menüsünde yer alan eylemler:
+    - **Kapat** (`window_ctx_close` / "Kapat"): Pencereyi sonlandırır.
+    - **Küçült** (`window_ctx_minimize` / "Simge Durumuna Küçült"): Pencereyi Dock'a indirir.
+    - **Ekranı Kapla / Geri Yükle** (`window_ctx_maximize` / `window_ctx_restore`): Boyutu tam ekran ile normal durum arasında değiştirir.
+  - Pencere dışına tıklandığında veya `Escape` tuşuna basıldığında menü otomatik olarak kapanır.
+- **Açık Uygulamalar Çubuğu (Dock) Sağ Tık Menüsü & Doğrudan Kapatma (`Dock.tsx`, `dock.css`)**:
+  - Alt bardaki açık uygulama butonlarına `onContextMenu` desteği eklendi; tarayıcının yerel menüsü engellenerek butonun hemen üzerinde temaya duyarlı bağlam menüsü açılması sağlandı.
+  - Menü bileşenleri:
+    - **Başlık Alanı** (`.dock-context-header`): 7 dilli yerelleştirilmiş uygulama adını görüntüler.
+    - **Kapat Butonu** (`.window-titlebar-context-item.danger`): Uygulamayı doğrudan kapatır (`closeWindow`) ve menüyü gizler.
+    - **Küçült / Geri Yükle Butonu**: Uygulamanın minimize durumunu tersine çevirir.
+  - Dock zeminine boş alanda sağ tıklama tarayıcı menüsü engellendi (`e.preventDefault()`).
+  - Dışarı tıklama, başka yere sağ tıklama ve `Escape` tuşu ile otomatik menü kapatma sağlandı.
+- **Temaya Duyarlı CSS Tasarımı**:
+  - `spatial-glass`, `swiss-industrial`, `cyberpunk-neon` ve `classic-mac` temalarının her biri için `.dock-context-header` ve `.dock-context-menu` kuralları eklendi.
+- **Kapsamlı Test ve Doğrulama**:
+  - `WindowFrame.test.tsx`: Pencere içeriğine sağ tıklama, tarayıcı menüsünün engellenmesi, menüden kapatma ve Escape ile kapatma testleri eklendi.
+  - `Dock.test.tsx`: Dock öğesine sağ tıklama, "Kapat" butonuna basarak pencereyi sonlandırma, minimize/restore geçişi ve Escape/dışarı tıklama testleri eklendi.
+  - **179 testin tamamı %100 başarıyla geçti**.
+  - Tüm monorepo genelinde `npm run typecheck` **0 hata** ile tamamlandı.
+
 
 
 

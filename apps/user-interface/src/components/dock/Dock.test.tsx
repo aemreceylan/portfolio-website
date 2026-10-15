@@ -39,4 +39,75 @@ describe('Dock Component', () => {
     fireEvent.click(dockItem);
     expect(useWindowManager.getState().windows['terminal'].isMinimized).toBe(false);
   });
+
+  it('should open dock context menu on right click and prevent default browser menu', () => {
+    useWindowManager.getState().openWindow(terminalManifest);
+
+    render(<Dock />);
+
+    const dockItem = screen.getByTestId('dock-item-terminal');
+    const ctxEvent = fireEvent.contextMenu(dockItem);
+    expect(ctxEvent).toBe(false); // Browser default was prevented
+
+    expect(screen.getByTestId('dock-context-menu')).toBeInTheDocument();
+    expect(screen.getByTestId('dock-menu-close-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('dock-menu-toggle-btn')).toBeInTheDocument();
+  });
+
+  it('should close application when clicking Close in the dock context menu', () => {
+    useWindowManager.getState().openWindow(terminalManifest);
+
+    render(<Dock />);
+
+    const dockItem = screen.getByTestId('dock-item-terminal');
+    fireEvent.contextMenu(dockItem);
+
+    const closeBtn = screen.getByTestId('dock-menu-close-btn');
+    fireEvent.click(closeBtn);
+
+    expect(useWindowManager.getState().windows['terminal'].isOpen).toBe(false);
+    expect(screen.queryByTestId('dock-context-menu')).not.toBeInTheDocument();
+  });
+
+  it('should toggle minimize/restore from dock context menu', () => {
+    useWindowManager.getState().openWindow(terminalManifest);
+
+    render(<Dock />);
+
+    const dockItem = screen.getByTestId('dock-item-terminal');
+    fireEvent.contextMenu(dockItem);
+
+    const toggleBtn = screen.getByTestId('dock-menu-toggle-btn');
+    fireEvent.click(toggleBtn);
+
+    expect(useWindowManager.getState().windows['terminal'].isMinimized).toBe(true);
+    expect(screen.queryByTestId('dock-context-menu')).not.toBeInTheDocument();
+  });
+
+  it('should dismiss dock context menu when pressing Escape key', () => {
+    useWindowManager.getState().openWindow(terminalManifest);
+
+    render(<Dock />);
+
+    const dockItem = screen.getByTestId('dock-item-terminal');
+    fireEvent.contextMenu(dockItem);
+    expect(screen.getByTestId('dock-context-menu')).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByTestId('dock-context-menu')).not.toBeInTheDocument();
+  });
+
+  it('should dismiss dock context menu when clicking outside', () => {
+    useWindowManager.getState().openWindow(terminalManifest);
+
+    render(<Dock />);
+
+    const dockItem = screen.getByTestId('dock-item-terminal');
+    fireEvent.contextMenu(dockItem);
+    expect(screen.getByTestId('dock-context-menu')).toBeInTheDocument();
+
+    fireEvent.click(document.body);
+    expect(screen.queryByTestId('dock-context-menu')).not.toBeInTheDocument();
+  });
 });
+

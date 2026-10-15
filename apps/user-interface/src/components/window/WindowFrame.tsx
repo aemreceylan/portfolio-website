@@ -30,29 +30,30 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
   const isMinimized = win.isMinimized;
   const isMaximized = win.isMaximized;
 
-  const [titlebarMenu, setTitlebarMenu] = useState<{ isOpen: boolean; x: number; y: number }>({
+  const [windowMenu, setWindowMenu] = useState<{ isOpen: boolean; x: number; y: number }>({
     isOpen: false,
     x: 0,
     y: 0,
   });
 
   useEffect(() => {
-    if (!titlebarMenu.isOpen) return;
+    if (!windowMenu.isOpen) return;
 
     const handleGlobalClick = (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest('.window-titlebar-context-menu')) return;
-      setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+      setWindowMenu((prev) => ({ ...prev, isOpen: false }));
     };
 
     const handleGlobalContextMenu = (e: MouseEvent) => {
-      // If right-clicking anywhere outside this window's titlebar, close menu
-      if (!(e.target as HTMLElement).closest('.window-titlebar')) {
-        setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+      // If right-clicking anywhere outside this window, close menu
+      const target = e.target as HTMLElement | null;
+      if (!target || !target.closest(`[data-window-id="${win.id}"]`)) {
+        setWindowMenu((prev) => ({ ...prev, isOpen: false }));
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+      if (e.key === 'Escape') setWindowMenu((prev) => ({ ...prev, isOpen: false }));
     };
 
     window.addEventListener('click', handleGlobalClick);
@@ -64,12 +65,19 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
       window.removeEventListener('contextmenu', handleGlobalContextMenu);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [titlebarMenu.isOpen]);
+  }, [windowMenu.isOpen, win.id]);
 
-  const handleTitlebarContextMenu = (e: React.MouseEvent) => {
+  /**
+   * Handles right click on any part of the window (titlebar or content area),
+   * suppressing the browser's default context menu and opening the OS window context menu.
+   */
+  const handleWindowContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setTitlebarMenu({
+    if (!isActive) {
+      focusWindow(win.id);
+    }
+    setWindowMenu({
       isOpen: true,
       x: Math.min(e.clientX, window.innerWidth - 210),
       y: Math.min(e.clientY, window.innerHeight - 150),
@@ -282,7 +290,9 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
       }`}
       style={containerStyle}
       onPointerDown={handleWindowPointerDown}
+      onContextMenu={handleWindowContextMenu}
       data-testid={`window-${win.id}`}
+      data-window-id={win.id}
       role="dialog"
       aria-label={win.title}
     >
@@ -297,7 +307,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
         }}
         onAuxClick={handleTitlebarAuxClick}
         onDoubleClick={() => maximizeWindow(win.id)}
-        onContextMenu={handleTitlebarContextMenu}
+        onContextMenu={handleWindowContextMenu}
       >
         <div className="window-controls">
           <button
@@ -340,20 +350,21 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
         <div style={{ width: 44 }} aria-hidden="true" />
       </div>
 
-      {/* Titlebar Context Menu (rendered in document.body to avoid parent transform offsets) */}
-      {titlebarMenu.isOpen &&
+      {/* Window Context Menu (rendered in document.body to avoid parent transform offsets) */}
+      {windowMenu.isOpen &&
         createPortal(
           <div
             className="window-titlebar-context-menu"
-            style={{ left: titlebarMenu.x, top: titlebarMenu.y }}
+            style={{ left: windowMenu.x, top: windowMenu.y }}
             onClick={(e) => e.stopPropagation()}
             onContextMenu={(e) => e.preventDefault()}
+            data-testid="window-context-menu"
           >
             <button
               type="button"
               className="window-titlebar-context-item danger"
               onClick={() => {
-                setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+                setWindowMenu((prev) => ({ ...prev, isOpen: false }));
                 closeWindow(win.id);
               }}
             >
@@ -364,7 +375,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
               type="button"
               className="window-titlebar-context-item"
               onClick={() => {
-                setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+                setWindowMenu((prev) => ({ ...prev, isOpen: false }));
                 minimizeWindow(win.id);
               }}
             >
@@ -375,7 +386,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
               type="button"
               className="window-titlebar-context-item"
               onClick={() => {
-                setTitlebarMenu((prev) => ({ ...prev, isOpen: false }));
+                setWindowMenu((prev) => ({ ...prev, isOpen: false }));
                 maximizeWindow(win.id);
               }}
             >
@@ -386,14 +397,10 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
           document.body
         )}
 
-      {/* Content Area with custom Spatial Glass scrollbars (isolates right-click for native browser menu) */}
+      {/* Content Area with custom Spatial Glass scrollbars */}
       <div
         className="window-content"
-        onContextMenu={(e) => {
-          // Prevent bubbling to desktop viewport so desktop menu never triggers here,
-          // but do NOT call preventDefault so native browser context menu (Copy/Paste/Inspect) is available!
-          e.stopPropagation();
-        }}
+        onContextMenu={handleWindowContextMenu}
       >
         {children}
       </div>

@@ -275,4 +275,48 @@
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.35);
 }
 
+/* --------------------------------------------------------------------------
+   Dock Context Menu Styling
+   -------------------------------------------------------------------------- */
+.dock-context-menu {
+  min-width: 170px;
+}
+
+.dock-context-header {
+  padding: 4px 10px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+}
+
+[data-theme="swiss-industrial"] .dock-context-header {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  border-bottom: 1px solid #2d3342;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-theme="cyberpunk-neon"] .dock-context-header {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #22d3ee;
+  border-bottom: 1px solid rgba(244, 63, 94, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="classic-mac"] .dock-context-header {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  color: #555555;
+  border-bottom: 1px solid #111111;
+}
+
 

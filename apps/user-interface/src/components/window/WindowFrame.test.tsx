@@ -175,5 +175,55 @@ describe('WindowFrame Component', () => {
     const mouseDownEvent = fireEvent.mouseDown(titlebar, { button: 1 });
     expect(mouseDownEvent).toBe(false); // default was prevented
   });
+
+  it('should open window context menu and prevent default browser menu when right clicking window content', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div data-testid="test-content">Inner App Content</div>
+      </WindowFrame>
+    );
+
+    const content = screen.getByTestId('test-content');
+    const ctxEvent = fireEvent.contextMenu(content);
+    expect(ctxEvent).toBe(false); // default browser context menu was prevented
+
+    expect(screen.getByTestId('window-context-menu')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Close$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Minimize$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Maximize$/i })).toBeInTheDocument();
+  });
+
+  it('should close window and dismiss menu when clicking Close in the context menu', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div data-testid="test-content">Inner App Content</div>
+      </WindowFrame>
+    );
+
+    const content = screen.getByTestId('test-content');
+    fireEvent.contextMenu(content);
+
+    const closeBtn = screen.getByRole('button', { name: /^Close$/i });
+    fireEvent.click(closeBtn);
+
+    expect(useWindowManager.getState().windows['test-app'].isOpen).toBe(false);
+    expect(screen.queryByTestId('window-context-menu')).not.toBeInTheDocument();
+  });
+
+  it('should close window context menu on Escape key press', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div data-testid="test-content">Inner App Content</div>
+      </WindowFrame>
+    );
+
+    const content = screen.getByTestId('test-content');
+    fireEvent.contextMenu(content);
+    expect(screen.getByTestId('window-context-menu')).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByTestId('window-context-menu')).not.toBeInTheDocument();
+  });
 });
+
 

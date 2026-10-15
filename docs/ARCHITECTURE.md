@@ -42,6 +42,11 @@ Pencereler **Zustand** store üzerinden reaktif olarak yönetilir:
     - Normal boyuttayken: `Maximize2` ikonu ("Ekranı Kapla").
     - Tam ekrandayken: `Minimize2` ikonu ("Normal Boyuta Dön") ve belirgin mavi parıltı.
   - **Başlık Çubuğuna Çift Tıklama (Double-Click)**: Ekranı kaplama ve eski boyuta dönme arasında hızlıca geçiş yapılır.
+  - **Başlık Çubuğuna Orta Tıklama (Middle-Click / Scroll Wheel)**: Pencereyi kapatır ve tarayıcının otomatik kaydırma davranışını engeller.
+  - **Uygulama İçi & Başlık Çubuğu Sağ Tık Bağlam Menüsü (Window Context Menu)**:
+    - Pencerenin hem başlık çubuğuna hem de uygulama içeriğine (`window-content`) sağ tıklandığında tarayıcının yerel menüsü engellenir (`preventDefault`), pencere odağa getirilir ve WebOS pencere bağlam menüsü açılır.
+    - Menü eylemleri: **Kapat** (`Close`), **Simge Durumuna Küçült** (`Minimize`), **Ekranı Kapla / Geri Yükle** (`Maximize / Restore`).
+    - Dışarı tıklandığında veya `Escape` tuşuna basıldığında menü otomatik olarak kapanır.
 
 ---
 
@@ -53,6 +58,10 @@ Pencereler **Zustand** store üzerinden reaktif olarak yönetilir:
   - Aktif pencereye tıklandığında simge durumuna küçülür.
   - Simge durumundaki veya arkadaki pencereye tıklandığında öne gelir ve odaklanır.
   - Pencere kapatıldığında alt bardan otomatik olarak ayrılır.
+* **Sağ Tık Bağlam Menüsü (Dock Context Menu & Direct Close)**:
+  - Dock üzerindeki herhangi bir açık uygulama simgesine sağ tıklandığında tarayıcının yerel menüsü engellenir ve dock simgesinin hemen üzerinde temaya duyarlı bağlam menüsü açılır.
+  - Menü, uygulamanın yerelleştirilmiş adını, pencereyi doğrudan sonlandıran **Kapat** (`Close`) seçeneğini ve **Küçült / Geri Yükle** kontrolünü sunar.
+  - "Kapat" tıklandığında pencere kapatılır, dock'tan kaldırılır ve menü kapatılır. Dışarı tıklandığında veya `Escape` tuşuna basıldığında menü kapanır.
 
 ---
 
