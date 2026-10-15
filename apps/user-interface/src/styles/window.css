@@ -519,23 +519,42 @@
 }
 
 [data-theme="classic-mac"] .window-control-btn {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
   border-radius: 0;
   border: 1px solid #111111;
   background: #dcdfe5;
   box-shadow: inset 1px 1px 0px #ffffff, inset -1px -1px 0px #666666;
+  color: #111111;
   transition: none;
+}
+
+[data-theme="classic-mac"] .window-control-btn svg {
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: auto;
+  flex-shrink: 0;
+  opacity: 1;
 }
 
 [data-theme="classic-mac"] .window-control-btn:hover {
   transform: none;
   background: #c5c8cf;
+  color: #000000;
 }
 
 [data-theme="classic-mac"] .window-control-btn:active {
   box-shadow: inset -1px -1px 0px #ffffff, inset 1px 1px 0px #444444;
   background: #000080;
+  color: #ffffff;
 }
 
 [data-theme="classic-mac"] .window-control-btn.close {

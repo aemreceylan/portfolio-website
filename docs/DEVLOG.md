@@ -427,12 +427,14 @@
   - `MacMarkdownLogo`: TeachText / Document tüy kalem, mühür ve doküman rulosu.
   - `MacJsIdeLogo`: 3.5" manyetik geliştirici disketi ve kontrastlı "JS" sistem etiketi.
   - `MacTextFileLogo`, `MacMdFileLogo`, `MacJsFileLogo`: 3D kabartmalı katlanır köşeli sayfalar ve Susan Kare tarzı rozetler.
-- **Kapsamlı Stil & Görsel Ayrıştırma**:
+- **Kapsamlı Stil & Görsel Ayrıştırma & Hata Giderme**:
   - `design-tokens.css`: `[data-theme="classic-mac"]` kök değişkenleri, 3D kabartma gölgeleri (`inset 1px 1px #fff, inset -1px -1px #555`), açık zemin renkleri ve dither ızgara masaüstü deseni eklendi.
   - `desktop.css`: Platin üst durum çubuğu, siyah çerçeveli 3D beveled masaüstü uygulama/dosya simge kutuları, katı platin bağlam menüsü.
-  - `window.css`: Yatay pinstripe başlık çubuğu (`repeating-linear-gradient`), ortalanmış katı platin başlık plaketi, 13x13px kare kabartmalı kontrol butonları, beyaz pencere çalışma alanı.
+  - **Masaüstü İki Satırlı Etiketler & Gölgesiz Düz Renk**: `.desktop-app-card` iç boşluğu `padding: 4px 4px`, `gap: 3px` olarak optimize edildi; 2 satırlı uygulama isimlerinin (`Markdown Editörü` vb.) taşması engellendi. Etiketlerdeki tüm gölgeler ve çerçeveler kaldırılarak saf düz platin zemin (`#dcdfe5`) ve düz siyah metin (`#111111`) uygulandı. Hover durumunda klasik Mac lacivert vurgusu (`#000080`) aktifleşir.
+  - `window.css`: Yatay pinstripe başlık çubuğu (`repeating-linear-gradient`), ortalanmış katı platin başlık plaketi, beyaz pencere çalışma alanı.
+  - **Pencere Kontrol Butonlarının Merkezlenmesi**: Buton boyutu `14x14px` olarak ayarlandı, `display: flex; align-items: center; justify-content: center;` ile kapatma (`X`), küçültme (`Minus`) ve büyütme vektör ikonlarının sub-pixel kayması giderilerek tam matematiksel merkeze oturması sağlandı.
   - `dock.css`: Alt kenara kilitli System 7 Control Strip tarzı platin raf, 42x42px kare beveled dock kartları, katı lacivert aktif durum göstergesi (`#000080`).
-  - `settings.css`: Ayarlar uygulamasında `.theme-preview-box.preview-classic-mac` dither desenli önizleme kutusu, pinstripe pencere ve kare buton LED'leri.
+  - `settings.css`: Ayarlar uygulaması tamamen açık platin/beyaz temaya uyarlandı; hover durumunda açık renk zeminde beyazlaşarak kaybolan kart çerçeveleri yerine klasik Mac lacivert çerçevesi (`#000080`), 3D beveled kartlar ve kırmızı retro fabrika ayarlarına sıfırlama alanı geliştirildi.
 - **Tema Motoru & Test Kapsamı**:
   - `theme.types.ts`: `ThemeId` tipi `'spatial-glass' | 'swiss-industrial' | 'cyberpunk-neon' | 'classic-mac' | string` olarak genişletildi.
   - `theme-registry.ts`: `classicMacTheme` 4. yerleşik tema olarak kaydedildi.

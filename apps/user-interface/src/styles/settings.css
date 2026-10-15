@@ -511,3 +511,205 @@
   background: #f43f5e;
   box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);
 }
+
+/* --------------------------------------------------------------------------
+   Classic Macintosh Settings App Scoping (1984 System 7 Control Panels)
+   -------------------------------------------------------------------------- */
+[data-theme="classic-mac"] .settings-container {
+  background: #ffffff;
+  color: #111111;
+  font-family: var(--font-sans);
+  scrollbar-color: #888888 #e8ebf0;
+}
+
+[data-theme="classic-mac"] .settings-header {
+  border-bottom: 1px solid #111111;
+}
+
+[data-theme="classic-mac"] .settings-header h2 {
+  color: #111111;
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+
+[data-theme="classic-mac"] .settings-header p {
+  color: #4b5563;
+}
+
+[data-theme="classic-mac"] .settings-section-title {
+  color: #000080;
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+
+[data-theme="classic-mac"] .settings-section-desc {
+  color: #4b5563;
+}
+
+[data-theme="classic-mac"] .language-card {
+  background: #f3f4f6;
+  border: 1px solid #111111;
+  border-radius: 2px;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2), inset 1px 1px 0px #ffffff;
+  color: #111111;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+[data-theme="classic-mac"] .language-card:hover {
+  background: #e5e7eb;
+  border-color: #000080;
+  box-shadow: 2px 2px 0px #000080;
+  transform: none;
+}
+
+[data-theme="classic-mac"] .language-card.active {
+  background: #000080;
+  border-color: #000080;
+  color: #ffffff;
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.4), 2px 2px 0px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="classic-mac"] .language-card.active .language-native {
+  color: #ffffff;
+}
+
+[data-theme="classic-mac"] .language-card.active .language-badge {
+  background: #ffffff;
+  color: #000080;
+  border: none;
+}
+
+[data-theme="classic-mac"] .language-native {
+  color: #111111;
+  font-weight: 600;
+}
+
+[data-theme="classic-mac"] .language-badge {
+  background: #e5e7eb;
+  color: #000080;
+  border: 1px solid #9ca3af;
+  border-radius: 1px;
+}
+
+[data-theme="classic-mac"] .language-flag-wrapper {
+  border: 1px solid #111111;
+  border-radius: 1px;
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="classic-mac"] .theme-card {
+  background: #f3f4f6;
+  border: 1px solid #111111;
+  border-radius: 2px;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2), inset 1px 1px 0px #ffffff;
+  color: #111111;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+[data-theme="classic-mac"] .theme-card:hover {
+  background: #e5e7eb;
+  border-color: #000080;
+  box-shadow: 2px 2px 0px #000080;
+  transform: none;
+}
+
+[data-theme="classic-mac"] .theme-card.active {
+  border: 2px solid #000080;
+  background: #eef2ff;
+  box-shadow: 2px 2px 0px #000080;
+}
+
+[data-theme="classic-mac"] .theme-name {
+  color: #111111;
+  font-weight: 700;
+}
+
+[data-theme="classic-mac"] .theme-subtitle {
+  color: #4b5563;
+}
+
+[data-theme="classic-mac"] .theme-description {
+  color: #4b5563;
+}
+
+[data-theme="classic-mac"] .theme-active-badge {
+  background: #000080;
+  color: #ffffff;
+  border: 1px solid #000080;
+  border-radius: 1px;
+}
+
+[data-theme="classic-mac"] .theme-preview-box {
+  border: 1px solid #111111;
+}
+
+[data-theme="classic-mac"] .settings-section.settings-danger-zone {
+  border-top: 1px solid #111111;
+}
+
+[data-theme="classic-mac"] .settings-section-title.settings-danger-title {
+  color: #b91c1c;
+}
+
+[data-theme="classic-mac"] .settings-reset-trigger-btn {
+  background: #fee2e2;
+  border: 1px solid #dc2626;
+  border-radius: 2px;
+  color: #991b1b;
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="classic-mac"] .settings-reset-trigger-btn:hover {
+  background: #dc2626;
+  border-color: #991b1b;
+  color: #ffffff;
+  transform: none;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="classic-mac"] .settings-reset-confirm-box {
+  background: #fff5f5;
+  border: 1px solid #dc2626;
+  border-radius: 2px;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="classic-mac"] .settings-reset-confirm-text {
+  color: #374151;
+}
+
+[data-theme="classic-mac"] .settings-reset-cancel-btn {
+  background: #e5e7eb;
+  border: 1px solid #111111;
+  border-radius: 2px;
+  color: #111111;
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="classic-mac"] .settings-reset-cancel-btn:hover {
+  background: #d1d5db;
+  color: #000000;
+  transform: none;
+}
+
+[data-theme="classic-mac"] .settings-reset-execute-btn {
+  background: #dc2626;
+  border: 1px solid #991b1b;
+  border-radius: 2px;
+  color: #ffffff;
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="classic-mac"] .settings-reset-execute-btn:hover {
+  background: #b91c1c;
+  transform: none;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="classic-mac"] .settings-reset-success-alert {
+  background: #ecfdf5;
+  border: 1px solid #059669;
+  border-radius: 2px;
+  color: #065f46;
+}
+

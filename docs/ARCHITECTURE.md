@@ -391,7 +391,9 @@ Kullanıcı arayüzünde tema ekleme ve tema değiştirme deneyimini endüstri s
       2. 1984: **Classic Macintosh** (Susan Kare / Erken Dönem Kişisel Bilgisayar Devrimi)
       3. 2024: **Spatial Dark Glass** (Apple VisionOS / Çağdaş Buzlu Cam & Uzamsal Bilişim)
       4. 2077: **Cyberpunk Neon** (Night City / Sibernetik HUD & Fütüristik Yüksek Voltaj)
-    - **Pencere & Dock Geometrisi**: 2px köşeli platin pencere kasası, yatay pinstripe başlık çubuğu, ortalanmış katı platin başlık plaketi, 13x13px kare beveled kontrol butonları ve Control Strip tarzı alt dock rafı.
+    - **Pencere & Dock Geometrisi**: 2px köşeli platin pencere kasası, yatay pinstripe başlık çubuğu, ortalanmış katı platin başlık plaketi, 14x14px kare beveled kontrol butonları (mükemmel ortalanmış vektör ikonları) ve Control Strip tarzı alt dock rafı.
+    - **Masaüstü Etiketleri & İki Satırlı İsimler**: İki satırlı uygulama isimlerinin taşmaması için kart iç boşluğu (padding 4px, gap 3px) optimize edildi; etiketlerdeki tüm gölgeler ve çerçeveler kaldırılarak saf düz platin arka plan ve net siyah metin uygulandı. Hover durumunda klasik Mac lacivert vurgusu (`#000080`) aktifleşir.
+    - **Ayarlar (Settings) Uygulaması Uyarlaması**: Açık renk zemin ile uyumlu, hover durumunda kaybolmayan koyu lacivert çerçeveler (`#000080`), 3D platin kartlar, klasik butonlar ve tema uyumlu kırmızı sıfırlama alanı geliştirildi.
     - **Özel Susan Kare Homage SVG Simgeleri (`classic-mac.theme.tsx`)**:
       - `MacBrandLogo`: İkonik gülümseyen "Happy Mac" CRT bilgisayar ve disket yuvası.
       - `MacTerminalLogo`: Tersine çevrilmiş siyah başlık çubuklu retro komut kutusu, pinstripe ve kare imleç.
@@ -400,6 +402,7 @@ Kullanıcı arayüzünde tema ekleme ve tema değiştirme deneyimini endüstri s
       - `MacJsIdeLogo`: 3.5 inçlik manyetik geliştirici disketi ve "JS" sistem etiketi.
       - Dosya Simgeleri (`txt`, `md`, `js`): Katlanır köşeli kağıt dokümanlar ve klasik piksel rozetler.
     - **Sıfır Boyut Zıplaması**: Üst bar (40px), dock (58px), kart boyutları (88x92px) ve simge kutuları (50x50px) birebir muhafaza edilmiştir.
+
 
 
 

@@ -620,6 +620,8 @@
 
 [data-theme="classic-mac"] .desktop-app-card,
 [data-theme="classic-mac"] .desktop-file-card {
+  padding: 4px 4px;
+  gap: 3px;
   border-radius: 0;
 }
 
@@ -653,18 +655,38 @@
   font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
+  line-height: 1.2;
+  max-height: 32px;
   color: #111111;
-  background: rgba(220, 223, 229, 0.92);
-  padding: 1px 4px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+  background: #dcdfe5;
+  padding: 1px 3px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
 }
 
 [data-theme="classic-mac"] .desktop-file-name {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  max-height: 32px;
   color: #111111;
-  background: rgba(220, 223, 229, 0.92);
-  padding: 1px 4px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: #dcdfe5;
+  padding: 1px 3px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+[data-theme="classic-mac"] .desktop-app-card:hover .desktop-app-label,
+[data-theme="classic-mac"] .desktop-file-card:hover .desktop-file-name {
+  background: #000080;
+  color: #ffffff;
+  box-shadow: none;
+  text-shadow: none;
 }
 
 [data-theme="classic-mac"] .spatial-context-menu {
