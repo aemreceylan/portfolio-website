@@ -54,7 +54,7 @@ export const Dock: React.FC = () => {
   useEffect(() => {
     if (dockMenu.isOpen && dockMenu.appId) {
       const target = windows[dockMenu.appId];
-      if (!target || !target.isOpen) {
+      if (!target?.isOpen) {
         setDockMenu({ isOpen: false, appId: null, x: 0, y: 0 });
       }
     }
@@ -188,9 +188,16 @@ export const Dock: React.FC = () => {
       {dockMenu.isOpen && dockMenu.appId && windows[dockMenu.appId] &&
         createPortal(
           <div
+            role="menu"
+            tabIndex={-1}
             className="window-titlebar-context-menu dock-context-menu"
             style={{ left: dockMenu.x, top: dockMenu.y }}
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setDockMenu({ isOpen: false, appId: null, x: 0, y: 0 });
+              }
+            }}
             onContextMenu={(e) => e.preventDefault()}
             data-testid="dock-context-menu"
           >

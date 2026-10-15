@@ -35,6 +35,11 @@
   gap: 8px;
   cursor: pointer;
   letter-spacing: 0.02em;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
 }
 
 .os-brand-icon {
@@ -330,6 +335,11 @@
   -webkit-user-select: none;
   touch-action: none;
   pointer-events: auto;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  color: inherit;
+  text-align: center;
   transition: background var(--transition-fast), transform var(--transition-fast), left 0.2s cubic-bezier(0.2, 0, 0, 1), top 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
@@ -404,6 +414,11 @@
   -webkit-user-select: none;
   touch-action: none;
   pointer-events: auto;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  color: inherit;
+  text-align: center;
   transition: background var(--transition-fast), transform var(--transition-fast), left 0.2s cubic-bezier(0.2, 0, 0, 1), top 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 

@@ -47,7 +47,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
     const handleGlobalContextMenu = (e: MouseEvent) => {
       // If right-clicking anywhere outside this window, close menu
       const target = e.target as HTMLElement | null;
-      if (!target || !target.closest(`[data-window-id="${win.id}"]`)) {
+      if (!target?.closest(`[data-window-id="${win.id}"]`)) {
         setWindowMenu((prev) => ({ ...prev, isOpen: false }));
       }
     };
@@ -284,7 +284,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
   const maximizeLabel = isMaximized ? t('window_restore') : t('window_maximize');
 
   return (
-    <div
+    <section
       className={`window-container ${isActive ? 'active' : ''} ${isMinimized ? 'minimized' : ''} ${
         isMaximized ? 'maximized' : ''
       }`}
@@ -293,11 +293,13 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
       onContextMenu={handleWindowContextMenu}
       data-testid={`window-${win.id}`}
       data-window-id={win.id}
-      role="dialog"
       aria-label={win.title}
     >
       {/* Titlebar with double-click maximize toggle, middle-click close, and right-click context menu */}
-      <div
+      <header
+        role="toolbar"
+        aria-label={`${win.title} Titlebar`}
+        tabIndex={-1}
         className="window-titlebar"
         onPointerDown={handleTitlebarPointerDown}
         onMouseDown={(e) => {
@@ -348,15 +350,22 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
         </div>
 
         <div style={{ width: 44 }} aria-hidden="true" />
-      </div>
+      </header>
 
       {/* Window Context Menu (rendered in document.body to avoid parent transform offsets) */}
       {windowMenu.isOpen &&
         createPortal(
           <div
+            role="menu"
+            tabIndex={-1}
             className="window-titlebar-context-menu"
             style={{ left: windowMenu.x, top: windowMenu.y }}
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setWindowMenu((prev) => ({ ...prev, isOpen: false }));
+              }
+            }}
             onContextMenu={(e) => e.preventDefault()}
             data-testid="window-context-menu"
           >
@@ -418,6 +427,6 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
           <div className="resize-handle sw" onPointerDown={handleResizePointerDown('sw')} />
         </>
       )}
-    </div>
+    </section>
   );
 };

@@ -314,16 +314,17 @@ export const Desktop: React.FC = () => {
 
     // Dynamically created files (via Terminal, IDE, or upload without right-click):
     // Fill the FIRST available empty slot on the desktop grid!
-    dynamicFiles
-      .sort((a, b) => a.createdAt - b.createdAt || a.name.localeCompare(b.name))
-      .forEach((file) => {
-        const itemId = `file-${file.id}`;
-        if (positions[itemId]) return;
+    const sortedDynamicFiles = dynamicFiles.toSorted(
+      (a, b) => a.createdAt - b.createdAt || a.name.localeCompare(b.name)
+    );
+    sortedDynamicFiles.forEach((file) => {
+      const itemId = `file-${file.id}`;
+      if (positions[itemId]) return;
 
-        const pos = findNextFreeCell(0, 0);
-        positions[itemId] = pos;
-        occupiedKeys.add(`${pos.x},${pos.y}`);
-      });
+      const pos = findNextFreeCell(0, 0);
+      positions[itemId] = pos;
+      occupiedKeys.add(`${pos.x},${pos.y}`);
+    });
 
     return positions;
   }, [customPositions, files, maxRows]);
@@ -333,14 +334,14 @@ export const Desktop: React.FC = () => {
    * If the item is actively being dragged, it tracks the pointer position.
    */
   const getItemPosition = (itemId: string, _autoIndex?: number) => {
-    if (draggingItemState && draggingItemState.id === itemId) {
+    if (draggingItemState?.id === itemId) {
       return { x: draggingItemState.x, y: draggingItemState.y };
     }
     return layoutPositions[itemId] || { x: START_X, y: START_Y };
   };
 
   const handleIconPointerDown = (
-    e: React.PointerEvent<HTMLDivElement>,
+    e: React.PointerEvent<HTMLElement>,
     itemId: string,
     currentPos: { x: number; y: number }
   ) => {
@@ -573,9 +574,9 @@ export const Desktop: React.FC = () => {
   };
 
   /**
-   * Handles local file upload via FileReader
+   * Handles local file upload via File#text()
    */
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -588,16 +589,17 @@ export const Desktop: React.FC = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = String(event.target?.result || '');
+    try {
+      const content = await file.text();
       const res = createFile(file.name, content);
       if (!res.success) {
         showGuiAlert('Dosya Yükleme Hatası', res.error || 'Dosya oluşturulamadı.');
       }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+    } catch {
+      showGuiAlert('Dosya Yükleme Hatası', 'Dosya okunamadı.');
+    } finally {
+      e.target.value = '';
+    }
   };
 
   const handleRenameSubmit = (rawName: string): boolean => {
@@ -682,16 +684,15 @@ export const Desktop: React.FC = () => {
       {/* Top Status Bar with enhanced thickness */}
       <header className="spatial-statusbar" role="banner">
         <div className="statusbar-left">
-          <div
+          <button
+            type="button"
             className="os-brand"
             onClick={() => openWindow(settingsManifest)}
-            role="button"
-            tabIndex={0}
             aria-label="AEC System Settings"
           >
             <AppIconResolver variant="brand" size={18} className="os-brand-logo" />
             <span>AEC</span>
-          </div>
+          </button>
           {activeWindow && (
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               / {activeWindow.title}
@@ -720,8 +721,9 @@ export const Desktop: React.FC = () => {
           const isDragging = draggingItemState?.id === itemId;
 
           return (
-            <div
+            <button
               key={manifest.id}
+              type="button"
               className={`desktop-app-card ${isDragging ? 'dragging' : ''}`}
               style={{
                 position: 'absolute',
@@ -735,18 +737,13 @@ export const Desktop: React.FC = () => {
                 handleLaunchApp(manifest);
               }}
               data-testid={`desktop-app-${manifest.id}`}
-              role="button"
-              tabIndex={0}
               aria-label={appName}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleLaunchApp(manifest);
-              }}
             >
               <div className="desktop-app-icon">
                 <AppIconResolver appId={manifest.id} size={32} />
               </div>
               <span className="desktop-app-label">{appName}</span>
-            </div>
+            </button>
           );
         })}
       </section>
@@ -761,8 +758,9 @@ export const Desktop: React.FC = () => {
           const isDragging = draggingItemState?.id === itemId;
 
           return (
-            <div
+            <button
               key={file.id}
+              type="button"
               className={`desktop-file-card ${isJs ? 'js-file' : ''} ${isDragging ? 'dragging' : ''}`}
               style={{
                 position: 'absolute',
@@ -777,18 +775,13 @@ export const Desktop: React.FC = () => {
               }}
               onContextMenu={(e) => handleFileContextMenu(e, file)}
               data-testid={`desktop-file-${file.name}`}
-              role="button"
-              tabIndex={0}
               aria-label={`File ${file.name}`}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleOpenFile(file);
-              }}
             >
               <div className="desktop-file-icon">
                 <AppIconResolver fileExtension={file.extension} size={30} />
               </div>
               <span className="desktop-file-name">{file.name}</span>
-            </div>
+            </button>
           );
         })}
       </section>
@@ -796,11 +789,15 @@ export const Desktop: React.FC = () => {
       {/* Spatial Dark Glass Right-Click Context Menu */}
       {contextMenu.isOpen && (
         <div
+          role="menu"
+          tabIndex={-1}
           className="spatial-context-menu"
           style={{ top: contextMenu.y, left: contextMenu.x }}
-          role="menu"
           aria-label="Desktop Context Menu"
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setContextMenu((prev) => ({ ...prev, isOpen: false }));
+          }}
         >
           {contextMenu.file ? (
             /* Context Menu for specific file */
@@ -938,7 +935,6 @@ export const Desktop: React.FC = () => {
       {promptModal.isOpen && (
         <div
           className="spatial-alert-overlay"
-          role="dialog"
           aria-modal="true"
           aria-labelledby="prompt-modal-title"
         >
@@ -981,7 +977,7 @@ export const Desktop: React.FC = () => {
       )}
 
       {/* Spatial Dark Glass Alert Modal (GUI Error Warning) */}
-      {guiAlert && guiAlert.isOpen && (
+      {guiAlert?.isOpen && (
         <div
           className="spatial-alert-overlay"
           role="alertdialog"

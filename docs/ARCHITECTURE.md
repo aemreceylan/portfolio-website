@@ -102,6 +102,9 @@ PersonalWebSite/
   - **Hata Ayrıştırması (Terminal vs GUI)**:
     - Terminal komut satırından silme denemesinde doğrudan terminal içi hata çıktısı verilir (`rm: cannot remove '...': Protected system file`).
     - Grafik arayüzden (Desktop veya buton) silme denemesinde ise Spatial Dark Glass Alert Modal dialog gösterilir.
+  - **Görünüm Modu & Sekme Senkronizasyonu (`MarkdownViewerMode`)**:
+    - `export type MarkdownViewerMode = 'edit' | 'preview' | 'split';` tipi modüler olarak store'dan sağlanır.
+    - Dosya adı/kimliği ile esnek erişim (`getFile`, `deleteFile`, `updateFile`, `renameFile`) ve yeniden adlandırmada uzantı türüne göre IDE/Viewer sekmelerinin dinamik senkronizasyonu garanti edilir.
 * **Terminal Geçmişi Değişmezliği (Static Terminal Buffer)**:
   - `ls` komutu çalıştırıldığında o anki dosya listesini terminal satırlarına statik metin olarak ekler.
   - Arayüzden dosya eklenip silinse bile geçmiş `ls` çıktıları asla geriye dönük mutasyona uğramaz; yalnızca yeni `ls` komutu girildiğinde güncel durum yazdırılır.
@@ -117,8 +120,12 @@ PersonalWebSite/
   - `js-ide` içindeki kod çalıştırma mantığı, OWASP standartlarına uygun olarak `<iframe sandbox="allow-scripts" srcDoc={...} />` yapısı ile izole edilir.
   - `allow-same-origin` kesinlikle **verilmez**. Bu sayede kullanıcı kodunun ana pencereye, çerezlere, `localStorage`'a veya DOM'a erişmesi imkansızdır.
   - `window.parent.postMessage` köprüsü üzerinden sadece `console.log`, `warn`, `error` ve çalışma süreleri ana uygulamaya güvenli iletilir.
+* **Kriptografik Güvenli Rastgelelik Motoru (`apps/games/utils/random.ts`)**:
+  - Simülasyon, oyun fiziği ve parçacık efektlerinde `Math.random()` yerine Web Crypto API tabanlı `crypto.getRandomValues` kullanılır (`getRandomFloat`, `getRandomInt`, `getRandomSpread`, `getRandomSign`). Bu sayede SonarQube S2245 / OWASP A02 güvenlik standartları eksiksiz karşılanır.
 * **Çalışma Zamanı Güvenliği**: Terminal komutları, argümanları ve kullanıcı isimleri (`su <user>`) Zod şemaları ile doğrulanır.
-* **DevSecOps Standardı**: `npm audit` sıfır zafiyet garantisi ile denetlenir.
+* **DevSecOps & SonarQube Standardı**:
+  - `eslint-plugin-sonarjs` ile bilişsel karmaşıklık üst sınırı 15 olarak zorunludur.
+  - `npm audit` sıfır zafiyet garantisi ve `npm run lint` 0 hata/uyarı ile denetlenir.
 
 ---
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, Zap, RotateCcw, Play, Pause, Heart } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Zap, RotateCcw, Play, Heart } from 'lucide-react';
 import { useThemeStore } from '#stores/theme.store';
 import { gameSoundService } from '../../services/game-sound.service';
 import { getGameThemeStyle } from '../../types';
+import { getRandomSpread, getRandomFloat } from '../../utils/random';
 
 interface Alien {
   x: number;
@@ -202,12 +203,124 @@ export const SpaceDefenderGame: React.FC = () => {
       sparksRef.current.push({
         x,
         y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
+        vx: getRandomSpread(6),
+        vy: getRandomSpread(6),
         color,
         alpha: 1,
       });
     }
+  };
+
+  const updateAlienBulletsAndMovement = (width: number, height: number): boolean => {
+    let shouldReverse = false;
+    let lowestAlienY = 0;
+
+    aliensRef.current.forEach((alien) => {
+      if (!alien.alive) return;
+      alien.x += alienDirRef.current * alienSpeedRef.current;
+      if (alien.x <= 10 || alien.x + alien.width >= width - 10) {
+        shouldReverse = true;
+      }
+      if (alien.y + alien.height > lowestAlienY) {
+        lowestAlienY = alien.y + alien.height;
+      }
+
+      // Cryptographically secure alien firing
+      if (getRandomFloat() < 0.002 * waveRef.current) {
+        bulletsRef.current.push({
+          x: alien.x + alien.width / 2,
+          y: alien.y + alien.height,
+          vy: 3.5,
+          isAlien: true,
+        });
+      }
+    });
+
+    if (shouldReverse) {
+      alienDirRef.current *= -1;
+      aliensRef.current.forEach((alien) => {
+        alien.y += 12;
+      });
+    }
+
+    // Alien landing on player base
+    if (lowestAlienY >= height - 55) {
+      livesRef.current = 0;
+      setLives(0);
+      setGameState('game-over');
+      gameSoundService.play('game-over', currentTheme);
+      return false;
+    }
+    return true;
+  };
+
+  const checkPlayerBulletsVsAliens = () => {
+    let liveAliensCount = 0;
+    aliensRef.current.forEach((alien) => {
+      if (!alien.alive) return;
+      liveAliensCount += 1;
+
+      bulletsRef.current.forEach((bullet) => {
+        if (bullet.isAlien) return;
+        if (
+          bullet.x >= alien.x &&
+          bullet.x <= alien.x + alien.width &&
+          bullet.y >= alien.y &&
+          bullet.y <= alien.y + alien.height
+        ) {
+          alien.alive = false;
+          bullet.y = -100; // remove bullet
+          const points = (3 - alien.type) * 20;
+          const newScore = scoreRef.current + points;
+          scoreRef.current = newScore;
+          setScore(newScore);
+          spawnSparks(alien.x + alien.width / 2, alien.y + alien.height / 2, alien.color);
+          gameSoundService.play('alien-explode', currentTheme);
+        }
+      });
+    });
+
+    // Wave cleared
+    if (liveAliensCount === 0) {
+      waveRef.current += 1;
+      setWave(waveRef.current);
+      aliensRef.current = initAliens(waveRef.current);
+      gameSoundService.play('wave-clear', currentTheme);
+    }
+  };
+
+  const checkAlienBulletsVsPlayer = (height: number) => {
+    const px = playerXRef.current;
+    const py = height - 40;
+
+    bulletsRef.current.forEach((bullet) => {
+      if (!bullet.isAlien) return;
+      if (
+        bullet.x >= px &&
+        bullet.x <= px + PLAYER_WIDTH &&
+        bullet.y >= py &&
+        bullet.y <= py + PLAYER_HEIGHT
+      ) {
+        bullet.y = height + 100; // remove bullet
+        livesRef.current -= 1;
+        setLives(livesRef.current);
+        spawnSparks(px + PLAYER_WIDTH / 2, py, '#ef4444');
+        gameSoundService.play('player-hit', currentTheme);
+
+        if (livesRef.current <= 0) {
+          setGameState('game-over');
+          gameSoundService.play('game-over', currentTheme);
+          if (scoreRef.current > highScore) {
+            setHighScore(scoreRef.current);
+            try {
+              localStorage.setItem('aec_game_spacedefender_highscore', scoreRef.current.toString());
+            } catch {
+              // ignore
+            }
+          }
+        }
+      }
+    });
   };
 
   // Main game physics & rendering loop
@@ -238,112 +351,11 @@ export const SpaceDefenderGame: React.FC = () => {
         });
         bulletsRef.current = bulletsRef.current.filter((b) => b.y > 0 && b.y < height);
 
-        // Aliens movement
-        let shouldReverse = false;
-        let lowestAlienY = 0;
+        const aliensStillActive = updateAlienBulletsAndMovement(width, height);
+        if (!aliensStillActive) return;
 
-        aliensRef.current.forEach((alien) => {
-          if (!alien.alive) return;
-          alien.x += alienDirRef.current * alienSpeedRef.current;
-          if (alien.x <= 10 || alien.x + alien.width >= width - 10) {
-            shouldReverse = true;
-          }
-          if (alien.y + alien.height > lowestAlienY) {
-            lowestAlienY = alien.y + alien.height;
-          }
-
-          // Random alien firing
-          if (Math.random() < 0.002 * waveRef.current) {
-            bulletsRef.current.push({
-              x: alien.x + alien.width / 2,
-              y: alien.y + alien.height,
-              vy: 3.5,
-              isAlien: true,
-            });
-          }
-        });
-
-        if (shouldReverse) {
-          alienDirRef.current *= -1;
-          aliensRef.current.forEach((alien) => {
-            alien.y += 12;
-          });
-        }
-
-        // Alien landing on player base
-        if (lowestAlienY >= height - 55) {
-          livesRef.current = 0;
-          setLives(0);
-          setGameState('game-over');
-          gameSoundService.play('game-over', currentTheme);
-          return;
-        }
-
-        // Collisions: player bullets vs aliens
-        let liveAliensCount = 0;
-        aliensRef.current.forEach((alien) => {
-          if (!alien.alive) return;
-          liveAliensCount += 1;
-
-          bulletsRef.current.forEach((bullet) => {
-            if (bullet.isAlien) return;
-            if (
-              bullet.x >= alien.x &&
-              bullet.x <= alien.x + alien.width &&
-              bullet.y >= alien.y &&
-              bullet.y <= alien.y + alien.height
-            ) {
-              alien.alive = false;
-              bullet.y = -100; // remove bullet
-              const points = (3 - alien.type) * 20;
-              const newScore = scoreRef.current + points;
-              scoreRef.current = newScore;
-              setScore(newScore);
-              spawnSparks(alien.x + alien.width / 2, alien.y + alien.height / 2, alien.color);
-              gameSoundService.play('alien-explode', currentTheme);
-            }
-          });
-        });
-
-        // Wave cleared
-        if (liveAliensCount === 0) {
-          waveRef.current += 1;
-          setWave(waveRef.current);
-          aliensRef.current = initAliens(waveRef.current);
-          gameSoundService.play('wave-clear', currentTheme);
-        }
-
-        // Collisions: alien bullets vs player
-        bulletsRef.current.forEach((bullet) => {
-          if (!bullet.isAlien) return;
-          const px = playerXRef.current;
-          const py = height - 40;
-          if (
-            bullet.x >= px &&
-            bullet.x <= px + PLAYER_WIDTH &&
-            bullet.y >= py &&
-            bullet.y <= py + PLAYER_HEIGHT
-          ) {
-            bullet.y = height + 100; // remove bullet
-            livesRef.current -= 1;
-            setLives(livesRef.current);
-            spawnSparks(px + PLAYER_WIDTH / 2, py, '#ef4444');
-            gameSoundService.play('player-hit', currentTheme);
-
-            if (livesRef.current <= 0) {
-              setGameState('game-over');
-              gameSoundService.play('game-over', currentTheme);
-              if (scoreRef.current > highScore) {
-                setHighScore(scoreRef.current);
-                try {
-                  localStorage.setItem('aec_game_spacedefender_highscore', scoreRef.current.toString());
-                } catch {
-                  // ignore
-                }
-              }
-            }
-          }
-        });
+        checkPlayerBulletsVsAliens();
+        checkAlienBulletsVsPlayer(height);
 
         // Sparks physics
         sparksRef.current.forEach((s) => {

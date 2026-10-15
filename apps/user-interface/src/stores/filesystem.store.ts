@@ -5,6 +5,8 @@ import { create } from 'zustand';
  */
 export type AllowedExtension = 'txt' | 'md' | 'js';
 
+export type MarkdownViewerMode = 'edit' | 'preview' | 'split';
+
 /**
  * Representation of a virtual file residing in the WebOS Virtual File System (VFS)
  */
@@ -46,22 +48,22 @@ interface FileSystemStoreState {
   openIdeFileIds: string[];
   activeViewerFileId: string | null;
   activeIdeFileId: string | null;
-  viewerMode: 'edit' | 'preview' | 'split';
+  viewerMode: MarkdownViewerMode;
   guiAlert: GuiAlertState | null;
 
   // Actions
   createFile: (name: string, content?: string) => FileOpResult;
-  deleteFile: (name: string) => FileOpResult;
-  updateFile: (name: string, content: string) => FileOpResult;
-  renameFile: (oldName: string, newName: string) => FileOpResult;
-  getFile: (name: string) => VFSFile | undefined;
+  deleteFile: (nameOrId: string) => FileOpResult;
+  updateFile: (nameOrId: string, content: string) => FileOpResult;
+  renameFile: (oldNameOrId: string, newName: string) => FileOpResult;
+  getFile: (nameOrId: string) => VFSFile | undefined;
   setActiveViewerFileId: (id: string | null) => void;
   setActiveIdeFileId: (id: string | null) => void;
-  setViewerMode: (mode: 'edit' | 'preview' | 'split') => void;
-  openInViewer: (fileId: string, initialMode?: 'edit' | 'preview' | 'split') => void;
-  closeViewerTab: (fileId: string) => void;
-  openInIde: (fileId: string) => void;
-  closeIdeTab: (fileId: string) => void;
+  setViewerMode: (mode: MarkdownViewerMode) => void;
+  openInViewer: (fileIdOrName: string, initialMode?: MarkdownViewerMode) => void;
+  closeViewerTab: (fileIdOrName: string) => void;
+  openInIde: (fileIdOrName: string) => void;
+  closeIdeTab: (fileIdOrName: string) => void;
   showGuiAlert: (title: string, message: string) => void;
   dismissGuiAlert: () => void;
   reset: () => void;
@@ -223,7 +225,7 @@ console.log(\`✅ Benchmark finished in \${benchmark.durationMs}ms (Result: \${b
 function createInitialFileMap(): Record<string, VFSFile> {
   const map: Record<string, VFSFile> = {};
   INITIAL_SYSTEM_FILES.forEach((file) => {
-    map[file.name] = file;
+    map[file.name] = { ...file };
   });
   return map;
 }
@@ -288,9 +290,21 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
     return { success: true, file: newFile };
   },
 
-  deleteFile: (name) => {
-    const trimmed = name.trim();
-    const file = get().files[trimmed];
+  deleteFile: (nameOrId) => {
+    if (!nameOrId || typeof nameOrId !== 'string') {
+      return { success: false, error: 'File identifier cannot be empty.' };
+    }
+    const trimmed = nameOrId.trim();
+    let file = get().files[trimmed];
+    let fileKey = trimmed;
+
+    if (!file) {
+      const found = Object.entries(get().files).find(([, f]) => f.id === trimmed);
+      if (found) {
+        fileKey = found[0];
+        file = found[1];
+      }
+    }
 
     if (!file) {
       return { success: false, error: `rm: cannot remove '${trimmed}': No such file` };
@@ -299,14 +313,14 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
     if (file.isSystem) {
       return {
         success: false,
-        error: `rm: cannot remove '${trimmed}': Protected system file`,
+        error: `rm: cannot remove '${file.name}': Protected system file`,
         isSystemProtected: true,
       };
     }
 
     set((state) => {
       const nextFiles = { ...state.files };
-      delete nextFiles[trimmed];
+      delete nextFiles[fileKey];
       const nextViewerTabs = state.openViewerFileIds.filter((id) => id !== file.id);
       const nextIdeTabs = state.openIdeFileIds.filter((id) => id !== file.id);
       return {
@@ -315,11 +329,11 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
         openIdeFileIds: nextIdeTabs,
         activeViewerFileId:
           state.activeViewerFileId === file.id
-            ? nextViewerTabs[nextViewerTabs.length - 1] || null
+            ? nextViewerTabs.at(-1) ?? null
             : state.activeViewerFileId,
         activeIdeFileId:
           state.activeIdeFileId === file.id
-            ? nextIdeTabs[nextIdeTabs.length - 1] || null
+            ? nextIdeTabs.at(-1) ?? null
             : state.activeIdeFileId,
       };
     });
@@ -327,9 +341,21 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
     return { success: true };
   },
 
-  updateFile: (name, content) => {
-    const trimmed = name.trim();
-    const file = get().files[trimmed];
+  updateFile: (nameOrId, content) => {
+    if (!nameOrId || typeof nameOrId !== 'string') {
+      return { success: false, error: 'File identifier cannot be empty.' };
+    }
+    const trimmed = nameOrId.trim();
+    let file = get().files[trimmed];
+    let fileKey = trimmed;
+
+    if (!file) {
+      const found = Object.entries(get().files).find(([, f]) => f.id === trimmed);
+      if (found) {
+        fileKey = found[0];
+        file = found[1];
+      }
+    }
 
     if (!file) {
       return { success: false, error: `File '${trimmed}' not found.` };
@@ -344,24 +370,37 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
     set((state) => ({
       files: {
         ...state.files,
-        [trimmed]: updated,
+        [fileKey]: updated,
       },
     }));
 
     return { success: true, file: updated };
   },
 
-  renameFile: (oldName, newName) => {
-    const oldTrimmed = oldName.trim();
+  renameFile: (oldNameOrId, newName) => {
+    if (!oldNameOrId || !newName || typeof oldNameOrId !== 'string' || typeof newName !== 'string') {
+      return { success: false, error: 'File name cannot be empty.' };
+    }
+    const oldTrimmed = oldNameOrId.trim();
     const newTrimmed = newName.trim();
 
-    const file = get().files[oldTrimmed];
+    let file = get().files[oldTrimmed];
+    let oldKey = oldTrimmed;
+
+    if (!file) {
+      const found = Object.entries(get().files).find(([, f]) => f.id === oldTrimmed);
+      if (found) {
+        oldKey = found[0];
+        file = found[1];
+      }
+    }
+
     if (!file) {
       return { success: false, error: `File '${oldTrimmed}' not found.` };
     }
 
     if (file.isSystem) {
-      return { success: false, error: `Cannot rename protected system file '${oldTrimmed}'.` };
+      return { success: false, error: `Cannot rename protected system file '${file.name}'.` };
     }
 
     const newExt = parseAllowedExtension(newTrimmed);
@@ -372,7 +411,7 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
       };
     }
 
-    if (get().files[newTrimmed] && oldTrimmed !== newTrimmed) {
+    if (get().files[newTrimmed] && oldKey !== newTrimmed) {
       return { success: false, error: `A file named '${newTrimmed}' already exists.` };
     }
 
@@ -385,16 +424,44 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
 
     set((state) => {
       const nextFiles = { ...state.files };
-      delete nextFiles[oldTrimmed];
+      delete nextFiles[oldKey];
       nextFiles[newTrimmed] = updated;
-      return { files: nextFiles };
+
+      let nextViewerTabs = state.openViewerFileIds;
+      let nextViewerActive = state.activeViewerFileId;
+      let nextIdeTabs = state.openIdeFileIds;
+      let nextIdeActive = state.activeIdeFileId;
+
+      if (newExt === 'js' && state.openViewerFileIds.includes(file.id)) {
+        nextViewerTabs = state.openViewerFileIds.filter((id) => id !== file.id);
+        nextViewerActive =
+          state.activeViewerFileId === file.id ? nextViewerTabs.at(-1) ?? null : state.activeViewerFileId;
+      }
+
+      if (newExt !== 'js' && state.openIdeFileIds.includes(file.id)) {
+        nextIdeTabs = state.openIdeFileIds.filter((id) => id !== file.id);
+        nextIdeActive =
+          state.activeIdeFileId === file.id ? nextIdeTabs.at(-1) ?? null : state.activeIdeFileId;
+      }
+
+      return {
+        files: nextFiles,
+        openViewerFileIds: nextViewerTabs,
+        activeViewerFileId: nextViewerActive,
+        openIdeFileIds: nextIdeTabs,
+        activeIdeFileId: nextIdeActive,
+      };
     });
 
     return { success: true, file: updated };
   },
 
-  getFile: (name) => {
-    return get().files[name.trim()];
+  getFile: (nameOrId) => {
+    if (!nameOrId || typeof nameOrId !== 'string') return undefined;
+    const trimmed = nameOrId.trim();
+    const byName = get().files[trimmed];
+    if (byName) return byName;
+    return Object.values(get().files).find((f) => f.id === trimmed);
   },
 
   setActiveViewerFileId: (id) => {
@@ -409,23 +476,27 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
     set({ viewerMode: mode });
   },
 
-  openInViewer: (fileId, initialMode) => {
+  openInViewer: (fileIdOrName, initialMode) => {
+    const file = get().getFile(fileIdOrName);
+    const targetId = file ? file.id : fileIdOrName;
     set((state) => {
-      const alreadyOpen = state.openViewerFileIds.includes(fileId);
+      const alreadyOpen = state.openViewerFileIds.includes(targetId);
       return {
-        openViewerFileIds: alreadyOpen ? state.openViewerFileIds : [...state.openViewerFileIds, fileId],
-        activeViewerFileId: fileId,
+        openViewerFileIds: alreadyOpen ? state.openViewerFileIds : [...state.openViewerFileIds, targetId],
+        activeViewerFileId: targetId,
         viewerMode: initialMode !== undefined ? initialMode : state.viewerMode,
       };
     });
   },
 
-  closeViewerTab: (fileId) => {
+  closeViewerTab: (fileIdOrName) => {
+    const file = get().getFile(fileIdOrName);
+    const targetId = file ? file.id : fileIdOrName;
     set((state) => {
-      const remaining = state.openViewerFileIds.filter((id) => id !== fileId);
+      const remaining = state.openViewerFileIds.filter((id) => id !== targetId);
       const nextActive =
-        state.activeViewerFileId === fileId
-          ? remaining[remaining.length - 1] || null
+        state.activeViewerFileId === targetId
+          ? remaining.at(-1) ?? null
           : state.activeViewerFileId;
       return {
         openViewerFileIds: remaining,
@@ -434,22 +505,26 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
     });
   },
 
-  openInIde: (fileId) => {
+  openInIde: (fileIdOrName) => {
+    const file = get().getFile(fileIdOrName);
+    const targetId = file ? file.id : fileIdOrName;
     set((state) => {
-      const alreadyOpen = state.openIdeFileIds.includes(fileId);
+      const alreadyOpen = state.openIdeFileIds.includes(targetId);
       return {
-        openIdeFileIds: alreadyOpen ? state.openIdeFileIds : [...state.openIdeFileIds, fileId],
-        activeIdeFileId: fileId,
+        openIdeFileIds: alreadyOpen ? state.openIdeFileIds : [...state.openIdeFileIds, targetId],
+        activeIdeFileId: targetId,
       };
     });
   },
 
-  closeIdeTab: (fileId) => {
+  closeIdeTab: (fileIdOrName) => {
+    const file = get().getFile(fileIdOrName);
+    const targetId = file ? file.id : fileIdOrName;
     set((state) => {
-      const remaining = state.openIdeFileIds.filter((id) => id !== fileId);
+      const remaining = state.openIdeFileIds.filter((id) => id !== targetId);
       const nextActive =
-        state.activeIdeFileId === fileId
-          ? remaining[remaining.length - 1] || null
+        state.activeIdeFileId === targetId
+          ? remaining.at(-1) ?? null
           : state.activeIdeFileId;
       return {
         openIdeFileIds: remaining,

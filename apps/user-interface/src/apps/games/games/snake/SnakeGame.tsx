@@ -3,6 +3,7 @@ import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RotateCcw, Play, Pause } fro
 import { useThemeStore } from '#stores/theme.store';
 import { gameSoundService } from '../../services/game-sound.service';
 import { getGameThemeStyle } from '../../types';
+import { getRandomInt } from '../../utils/random';
 
 interface Point {
   x: number;
@@ -18,6 +19,115 @@ const GRID_SIZE = 20;
 const INITIAL_SPEED = 140; // ms per tick
 const SPEED_STEP = 3;
 const MIN_SPEED = 65;
+
+const renderRetroPixelSegment = (
+  ctx: CanvasRenderingContext2D,
+  sx: number,
+  sy: number,
+  cellSize: number,
+  idx: number,
+  isHead: boolean
+) => {
+  let fill = '#475569';
+  if (isHead) {
+    fill = '#000080';
+  } else if (idx % 2 === 0) {
+    fill = '#1e293b';
+  }
+  ctx.fillStyle = fill;
+  ctx.fillRect(sx + 1, sy + 1, cellSize - 2, cellSize - 2);
+  if (isHead) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(sx + 4, sy + 4, 3, 3);
+  }
+};
+
+const renderCyberpunkSegment = (
+  ctx: CanvasRenderingContext2D,
+  sx: number,
+  sy: number,
+  cellSize: number,
+  themeStyle: ReturnType<typeof getGameThemeStyle>,
+  isHead: boolean
+) => {
+  ctx.save();
+  ctx.shadowBlur = isHead ? 14 : 8;
+  ctx.shadowColor = isHead ? themeStyle.secondary : themeStyle.primary;
+  ctx.fillStyle = isHead ? themeStyle.secondary : themeStyle.primary;
+  ctx.fillRect(sx + 1.5, sy + 1.5, cellSize - 3, cellSize - 3);
+
+  if (isHead) {
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(sx + cellSize / 2 - 1.5, sy + cellSize / 2 - 1.5, 3, 3);
+  }
+  ctx.restore();
+};
+
+const renderSwissSegment = (
+  ctx: CanvasRenderingContext2D,
+  sx: number,
+  sy: number,
+  cellSize: number,
+  themeStyle: ReturnType<typeof getGameThemeStyle>,
+  isHead: boolean
+) => {
+  ctx.fillStyle = isHead ? '#ffffff' : '#94a3b8';
+  ctx.fillRect(sx + 1, sy + 1, cellSize - 2, cellSize - 2);
+  if (isHead) {
+    ctx.fillStyle = themeStyle.primary;
+    ctx.fillRect(sx + cellSize / 2 - 2, sy + cellSize / 2 - 2, 4, 4);
+  }
+};
+
+const renderSpatialGlassSegment = (
+  ctx: CanvasRenderingContext2D,
+  sx: number,
+  sy: number,
+  cellSize: number,
+  themeStyle: ReturnType<typeof getGameThemeStyle>,
+  isHead: boolean
+) => {
+  ctx.save();
+  ctx.shadowBlur = isHead ? 12 : 4;
+  ctx.shadowColor = themeStyle.primary;
+  ctx.fillStyle = isHead ? themeStyle.primary : 'rgba(56, 189, 248, 0.75)';
+  const r = isHead ? 6 : 4;
+
+  ctx.beginPath();
+  ctx.roundRect(sx + 1.5, sy + 1.5, cellSize - 3, cellSize - 3, r);
+  ctx.fill();
+
+  if (isHead) {
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(sx + cellSize / 2, sy + cellSize / 2, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
+const renderSnakeSegment = (
+  ctx: CanvasRenderingContext2D,
+  seg: Point,
+  idx: number,
+  cellSize: number,
+  currentTheme: string,
+  themeStyle: ReturnType<typeof getGameThemeStyle>
+) => {
+  const sx = seg.x * cellSize;
+  const sy = seg.y * cellSize;
+  const isHead = idx === 0;
+
+  if (themeStyle.isRetroPixel) {
+    renderRetroPixelSegment(ctx, sx, sy, cellSize, idx, isHead);
+  } else if (currentTheme === 'cyberpunk-neon') {
+    renderCyberpunkSegment(ctx, sx, sy, cellSize, themeStyle, isHead);
+  } else if (currentTheme === 'swiss-industrial') {
+    renderSwissSegment(ctx, sx, sy, cellSize, themeStyle, isHead);
+  } else {
+    renderSpatialGlassSegment(ctx, sx, sy, cellSize, themeStyle, isHead);
+  }
+};
 
 export const SnakeGame: React.FC = () => {
   const currentTheme = useThemeStore((state) => state.currentTheme);
@@ -56,10 +166,9 @@ export const SnakeGame: React.FC = () => {
     let collision: boolean;
     do {
       newFood = {
-        x: Math.floor(Math.random() * GRID_SIZE),
-        y: Math.floor(Math.random() * GRID_SIZE),
+        x: getRandomInt(0, GRID_SIZE),
+        y: getRandomInt(0, GRID_SIZE),
       };
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
       collision = snake.some((segment) => segment.x === newFood.x && segment.y === newFood.y);
     } while (collision);
     return newFood;
@@ -70,8 +179,8 @@ export const SnakeGame: React.FC = () => {
     let collision: boolean;
     do {
       newFood = {
-        x: Math.floor(Math.random() * GRID_SIZE),
-        y: Math.floor(Math.random() * GRID_SIZE),
+        x: getRandomInt(0, GRID_SIZE),
+        y: getRandomInt(0, GRID_SIZE),
       };
       collision =
         snake.some((s) => s.x === newFood.x && s.y === newFood.y) ||
@@ -411,57 +520,7 @@ export const SnakeGame: React.FC = () => {
       // Snake Body
       const snake = snakeRef.current;
       snake.forEach((seg, idx) => {
-        const sx = seg.x * cellSize;
-        const sy = seg.y * cellSize;
-        const isHead = idx === 0;
-
-        if (themeStyle.isRetroPixel) {
-          // Classic Mac 1984 dither
-          ctx.fillStyle = isHead ? '#000080' : idx % 2 === 0 ? '#1e293b' : '#475569';
-          ctx.fillRect(sx + 1, sy + 1, cellSize - 2, cellSize - 2);
-          if (isHead) {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(sx + 4, sy + 4, 3, 3);
-          }
-        } else if (currentTheme === 'cyberpunk-neon') {
-          ctx.save();
-          ctx.shadowBlur = isHead ? 14 : 8;
-          ctx.shadowColor = isHead ? themeStyle.secondary : themeStyle.primary;
-          ctx.fillStyle = isHead ? themeStyle.secondary : themeStyle.primary;
-          ctx.fillRect(sx + 1.5, sy + 1.5, cellSize - 3, cellSize - 3);
-
-          if (isHead) {
-            ctx.fillStyle = '#facc15';
-            ctx.fillRect(sx + cellSize / 2 - 1.5, sy + cellSize / 2 - 1.5, 3, 3);
-          }
-          ctx.restore();
-        } else if (currentTheme === 'swiss-industrial') {
-          ctx.fillStyle = isHead ? '#ffffff' : '#94a3b8';
-          ctx.fillRect(sx + 1, sy + 1, cellSize - 2, cellSize - 2);
-          if (isHead) {
-            ctx.fillStyle = themeStyle.primary;
-            ctx.fillRect(sx + cellSize / 2 - 2, sy + cellSize / 2 - 2, 4, 4);
-          }
-        } else {
-          // Spatial Glass
-          ctx.save();
-          ctx.shadowBlur = isHead ? 12 : 4;
-          ctx.shadowColor = themeStyle.primary;
-          ctx.fillStyle = isHead ? themeStyle.primary : 'rgba(56, 189, 248, 0.75)';
-          const r = isHead ? 6 : 4;
-
-          ctx.beginPath();
-          ctx.roundRect(sx + 1.5, sy + 1.5, cellSize - 3, cellSize - 3, r);
-          ctx.fill();
-
-          if (isHead) {
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(sx + cellSize / 2, sy + cellSize / 2, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
+        renderSnakeSegment(ctx, seg, idx, cellSize, currentTheme, themeStyle);
       });
 
       animId = requestAnimationFrame(render);

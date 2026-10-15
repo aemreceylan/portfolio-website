@@ -674,17 +674,28 @@
   - Vitest: **29 test dosyasında 182 testin tamamı %100 geçti**.
   - Monorepo genelinde `npm run typecheck` **0 hata** ile doğrulandı.
 
+## [2026-10-15] - Filesystem Store Hata Düzeltmeleri, Kapsamlı SonarQube/SonarJS Taraması ve Güvenlik Sertleştirmesi
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+### Yapılanlar
+- **Filesystem Store Sertleştirmesi & Tip Güvenliği (`filesystem.store.ts`)**:
+  - `MarkdownViewerMode` tipi modüler olarak dışa aktarıldı (`export type MarkdownViewerMode = 'edit' | 'preview' | 'split';`), SonarQube S4323 kural ihlali giderildi.
+  - `getFile`, `deleteFile`, `updateFile`, `renameFile` metodları hem dosya adı (`name`) hem de benzersiz dosya kimliği (`id`) kabul edecek şekilde esnetildi ve sınır kontrolleri güçlendirildi.
+  - `renameFile` metodu dosya uzantısı değişiminde (ör. `.txt` -> `.js` veya `.js` -> `.md`) Markdown Viewer ve JS IDE aktif sekmelerini dinamik olarak senkronize edecek şekilde güncellendi.
+  - `createInitialFileMap` kopyalama sızıntılarını önlemek amacıyla sığ klonlama (`shallow clone`) ile izole edildi.
+- **SonarQube & SonarJS Kapsamlı Kod Kalitesi Taraması (`npm run lint`)**:
+  - Monorepo genelindeki tüm bileşenler, kancalar ve oyun modülleri SonarJS kurallarından geçirildi.
+  - **Sözde Rastgele Sayı Güvenliği (S2245 / `sonarjs/pseudo-random`)**: Oyunlarda (`BreakoutGame.tsx`, `SnakeGame.tsx`, `SpaceDefenderGame.tsx`) `Math.random()` yerine Web Crypto API tabanlı cryptographically secure `crypto.getRandomValues` kullanan `apps/user-interface/src/apps/games/utils/random.ts` yardımcı motoru yazıldı (`getRandomFloat`, `getRandomInt`, `getRandomSpread`, `getRandomSign`).
+  - **Bilişsel Karmaşıklık İyileştirmeleri (S3776 / `sonarjs/cognitive-complexity`)**:
+    - `BreakoutGame.tsx`: 49 olan bilişsel karmaşıklık, palet hareketi, duvar/tavan sekmesi, palet sekmesi, zemin/can kontrolü ve tuğla çarpışma yardımcılarına (`updatePaddleMovement`, `updateBallWallAndCeilingBounce`, `updatePaddleBounce`, `handleBallLossAndFloor`, `updateBrickCollisionsAndVictory`) parçalanarak < 5 seviyesine düşürüldü.
+    - `SnakeGame.tsx`: Yılan gövde çizimindeki iç içe dallanmalar ve ternary ifadeler (`sonarjs/no-nested-conditional`) temaya özel alt fonksiyonlara (`renderRetroPixelSegment`, `renderCyberpunkSegment`, `renderSwissSegment`, `renderSpatialGlassSegment`) ayrılarak karmaşıklık 4'e düşürüldü.
+    - `SpaceDefenderGame.tsx`: Oyun döngüsü ve uzaylı hareketleri ayrıştırıldı, kullanılmayan `Pause` import'u temizlendi (`sonarjs/unused-import`).
+  - **Erişilebilirlik ve Semantik İyileştirmeler**:
+    - `Desktop.tsx`: Masaüstü kartları ve marka logosu `role="button"` div'ler yerine semantik `<button type="button">` etiketlerine dönüştürüldü (SonarQube S6819); CSS sıfırlamaları `desktop.css`'e işlendi. `file.text()` standardına geçildi (S6551/S7756).
+    - `Dock.tsx` ve `WindowFrame.tsx`: Sağ tık bağlam menülerine `role="menu"`, `tabIndex={-1}` ve klavye dinleyicisi `onKeyDown` eklendi (S6848, S1082).
+- **TypeScript Derleme Uyumluluğu (`tsconfig.json`)**:
+  - `apps/user-interface/tsconfig.json` `lib` array'ine `"ES2023"` eklendi (`toSorted()` desteği).
+  - Pointer event türü `HTMLElement` olarak gevşetilerek tip hataları sıfırlandı.
+- **Test ve Kalite Durumu**:
+  - `npm run lint`: **0 hata, 0 uyarı** (Monorepo genelinde SonarJS kuralları %100 temiz).
+  - `npm run typecheck`: **0 hata** (Tüm paketlerde tam tip güvenliği).
+  - `npm test`: **29 test dosyasında 182 testin tamamı %100 başarıyla geçti**.

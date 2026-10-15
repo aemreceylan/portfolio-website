@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, RotateCcw, Play, Pause, Heart } from 'lucide-rea
 import { useThemeStore } from '#stores/theme.store';
 import { gameSoundService } from '../../services/game-sound.service';
 import { getGameThemeStyle } from '../../types';
+import { getRandomSpread, getRandomSign, getRandomFloat } from '../../utils/random';
 
 interface Brick {
   x: number;
@@ -98,7 +99,7 @@ export const BreakoutGame: React.FC = () => {
   const startGame = useCallback(() => {
     paddleXRef.current = 160;
     ballPosRef.current = { x: 200, y: 320 };
-    ballVelRef.current = { vx: (Math.random() > 0.5 ? 1 : -1) * 3, vy: -3.5 };
+    ballVelRef.current = { vx: getRandomSign() * 3, vy: -3.5 };
     bricksRef.current = initBricks();
     particlesRef.current = [];
     livesRef.current = 3;
@@ -180,12 +181,135 @@ export const BreakoutGame: React.FC = () => {
       particlesRef.current.push({
         x,
         y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
+        vx: getRandomSpread(6),
+        vy: getRandomSpread(6),
         color,
         alpha: 1,
-        size: Math.random() * 3 + 2,
+        size: getRandomFloat() * 3 + 2,
       });
+    }
+  };
+
+  const updatePaddleMovement = (width: number) => {
+    if (keysDownRef.current.left) {
+      paddleXRef.current = Math.max(0, paddleXRef.current - 6.5);
+    }
+    if (keysDownRef.current.right) {
+      paddleXRef.current = Math.min(width - PADDLE_WIDTH, paddleXRef.current + 6.5);
+    }
+  };
+
+  const updateBallWallAndCeilingBounce = (width: number) => {
+    const ball = ballPosRef.current;
+    const vel = ballVelRef.current;
+
+    // Side wall collisions
+    if (ball.x - BALL_RADIUS <= 0) {
+      ball.x = BALL_RADIUS;
+      vel.vx = Math.abs(vel.vx);
+      gameSoundService.play('paddle-bounce', currentTheme);
+    } else if (ball.x + BALL_RADIUS >= width) {
+      ball.x = width - BALL_RADIUS;
+      vel.vx = -Math.abs(vel.vx);
+      gameSoundService.play('paddle-bounce', currentTheme);
+    }
+
+    // Top ceiling collision
+    if (ball.y - BALL_RADIUS <= 0) {
+      ball.y = BALL_RADIUS;
+      vel.vy = Math.abs(vel.vy);
+      gameSoundService.play('paddle-bounce', currentTheme);
+    }
+  };
+
+  const updatePaddleBounce = (height: number) => {
+    const ball = ballPosRef.current;
+    const vel = ballVelRef.current;
+    const paddleY = height - 30;
+
+    if (
+      ball.y + BALL_RADIUS >= paddleY &&
+      ball.y - BALL_RADIUS <= paddleY + PADDLE_HEIGHT &&
+      ball.x >= paddleXRef.current &&
+      ball.x <= paddleXRef.current + PADDLE_WIDTH &&
+      vel.vy > 0
+    ) {
+      vel.vy = -Math.abs(vel.vy);
+      const hitOffset = (ball.x - (paddleXRef.current + PADDLE_WIDTH / 2)) / (PADDLE_WIDTH / 2);
+      vel.vx = hitOffset * 4.5;
+      gameSoundService.play('paddle-bounce', currentTheme);
+    }
+  };
+
+  const handleBallLossAndFloor = (height: number): boolean => {
+    const ball = ballPosRef.current;
+    const vel = ballVelRef.current;
+
+    if (ball.y - BALL_RADIUS <= height) return true;
+
+    livesRef.current -= 1;
+    setLives(livesRef.current);
+    gameSoundService.play('life-lost', currentTheme);
+
+    if (livesRef.current <= 0) {
+      setGameState('game-over');
+      gameSoundService.play('game-over', currentTheme);
+      if (scoreRef.current > highScore) {
+        setHighScore(scoreRef.current);
+        try {
+          localStorage.setItem('aec_game_breakout_highscore', scoreRef.current.toString());
+        } catch {
+          // ignore
+        }
+      }
+      return false;
+    }
+
+    // Reset ball position on paddle
+    ball.x = paddleXRef.current + PADDLE_WIDTH / 2;
+    ball.y = height - 45;
+    vel.vx = getRandomSign() * 3;
+    vel.vy = -3.5;
+    return true;
+  };
+
+  const updateBrickCollisionsAndVictory = () => {
+    const ball = ballPosRef.current;
+    const vel = ballVelRef.current;
+    let remainingBricks = 0;
+
+    bricksRef.current.forEach((brick) => {
+      if (!brick.alive) return;
+      remainingBricks += 1;
+
+      // Simple AABB collision
+      if (
+        ball.x + BALL_RADIUS >= brick.x &&
+        ball.x - BALL_RADIUS <= brick.x + brick.width &&
+        ball.y + BALL_RADIUS >= brick.y &&
+        ball.y - BALL_RADIUS <= brick.y + brick.height
+      ) {
+        brick.alive = false;
+        vel.vy = -vel.vy;
+        const newScore = scoreRef.current + brick.points;
+        scoreRef.current = newScore;
+        setScore(newScore);
+        spawnParticles(brick.x + brick.width / 2, brick.y + brick.height / 2, brick.color);
+        gameSoundService.play('brick-hit', currentTheme);
+      }
+    });
+
+    if (remainingBricks === 0) {
+      setGameState('victory');
+      gameSoundService.play('level-clear', currentTheme);
+      if (scoreRef.current > highScore) {
+        setHighScore(scoreRef.current);
+        try {
+          localStorage.setItem('aec_game_breakout_highscore', scoreRef.current.toString());
+        } catch {
+          // ignore
+        }
+      }
     }
   };
 
@@ -204,116 +328,19 @@ export const BreakoutGame: React.FC = () => {
 
       // Update positions if playing
       if (gameState === 'playing') {
-        // Paddle movement via keys
-        if (keysDownRef.current.left) {
-          paddleXRef.current = Math.max(0, paddleXRef.current - 6.5);
-        }
-        if (keysDownRef.current.right) {
-          paddleXRef.current = Math.min(width - PADDLE_WIDTH, paddleXRef.current + 6.5);
-        }
+        updatePaddleMovement(width);
 
         // Ball movement
-        const ball = ballPosRef.current;
-        const vel = ballVelRef.current;
-        ball.x += vel.vx;
-        ball.y += vel.vy;
+        ballPosRef.current.x += ballVelRef.current.vx;
+        ballPosRef.current.y += ballVelRef.current.vy;
 
-        // Side wall collisions
-        if (ball.x - BALL_RADIUS <= 0) {
-          ball.x = BALL_RADIUS;
-          vel.vx = Math.abs(vel.vx);
-          gameSoundService.play('paddle-bounce', currentTheme);
-        } else if (ball.x + BALL_RADIUS >= width) {
-          ball.x = width - BALL_RADIUS;
-          vel.vx = -Math.abs(vel.vx);
-          gameSoundService.play('paddle-bounce', currentTheme);
-        }
+        updateBallWallAndCeilingBounce(width);
+        updatePaddleBounce(height);
 
-        // Top ceiling collision
-        if (ball.y - BALL_RADIUS <= 0) {
-          ball.y = BALL_RADIUS;
-          vel.vy = Math.abs(vel.vy);
-          gameSoundService.play('paddle-bounce', currentTheme);
-        }
+        const isStillAlive = handleBallLossAndFloor(height);
+        if (!isStillAlive) return;
 
-        // Paddle collision
-        const paddleY = height - 30;
-        if (
-          ball.y + BALL_RADIUS >= paddleY &&
-          ball.y - BALL_RADIUS <= paddleY + PADDLE_HEIGHT &&
-          ball.x >= paddleXRef.current &&
-          ball.x <= paddleXRef.current + PADDLE_WIDTH &&
-          vel.vy > 0
-        ) {
-          vel.vy = -Math.abs(vel.vy);
-          // Angle modifier based on where ball hits paddle
-          const hitOffset = (ball.x - (paddleXRef.current + PADDLE_WIDTH / 2)) / (PADDLE_WIDTH / 2);
-          vel.vx = hitOffset * 4.5;
-          gameSoundService.play('paddle-bounce', currentTheme);
-        }
-
-        // Bottom floor collision (Lost ball)
-        if (ball.y - BALL_RADIUS > height) {
-          livesRef.current -= 1;
-          setLives(livesRef.current);
-          gameSoundService.play('life-lost', currentTheme);
-
-          if (livesRef.current <= 0) {
-            setGameState('game-over');
-            gameSoundService.play('game-over', currentTheme);
-            if (scoreRef.current > highScore) {
-              setHighScore(scoreRef.current);
-              try {
-                localStorage.setItem('aec_game_breakout_highscore', scoreRef.current.toString());
-              } catch {
-                // ignore
-              }
-            }
-          } else {
-            // Reset ball position on paddle
-            ball.x = paddleXRef.current + PADDLE_WIDTH / 2;
-            ball.y = height - 45;
-            vel.vx = (Math.random() > 0.5 ? 1 : -1) * 3;
-            vel.vy = -3.5;
-          }
-        }
-
-        // Brick collisions
-        let remainingBricks = 0;
-        bricksRef.current.forEach((brick) => {
-          if (!brick.alive) return;
-          remainingBricks += 1;
-
-          // Simple AABB collision
-          if (
-            ball.x + BALL_RADIUS >= brick.x &&
-            ball.x - BALL_RADIUS <= brick.x + brick.width &&
-            ball.y + BALL_RADIUS >= brick.y &&
-            ball.y - BALL_RADIUS <= brick.y + brick.height
-          ) {
-            brick.alive = false;
-            vel.vy = -vel.vy;
-            const newScore = scoreRef.current + brick.points;
-            scoreRef.current = newScore;
-            setScore(newScore);
-            spawnParticles(brick.x + brick.width / 2, brick.y + brick.height / 2, brick.color);
-            gameSoundService.play('brick-hit', currentTheme);
-          }
-        });
-
-        // Victory check
-        if (remainingBricks === 0) {
-          setGameState('victory');
-          gameSoundService.play('level-clear', currentTheme);
-          if (scoreRef.current > highScore) {
-            setHighScore(scoreRef.current);
-            try {
-              localStorage.setItem('aec_game_breakout_highscore', scoreRef.current.toString());
-            } catch {
-              // ignore
-            }
-          }
-        }
+        updateBrickCollisionsAndVictory();
 
         // Update particles
         particlesRef.current.forEach((p) => {
