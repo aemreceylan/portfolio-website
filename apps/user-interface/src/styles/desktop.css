@@ -4,8 +4,8 @@
   top: 0;
   left: 0;
   right: 0;
-  height: var(--statusbar-height, 42px);
-  min-height: var(--statusbar-height, 42px);
+  height: var(--statusbar-height, 40px);
+  min-height: var(--statusbar-height, 40px);
   padding: 0 20px;
   display: flex;
   align-items: center;
@@ -68,11 +68,15 @@
 
 .desktop-app-card {
   width: 88px;
+  height: 92px;
+  max-height: 92px;
+  min-height: 92px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 10px 6px;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 6px 4px;
   border-radius: 12px;
   cursor: grab;
   user-select: none;
@@ -99,6 +103,7 @@
 .desktop-app-icon {
   width: 50px;
   height: 50px;
+  flex-shrink: 0;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
@@ -114,27 +119,37 @@
 
 .desktop-app-card:hover .desktop-app-icon {
   transform: scale(1.08);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45), 0 0 14px rgba(56, 189, 248, 0.3);
-  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45), 0 0 14px var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
 }
 
 .desktop-app-label {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--text-primary);
   text-align: center;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   letter-spacing: -0.01em;
   word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
+  max-height: 30px;
 }
 
 .desktop-file-card {
   width: 88px;
+  height: 92px;
+  max-height: 92px;
+  min-height: 92px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px 4px;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 6px 4px;
   border-radius: 12px;
   cursor: grab;
   position: absolute;
@@ -160,18 +175,19 @@
 }
 
 .desktop-file-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #38bdf8;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
   transition: all var(--transition-fast);
 }
 
@@ -191,7 +207,12 @@
   color: #cbd5e1;
   text-align: center;
   word-break: break-all;
-  line-height: 1.2;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: 30px;
 }
 
 /* Spatial Glass Context Menu */
@@ -377,3 +398,95 @@
   background: rgba(255, 255, 255, 0.18);
   border-color: rgba(255, 255, 255, 0.3);
 }
+
+/* --------------------------------------------------------------------------
+   Swiss Industrial Desktop Scoping (Dieter Rams & Swiss Functionalism)
+   -------------------------------------------------------------------------- */
+[data-theme="swiss-industrial"] .spatial-statusbar {
+  background: #111317;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid #232731;
+  font-family: var(--font-mono);
+  color: #a1a1aa;
+}
+
+[data-theme="swiss-industrial"] .os-brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="swiss-industrial"] .os-brand-icon {
+  border-radius: 1px;
+  background: var(--color-accent);
+  box-shadow: none;
+}
+
+[data-theme="swiss-industrial"] .desktop-app-card,
+[data-theme="swiss-industrial"] .desktop-file-card {
+  border-radius: 4px;
+}
+
+[data-theme="swiss-industrial"] .desktop-app-card:hover,
+[data-theme="swiss-industrial"] .desktop-file-card:hover {
+  background: #171a22;
+  box-shadow: 0 0 0 1px #282f3d;
+  transform: none;
+}
+
+[data-theme="swiss-industrial"] .desktop-app-icon,
+[data-theme="swiss-industrial"] .desktop-file-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  background: #131519;
+  border: 1px solid #22262f;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme="swiss-industrial"] .desktop-app-card:hover .desktop-app-icon,
+[data-theme="swiss-industrial"] .desktop-file-card:hover .desktop-file-icon {
+  transform: none;
+  border-color: var(--color-accent);
+  box-shadow: none;
+}
+
+[data-theme="swiss-industrial"] .desktop-app-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #d4d4d8;
+  text-shadow: none;
+}
+
+[data-theme="swiss-industrial"] .desktop-file-name {
+  color: #a1a1aa;
+  text-shadow: none;
+}
+
+[data-theme="swiss-industrial"] .spatial-context-menu {
+  background: #14171d;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid #282f3d;
+  border-radius: 4px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="swiss-industrial"] .context-menu-item {
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+[data-theme="swiss-industrial"] .context-menu-item:hover {
+  background: #1e222b;
+  color: #f4f4f5;
+}
+

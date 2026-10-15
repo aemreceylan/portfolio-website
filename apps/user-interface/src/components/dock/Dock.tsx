@@ -1,27 +1,8 @@
-import { Terminal, Settings, AppWindow, FileText, Code2 } from 'lucide-react';
+import React from 'react';
 import { useWindowManager } from '#stores/window-manager.store';
-import { APP_REGISTRY } from '#apps/app-registry';
 import { useTranslation } from '#i18n/i18n.store';
+import { AppIconResolver } from '#components/icons/AppIconResolver';
 import '#styles/dock.css';
-
-/**
- * Maps application iconName to corresponding Lucide icon component.
- * Guaranteed to only use non-deprecated standard geometric Lucide icons.
- */
-const renderAppIcon = (iconName: string, size = 20) => {
-  switch (iconName) {
-    case 'Terminal':
-      return <Terminal size={size} />;
-    case 'Settings':
-      return <Settings size={size} />;
-    case 'FileText':
-      return <FileText size={size} />;
-    case 'Code2':
-      return <Code2 size={size} />;
-    default:
-      return <AppWindow size={size} />;
-  }
-};
 
 /**
  * Dynamic Dock component that functions strictly as an Active Taskbar.
@@ -62,10 +43,8 @@ export const Dock: React.FC = () => {
   return (
     <nav className="spatial-dock-container" aria-label="Açık Uygulamalar Çubuğu">
       {openWindows.map((win) => {
-        const appEntry = APP_REGISTRY[win.id];
         const titleKey = win.id === 'settings' ? 'appName_settings' : 'appName_terminal';
         const localizedTitle = t(titleKey);
-        const iconName = appEntry ? appEntry.manifest.iconName : win.iconName;
         const isActive = activeWindowId === win.id && !win.isMinimized;
 
         return (
@@ -77,15 +56,14 @@ export const Dock: React.FC = () => {
             aria-label={`${localizedTitle} - ${t('dock_manage_window')}`}
             title={localizedTitle}
           >
-            {renderAppIcon(iconName)}
+            <AppIconResolver appId={win.id} size={24} />
             <span className="dock-tooltip">{localizedTitle}</span>
             <span
               className="dock-dot"
-              style={{
-                background: isActive ? 'var(--aurora-cyan)' : 'var(--text-muted)',
-                boxShadow: isActive ? '0 0 6px var(--aurora-cyan)' : 'none',
-              }}
               data-testid={`dock-dot-${win.id}`}
+              style={{
+                opacity: isActive ? 1 : 0.4,
+              }}
             />
           </button>
         );

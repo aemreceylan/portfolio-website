@@ -1,4 +1,12 @@
-/* Spatial Glass Window Styles */
+/* ==========================================================================
+   Window Frame & Chrome Styling
+   - Spatial Dark Glass: Frosted glass blur, soft highlights, colored control discs
+   - Swiss Industrial: 4px solid chassis, monospace headers, mechanical controls
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Default / Spatial Glass Window
+   -------------------------------------------------------------------------- */
 .window-container {
   position: absolute;
   border-radius: var(--radius-window);
@@ -32,7 +40,7 @@
   border: none;
 }
 
-/* Window Titlebar styled with dynamic theme accent */
+/* Window Titlebar */
 .window-titlebar {
   height: var(--titlebar-height);
   min-height: var(--titlebar-height);
@@ -40,16 +48,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
-  background: linear-gradient(90deg, rgba(var(--accent-rgb, 34, 211, 238), 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-  border-bottom: 1px solid rgba(var(--accent-rgb, 34, 211, 238), 0.16);
+  background: linear-gradient(90deg, rgba(var(--accent-rgb, 56, 189, 248), 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-bottom: 1px solid rgba(var(--accent-rgb, 56, 189, 248), 0.16);
   cursor: grab;
   user-select: none;
   transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .window-container.active .window-titlebar {
-  background: linear-gradient(90deg, rgba(var(--accent-rgb, 34, 211, 238), 0.16) 0%, rgba(var(--accent-rgb, 34, 211, 238), 0.04) 100%);
-  border-bottom: 1px solid rgba(var(--accent-rgb, 34, 211, 238), 0.32);
+  background: linear-gradient(90deg, rgba(var(--accent-rgb, 56, 189, 248), 0.16) 0%, rgba(var(--accent-rgb, 56, 189, 248), 0.04) 100%);
+  border-bottom: 1px solid rgba(var(--accent-rgb, 56, 189, 248), 0.32);
 }
 
 .window-titlebar:active {
@@ -134,7 +142,7 @@
   background: rgba(8, 10, 14, 0.45);
 }
 
-/* Spatial Suspense Skeleton (Loading Screen for Lazy Apps) */
+/* Spatial Suspense Skeleton */
 .spatial-skeleton-container {
   display: flex;
   flex-direction: column;
@@ -156,7 +164,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--aurora-cyan);
+  color: var(--color-accent);
   animation: pulse-glow 2s infinite ease-in-out;
 }
 
@@ -208,7 +216,7 @@
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
   padding: 6px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 20px rgba(var(--accent-rgb, 34, 211, 238), 0.15);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 20px rgba(var(--accent-rgb, 56, 189, 248), 0.15);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -250,3 +258,106 @@
   color: currentColor;
 }
 
+/* --------------------------------------------------------------------------
+   Swiss Industrial Window Scoping (Solid Matte Engineered Chassis)
+   -------------------------------------------------------------------------- */
+[data-theme="swiss-industrial"] .window-container {
+  border-radius: 4px;
+  background: #131519;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid #232732;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), 0 0 0 1px #22262f;
+}
+
+[data-theme="swiss-industrial"] .window-container.active {
+  background: #16191f;
+  border-color: #3b4251;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 0 1px #485368;
+}
+
+[data-theme="swiss-industrial"] .window-titlebar {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  background: #171920;
+  border-bottom: 1px solid #232731;
+}
+
+[data-theme="swiss-industrial"] .window-container.active .window-titlebar {
+  background: #1b1e26;
+  border-bottom: 1px solid var(--color-accent);
+}
+
+[data-theme="swiss-industrial"] .window-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #a1a1aa;
+}
+
+[data-theme="swiss-industrial"] .window-container.active .window-title {
+  color: #f4f4f5;
+}
+
+[data-theme="swiss-industrial"] .window-controls {
+  gap: 6px;
+}
+
+[data-theme="swiss-industrial"] .window-control-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+[data-theme="swiss-industrial"] .window-control-btn:hover {
+  transform: none;
+}
+
+[data-theme="swiss-industrial"] .window-control-btn.close {
+  background: #dc2626;
+  border-color: #ef4444;
+}
+
+[data-theme="swiss-industrial"] .window-control-btn.minimize {
+  background: #eab308;
+  border-color: #ca8a04;
+}
+
+[data-theme="swiss-industrial"] .window-control-btn.maximize,
+[data-theme="swiss-industrial"] .window-control-btn.restore {
+  background: #16a34a;
+  border-color: #22c55e;
+}
+
+[data-theme="swiss-industrial"] .window-content {
+  background: #0e1014;
+}
+
+[data-theme="swiss-industrial"] .window-titlebar-context-menu {
+  background: #151820;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid #2d3342;
+  border-radius: 3px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="swiss-industrial"] .window-titlebar-context-item {
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+[data-theme="swiss-industrial"] .skeleton-orb {
+  border-radius: 4px;
+  background: #181b22;
+  border: 1px solid #2c323f;
+  animation: none;
+  box-shadow: none;
+}

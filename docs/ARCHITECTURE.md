@@ -311,6 +311,71 @@ Docker ortamında orkestrasyonun ve konteynerin ayakta kalmasını (keep-alive) 
   - `docker/docker-compose.yml` orkestrasyon dosyası GitHub Actions tarafından Base64 formatında doğrudan sunucuya iletilir.
   - Sunucu yalnızca bir Docker hostu olarak davranır; `docker compose` ve `docker-compose` komutlarını dinamik olarak destekler, GitHub Container Registry'den imajları çeker ve ayağa kaldırır. Bu yaklaşım sunucunun ele geçirilmesi durumunda kaynak koda veya GitHub hesabına erişim riskini sıfıra indirir.
 
+---
+
+## 18. Çift Motorlu Tasarım Sistemi & Bütünsel Tema Mimarisi (Dual-Engine Theme System)
+
+Kullanıcı arayüzünde yüzeysel renk veya arka plan gradyanı değişiklikleri yerine, işletim sisteminin tüm görsel, geometrik, tipografik ve duyusal katmanlarını dönüştüren **Çift Motorlu Tasarım Sistemi** hayata geçirilmiştir:
+
+* **İki Bağımsız Tasarım Felsefesi**:
+  1. **Spatial Dark Glass (`spatial-glass`) [Varsayılan]**:
+     - Apple VisionOS ve modern spatial tasarım dili.
+     - 24px katmanlı buzlu cam (`backdrop-filter: blur(24px)`), elektrik aurora camgöbeği (`#38bdf8`) vurgu ışıltısı, 14px yuvarlatılmış pencere köşeleri.
+     - 9999px yüzen cam kapsül dock ve akıcı hover sıçramaları (`scale(1.12)`).
+     - Orijinal derin uzay nebula gradyanı ve standart çağdaş Lucide vektör simgeleri.
+  2. **Swiss Industrial (`swiss-industrial`)**:
+     - Dieter Rams ("Weniger, aber besser"), Braun & Leica ve Bauhaus işlevsel grafik tasarım ekolü.
+     - Masif, mat, monolitik grafit/arduvaz şasi (`blur: 0px`, `#131519`), sıfır süsleme, 4px deterministik pencere köşeleri.
+     - 46px modüler enstrüman konsolu (alt kenara kilitli, sıfır zıplama/bounce, mekanik durum LED'i).
+     - Braun/Leica tekil fonksiyonel emniyet turuncusu (`#ff5500`) vurgusu.
+     - 32px teknik CAD çizim ızgarası (`drafting grid`) ve üst barda teknik koordinat telemetrisi (`SYS.LOC // 39.92°N 32.85°E`).
+     - Özel geometrik Bauhaus mimari SVG logoları (`AppLogos.tsx`).
+* **Sabit İmza Duvar Kağıtları & Renk Seçiminin Tasfiyesi**:
+  - Her temanın felsefesine uygun tekil ve değişmez bir imza arka planı atanmış; kullanıcı arayüzündeki manuel duvar kağıdı seçimi kaldırılmıştır.
+  - Standart 5'li vurgu rengi seçimi ve `isAutoAccent` arayüzden ve store'dan tamamen temizlenmiştir; her temanın vurgu rengi o ekolün ruhuna içkin ve sabittir.
+* **Reaktif Simge Ayrıştırıcısı (`AppIconResolver.tsx`)**:
+  - `Desktop.tsx`, `Dock.tsx` ve `WindowFrame.tsx` içerisinde kod karmaşasını önlemek amacıyla simge çözümleyici bileşen geliştirilmiştir.
+  - Bilişsel karmaşıklığı (`cognitive-complexity`) 15 limitinin çok altında tutmak üzere modüler alt fonksiyonlara (`renderSwissAppIcon`, `renderSpatialAppIcon`, `renderFileIcon`, `renderBrandIcon`) ayrıştırılmıştır.
+  - `spatial-glass` aktifken Lucide glifleri, `swiss-industrial` aktifken özel mimari SVG logoları derlenir.
+* **Geleceğe Hazır Backend Varsayılan Tema Entegrasyonu (`theme.store.ts`)**:
+  - Varsayılan tema `develop` dalı standardı olan `spatial-glass`'tır.
+  - `resolveInitialTheme(backendDefault?: ThemeId)` fonksiyonu ile 3 aşamalı hiyerarşi kurulmuştur:
+    1. Kullanıcının yerel tercihi (`localStorage.getItem('aec_portfolio_active_theme')`),
+    2. Backend API'sinden gelebilecek varsayılan konfigürasyon (`backendDefault`),
+    3. Güvenli geri dönüş varsayılanı (`DEFAULT_THEME = 'spatial-glass'`).
+* **Ayrıntılı Tasarım Şartnamesi**:
+  - Tüm CSS token'ları, renk kodları, yüzey haritaları ve simge kılavuzları [DESIGN_SYSTEM_SPEC.md](file:///docs/DESIGN_SYSTEM_SPEC.md) belgesinde tescillenmiştir.
+
+---
+
+## 19. Modüler & Genişletilebilir Tema Motoru (Pluggable Theme Engine) & Geometrik Bütünlük
+
+Kullanıcı arayüzünde tema ekleme ve tema değiştirme deneyimini endüstri standardı seviyesine çıkarmak amacıyla, sert kodlanmış `if (isSwiss)` mantıkları tamamen tasfiye edilerek **Açık/Kapalı Prensibi'ne (Open/Closed Principle)** dayalı dinamik bir tema motoru (`apps/user-interface/src/themes/`) geliştirilmiştir:
+
+* **Tema Kayıt Defteri & Motoru (`theme-registry.ts` & `theme.types.ts`)**:
+  - `ThemeDefinition` arayüzü ile bir temanın sahip olması gereken tüm kimlik (`id`, `name`, `subtitle`, `description`), renk/arka plan (`colors`), tipografi (`typography`) ve simge haritası (`icons`) kurallara bağlanmıştır.
+  - `ThemeRegistry` sınıfı; `registerTheme()`, `getTheme()`, `getAllThemes()`, `hasTheme()`, `applyThemeToDom()` ve `getThemeMetaList()` metodları ile merkezi kontrol sağlar.
+  - Sistem başlangıcında `spatialGlassTheme` ve `swissIndustrialTheme` motor tarafından otomatik kaydedilir.
+  - Yeni bir tema eklemek için tek yapılması gereken `my-theme.theme.tsx` tanımını oluşturup `registerTheme(myTheme)` çağırmaktır; Ayarlar arayüzü, simge çözümleyiciler ve DOM değişkenleri hiçbir if/else koşulu yazılmadan anında çalışır.
+* **Tema Değişiminde Sıfır Boyut Zıplaması (Zero Layout Jumping)**:
+  - Tema değiştiğinde bileşen boyutlarının titremesini/zıplamasını engellemek için geometrik ölçüler `:root` seviyesinde tekleştirilmiştir:
+    - **Üst Bar (Status Bar)**: Her iki temada da tam `40px` (`--statusbar-height: 40px`).
+    - **Pencere Çerçeve Barı (Titlebar)**: Her iki temada da ince ve zarif `36px` (`--titlebar-height: 36px`).
+    - **Açık Uygulamalar Çubuğu (Dock)**: Her iki temada da `58px` (`--dock-height: 58px`), dock ögeleri ise `42x42px` boyutundadır.
+    - **Masaüstü Uygulama ve Dosya Kartları**: Her iki temada da `88px x 92px` boyutunda, `50x50px` simge kapsayıcısına ve `11.5px` (satır yüksekliği `1.25`, azami `30px`) iki satırlı taşmayan etiketlere sahiptir.
+* **Görsel & Geometrik Kusursuzlaştırmalar**:
+  - **Masaüstü İki Satırlı Program İsimleri**: Kart yüksekliği 86px'ten 92px'e çıkarılmış, dikey hizalama `flex-start` ve `padding: 6px 4px` olarak ayarlanmış; iki satırlı etiketlerin kesilmesi (`text truncation/clipping`) tamamen çözülmüştür.
+  - **Simge Arkaplan Eşitsizliğinin Çözümü & Optik Denge**:
+    - `TerminalAppLogo`, `MarkdownAppLogo` ve `JsIdeAppLogo` içindeki kutu-içinde-kutu küçülmesine yol açan dahili koyu şasi dikdörtgenleri (`<rect fill="#0d0f14">`) kaldırılmıştır.
+    - Tüm uygulama logoları 24x24 viewBox içinde optik sınırları (~20x18) dolgun, saf yüksek kontrastlı vektör gliflerine dönüştürülmüştür.
+    - Masaüstündeki dosya ve uygulama simgeleri `50x50px` dış çerçeveye eşitlenmiş; `welcome.md` ve `markdown-viewer` arka planları birebir aynı boyuta getirilmiştir.
+    - Swiss temasında simge boyutu masaüstünde 32px'e, dock'ta 24px'e çıkarılarak net ve belirgin hale getirilmiştir.
+  - **Pencere Çerçeve Barı Sadeleştirmesi**: Çerçeve üst barındaki küçük uygulama logosu kaldırılmış, sadece pencere başlığı metni bırakılmıştır.
+  - **Swiss Kontrol Tuşları Renkleri**: Endüstriyel makine gösterge standartlarına uygun olarak küçültme/aşağı alma tuşu sarı/kehribar (`#eab308`), büyütme/ekranı kaplama tuşu yeşil (`#16a34a`), kapatma tuşu kırmızı (`#dc2626`) olarak güncellenmiştir.
+  - **Sağ Üst Koordinatların Temizlenmesi**: Kullanıcı talebi doğrultusunda Swiss temasında sağ üstteki `SYS.LOC` telemetri metni kaldırılmıştır.
+
+
+
 
 
 

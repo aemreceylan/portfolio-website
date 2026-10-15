@@ -1,18 +1,17 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import {
-  Terminal,
-  Settings,
-  AppWindow,
-  FileText,
-  FileCode,
-  Code2,
   ShieldAlert,
   FolderPlus,
   Edit3,
   Trash2,
   ExternalLink,
+  FileText,
+  FileCode,
+  Terminal,
+  Settings,
 } from 'lucide-react';
 import { useWindowManager } from '#stores/window-manager.store';
+import { AppIconResolver } from '#components/icons/AppIconResolver';
 import {
   APP_REGISTRY,
   terminalManifest,
@@ -28,24 +27,6 @@ import { useFileSystemStore, VFSFile, parseAllowedExtension } from '#stores/file
 import '#styles/design-tokens.css';
 import '#styles/window.css';
 import '#styles/desktop.css';
-
-/**
- * Maps iconName string from manifest to standard Lucide React SVG icon
- */
-const renderDesktopIcon = (iconName: string) => {
-  switch (iconName) {
-    case 'Terminal':
-      return <Terminal size={24} />;
-    case 'Settings':
-      return <Settings size={24} />;
-    case 'FileText':
-      return <FileText size={24} />;
-    case 'Code2':
-      return <Code2 size={24} />;
-    default:
-      return <AppWindow size={24} />;
-  }
-};
 
 interface ContextMenuState {
   isOpen: boolean;
@@ -676,8 +657,14 @@ export const Desktop: React.FC = () => {
       {/* Top Status Bar with enhanced thickness */}
       <header className="spatial-statusbar" role="banner">
         <div className="statusbar-left">
-          <div className="os-brand">
-            <span className="os-brand-icon" aria-hidden="true" />
+          <div
+            className="os-brand"
+            onClick={() => openWindow(settingsManifest)}
+            role="button"
+            tabIndex={0}
+            aria-label="AEC System Settings"
+          >
+            <AppIconResolver variant="brand" size={18} className="os-brand-logo" />
             <span>AEC</span>
           </div>
           {activeWindow && (
@@ -725,7 +712,9 @@ export const Desktop: React.FC = () => {
                 if (e.key === 'Enter') openWindow(manifest);
               }}
             >
-              <div className="desktop-app-icon">{renderDesktopIcon(manifest.iconName)}</div>
+              <div className="desktop-app-icon">
+                <AppIconResolver appId={manifest.id} size={32} />
+              </div>
               <span className="desktop-app-label">{appName}</span>
             </div>
           );
@@ -766,7 +755,7 @@ export const Desktop: React.FC = () => {
               }}
             >
               <div className="desktop-file-icon">
-                {isJs ? <FileCode size={22} /> : <FileText size={22} />}
+                <AppIconResolver fileExtension={file.extension} size={30} />
               </div>
               <span className="desktop-file-name">{file.name}</span>
             </div>

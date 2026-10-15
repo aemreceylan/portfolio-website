@@ -114,8 +114,8 @@ describe('TerminalApp Component', () => {
     expect(useFileSystemStore.getState().getFile('custom-temp.md')).toBeDefined();
 
     // 2. Change theme
-    useThemeStore.getState().setWallpaper('cyberpunk');
-    expect(useThemeStore.getState().wallpaper).toBe('cyberpunk');
+    useThemeStore.getState().setTheme('swiss-industrial');
+    expect(useThemeStore.getState().currentTheme).toBe('swiss-industrial');
 
     // 3. Switch user
     const input = screen.getByPlaceholderText(/type a command/i);
@@ -138,8 +138,8 @@ describe('TerminalApp Component', () => {
     // Assert custom file wiped
     expect(useFileSystemStore.getState().getFile('custom-temp.md')).toBeUndefined();
 
-    // Assert wallpaper reset to deep-space
-    expect(useThemeStore.getState().wallpaper).toBe('deep-space');
+    // Assert theme reset to spatial-glass
+    expect(useThemeStore.getState().currentTheme).toBe('spatial-glass');
   });
 
   it('should warn when attempting rm -rf without sudo', () => {

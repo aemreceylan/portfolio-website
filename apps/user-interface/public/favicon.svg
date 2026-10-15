@@ -1,0 +1,11 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Matte dark industrial base -->
+  <rect width="32" height="32" rx="6" fill="#0E1013"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="5.5" stroke="#2C313C"/>
+  <!-- Precision grid letterform: Geometric A -->
+  <path d="M6 23L11 9L16 23M7.8 18H14.2" stroke="#F4F4F5" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/>
+  <!-- Precision grid letterform: Monolithic E -->
+  <path d="M19 9H26M19 16H23.5M19 23H26M19 9V23" stroke="#F4F4F5" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/>
+  <!-- Industrial Safety Signal Orange Indicator -->
+  <rect x="23.5" y="14.5" width="3" height="3" fill="#FF5500"/>
+</svg>

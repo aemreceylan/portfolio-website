@@ -1,26 +1,21 @@
 import React, { useState } from 'react';
-import { Globe, Palette, Check, Sparkles, Image, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Globe, Palette, Check, RotateCcw, AlertTriangle } from 'lucide-react';
 import { LANGUAGE_OPTIONS } from '#i18n/translations';
 import { useTranslation } from '#i18n/i18n.store';
 import { LanguageFlag } from '#components/LanguageFlag';
-import {
-  useThemeStore,
-  WALLPAPER_OPTIONS,
-  ACCENT_COLOR_OPTIONS,
-} from '#stores/theme.store';
+import { useThemeStore, THEME_OPTIONS, ThemeId } from '#stores/theme.store';
 import { performSystemReset } from '#services/system-reset';
 import '#styles/settings.css';
 
 /**
  * SettingsApp component allowing the user to configure:
  * - Multilingual preferences across 7 locales
- * - Desktop wallpaper themes with Spatial dark gradients
- * - Dynamic accent palette with automatic wallpaper synchronization
- * - System factory reset (equivalent to sudo rm -rf)
+ * - Dual-Engine System Design Theme (Spatial Dark Glass vs Swiss Industrial)
+ * - System factory reset (equivalent to sudo rm -rf in GUI)
  */
 export const SettingsApp: React.FC = () => {
   const { currentLanguage, setLanguage, t } = useTranslation();
-  const { wallpaper, accent, isAutoAccent, setWallpaper, setAccent, setAutoAccent } = useThemeStore();
+  const { currentTheme, setTheme } = useThemeStore();
   const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
   const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
 
@@ -80,80 +75,66 @@ export const SettingsApp: React.FC = () => {
         </div>
       </section>
 
-      {/* Wallpaper Themes Section */}
-      <section className="settings-section">
-        <div className="settings-section-title">
-          <Image size={16} />
-          <span>Masaüstü Duvar Kağıdı</span>
-        </div>
-        <p className="settings-section-desc">
-          Spatial Dark Glass masaüstünüz için yüksek kaliteli karanlık tema arka planları.
-        </p>
-
-        <div className="wallpaper-grid" role="group" aria-label="Wallpaper Options">
-          {WALLPAPER_OPTIONS.map((wp) => {
-            const isActive = wallpaper === wp.id;
-            return (
-              <button
-                key={wp.id}
-                type="button"
-                className={`wallpaper-card ${isActive ? 'active' : ''}`}
-                onClick={() => setWallpaper(wp.id)}
-                aria-pressed={isActive}
-                aria-label={`Wallpaper ${wp.name}`}
-              >
-                <div
-                  className="wallpaper-thumb"
-                  style={{ background: wp.previewGradient }}
-                >
-                  {isActive && (
-                    <span className="language-badge">
-                      <Check size={12} style={{ display: 'inline', marginRight: 2 }} />
-                      Aktif
-                    </span>
-                  )}
-                </div>
-                <span className="wallpaper-name">{wp.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Accent Palette Section */}
+      {/* Dual-Engine Design System Theme Section */}
       <section className="settings-section">
         <div className="settings-section-title">
           <Palette size={16} />
-          <span>Vurgu Rengi & Tema</span>
+          <span>{t('settings_appearance_section')}</span>
         </div>
-        <p className="settings-section-desc">
-          Sistem parıltısı ve butonlar için renk paleti. Otomatik modda seçilen duvar kağıdının atmosferine göre uyarlanır.
-        </p>
+        <p className="settings-section-desc">{t('settings_appearance_desc')}</p>
 
-        <div className="accent-row">
-          <button
-            type="button"
-            className={`accent-auto-btn ${isAutoAccent ? 'active' : ''}`}
-            onClick={() => setAutoAccent(!isAutoAccent)}
-            aria-pressed={isAutoAccent}
-          >
-            <Sparkles size={14} />
-            <span>Otomatik Senkronizasyon {isAutoAccent ? '(Açık)' : '(Kapalı)'}</span>
-          </button>
-
-          {ACCENT_COLOR_OPTIONS.map((ac) => {
-            const isActive = accent === ac.id;
+        <div
+          className="theme-selector-grid"
+          role="radiogroup"
+          aria-label={t('settings_appearance_section')}
+        >
+          {THEME_OPTIONS.map((opt) => {
+            const isActive = currentTheme === opt.id;
             return (
               <button
-                key={ac.id}
+                key={opt.id}
                 type="button"
-                className={`accent-circle-btn ${isActive ? 'active' : ''}`}
-                style={{ background: ac.hex }}
-                onClick={() => setAccent(ac.id)}
-                aria-label={`Accent color ${ac.name}`}
-                title={`${ac.name} ${isActive ? '(Active)' : ''}`}
+                role="radio"
+                aria-checked={isActive}
+                className={`theme-card ${opt.id} ${isActive ? 'active' : ''}`}
+                onClick={() => setTheme(opt.id as ThemeId)}
+                data-testid={`theme-card-${opt.id}`}
+                aria-label={`${opt.name} (${opt.subtitle})`}
               >
-                {isActive && <Check size={14} color="#000" strokeWidth={3} />}
+                {/* Visual Theme Preview Box */}
+                <div className={`theme-preview-box preview-${opt.id}`}>
+                  <div className="preview-decor-window">
+                    <div className="preview-decor-bar">
+                      <span className="preview-decor-dot close" />
+                      <span className="preview-decor-dot min" />
+                      <span className="preview-decor-dot max" />
+                      <span className="preview-decor-accent" style={{ background: opt.accentColor }} />
+                    </div>
+                    <div className="preview-decor-body">
+                      <span className="preview-decor-line long" />
+                      <span className="preview-decor-line short" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Theme Metadata */}
+                <div className="theme-card-body">
+                  <div className="theme-card-header">
+                    <div className="theme-title-group">
+                      <h4 className="theme-name">{opt.name}</h4>
+                      <span className="theme-subtitle">{opt.subtitle}</span>
+                    </div>
+
+                    {isActive && (
+                      <span className="theme-active-badge">
+                        <Check size={12} style={{ display: 'inline', marginRight: 2 }} />
+                        {t('settings_active_badge')}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="theme-description">{opt.description}</p>
+                </div>
               </button>
             );
           })}
@@ -166,9 +147,7 @@ export const SettingsApp: React.FC = () => {
           <RotateCcw size={16} />
           <span>{t('settings_reset_section')}</span>
         </div>
-        <p className="settings-section-desc">
-          {t('settings_reset_desc')}
-        </p>
+        <p className="settings-section-desc">{t('settings_reset_desc')}</p>
 
         {resetSuccessMessage && (
           <div className="settings-reset-success-alert" role="status" data-testid="settings-reset-success-alert">
@@ -195,9 +174,7 @@ export const SettingsApp: React.FC = () => {
               <AlertTriangle size={18} className="danger-icon" />
               <h4>{t('settings_reset_confirm_title')}</h4>
             </div>
-            <p className="settings-reset-confirm-text">
-              {t('settings_reset_confirm_desc')}
-            </p>
+            <p className="settings-reset-confirm-text">{t('settings_reset_confirm_desc')}</p>
             <div className="settings-reset-confirm-actions">
               <button
                 type="button"

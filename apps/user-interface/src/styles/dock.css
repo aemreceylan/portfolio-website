@@ -1,4 +1,12 @@
-/* Floating Spatial Frosted Glass Dock */
+/* ==========================================================================
+   Dock / Taskbar Styling
+   - Spatial Dark Glass: Floating frosted glass pill capsule with neon glow & bounce
+   - Swiss Industrial: 46px segmented bottom instrument rack with mechanical LED
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Default / Spatial Dark Glass Dock
+   -------------------------------------------------------------------------- */
 .spatial-dock-container {
   position: absolute;
   bottom: 14px;
@@ -18,7 +26,7 @@
   z-index: 9999;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform var(--transition-spring), opacity var(--transition-smooth);
+  transition: transform var(--transition-spring), opacity var(--transition-smooth), bottom var(--transition-smooth), height var(--transition-fast);
 }
 
 .dock-item {
@@ -33,7 +41,6 @@
   justify-content: center;
   cursor: pointer;
   color: var(--text-primary);
-  /* Balanced scale that stays harmoniously within dock boundaries */
   transition: transform var(--transition-spring), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -41,7 +48,7 @@
   transform: scale(1.12) translateY(-2px);
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), 0 0 14px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), 0 0 14px var(--color-accent-subtle);
 }
 
 .dock-item:active {
@@ -74,13 +81,75 @@
   transform: translateY(0);
 }
 
-/* Running App Indicator Dot */
+/* Running App Indicator Dot (Spatial Glass) */
 .dock-dot {
   position: absolute;
   bottom: -3px;
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--aurora-cyan);
-  box-shadow: 0 0 6px var(--aurora-cyan);
+  background: var(--color-accent);
+  box-shadow: 0 0 6px var(--color-accent);
+  transition: background var(--transition-fast);
+}
+
+/* --------------------------------------------------------------------------
+   Swiss Industrial Dock Scoping (Dieter Rams Instrument Rack)
+   -------------------------------------------------------------------------- */
+[data-theme="swiss-industrial"] .spatial-dock-container {
+  bottom: 0;
+  height: var(--dock-height, 58px);
+  padding: 0 16px;
+  gap: 8px;
+  background: #111317;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid #232731;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="swiss-industrial"] .dock-item {
+  width: 42px;
+  height: 42px;
+  border-radius: 4px;
+  background: #16181f;
+  border: 1px solid #252a36;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="swiss-industrial"] .dock-item:hover {
+  transform: none;
+  background: #1c2029;
+  border-color: var(--color-accent);
+  box-shadow: none;
+}
+
+[data-theme="swiss-industrial"] .dock-item:active {
+  transform: none;
+  background: #232734;
+}
+
+[data-theme="swiss-industrial"] .dock-dot {
+  bottom: 2px;
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-accent);
+  box-shadow: none;
+}
+
+[data-theme="swiss-industrial"] .dock-tooltip {
+  bottom: 64px;
+  padding: 4px 8px;
+  background: #15181f;
+  border: 1px solid #2b313e;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #e4e4e7;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 }

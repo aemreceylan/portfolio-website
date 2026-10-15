@@ -318,6 +318,71 @@
   - `deploy.yml` içine eklenen Base64 senkronizasyon adımı ile `docker/docker-compose.yml` doğrudan sunucuya aktarıldı.
   - Sunucu üzerinde `docker compose` ve `docker-compose` komut sürümleri dinamik olarak algılandı; GHCR imajları çekilerek izole, güvenli ve sıfır yetki riskiyle ayağa kaldırılması sağlandı.
 
+## [2026-10-15] - Çift Motorlu Tasarım Sistemi & Bütünsel Tema Mimarisi Entegrasyonu
+
+### Yapılanlar
+- **Dal Temizliği & Doğrudan `develop` Entegrasyonu**:
+  - Kullanıcı talimatı doğrultusunda geçici feature dalları (`feature/functionalist-redesign`, `feature/dual-theme-engine`) silindi; geliştirme doğrudan ve temiz bir biçimde `develop` dalı üzerine inşa edildi.
+- **Tasarım Şartnamesi Kataloğu (`docs/DESIGN_SYSTEM_SPEC.md`)**:
+  - `spatial-glass` (VisionOS) ve `swiss-industrial` (Dieter Rams / Swiss Style) temalarının tüm token, yüzey, renk, kenarlık ve tipografi tanımları eksiksiz şartnameye bağlandı.
+- **3-Kademeli Token Mimarisi (`design-tokens.css`)**:
+  - Kök HTML özniteliği (`data-theme="spatial-glass" | "swiss-industrial"`) üzerinden sıfır runtime maliyetli tema geçişi sağlandı.
+  - Her temaya has değişmez imza arka planı (`--wallpaper-bg`) tanımlandı; arayüzdeki gereksiz duvar kağıdı seçimi tasfiye edildi.
+- **Durum Yönetimi & Geleceğe Hazır Backend Entegrasyonu (`theme.store.ts`)**:
+  - Standart 5'li vurgu rengi seçimi ve `isAutoAccent` mantığı temizlendi; her temanın vurgu rengi o ekolün felsefesine içkin ve sabit hale getirildi.
+  - Gelecekte backend'den gelebilecek varsayılan tema verisi için `resolveInitialTheme(backendDefault?: ThemeId)` kancası kuruldu. Veri gelmezse veya bağlantı yoksa `spatial-glass` varsayılan olarak devreye girer.
+- **Reaktif Simge Dağıtım Motoru (`AppIconResolver.tsx`)**:
+  - `Desktop.tsx`, `Dock.tsx` ve `WindowFrame.tsx` bileşenlerinde `AppIconResolver` entegre edildi.
+  - Aktif temaya göre Lucide ikonları (`spatial-glass`) veya özel mimari Bauhaus/Braun SVG logoları (`swiss-industrial`) derlenir.
+  - SonarJS bilişsel karmaşıklık kurallarına (<= 15) uygun olarak modüler alt fonksiyonlara ayrıştırıldı.
+- **Ayarlar (Settings) Uygulaması Revizyonu (`SettingsApp.tsx`)**:
+  - Renk paleti ve duvar kağıdı galerisi kaldırılarak, iki ekolün malzeme önizlemesini ve tipografik kimliğini gösteren 2'li büyük görsel tema seçim kartları eklendi.
+- **Bileşen Stillerinin İzolasyonu (`dock.css`, `window.css`, `desktop.css`)**:
+  - `dock.css`: Yüzen cam hap kapsül vs 46px sabit modüler enstrüman konsolu.
+  - `window.css`: 14px yuvarlak cam çerçeve vs 4px masif grafit şasi.
+  - `desktop.css`: Nebula uzay gradyanı vs 32px CAD drafting grid ve üst barda teknik koordinat telemetrisi (`SYS.LOC // 39.92°N 32.85°E`). Masaüstü simge kartları 86px yükseklik ve 2 satır metin sınırlamasıyla hover çakışmalarına karşı zırhlandı.
+- **Test ve Kalite Durumu**:
+  - `npm test`: 17 test dosyasında **99 testin tamamı (%100) başarıyla geçti**.
+  - `npm run lint`: Monorepo genelinde ESLint ve SonarJS statik analizlerinde **0 hata, 0 uyarı**.
+  - `npm run build`: TypeScript derlemesi (`tsc --noEmit`) ve Vite prodüksiyon paketi sıfır hata ile tamamlandı.
+
+## [2026-10-15] - Modüler & Genişletilebilir Tema Motoru (Pluggable Theme Engine) & Geometrik/Görsel Kusursuzlaştırmalar
+
+### Yapılanlar
+- **Modüler & Açık/Kapalı Tema Motoru Mimarisi (`src/themes/`)**:
+  - `theme.types.ts`: `ThemeDefinition`, `ThemeIcons`, `ThemeColors`, `ThemeTypography` ve `ThemeMeta` arayüzleri tasarlandı.
+  - `spatial-glass.theme.tsx`: Lucide ikonları, aurora cyan vurgu rengi ve dinamik radial nebula duvar kağıdı ile modüler tema dosyası olarak ayrıştırıldı.
+  - `swiss-industrial.theme.tsx`: Özel Bauhaus/Braun mimari SVG logoları, emniyet turuncusu vurgu rengi ve masif grafit duvar kağıdı ile modüler tema dosyası haline getirildi.
+  - `theme-registry.ts`: Merkezi `ThemeRegistry` sınıfı ile `registerTheme()`, `getTheme()`, `getAllThemes()`, `hasTheme()`, `applyThemeToDom()` ve `getThemeMetaList()` işlevleri sağlandı.
+  - Yeni temaların tek bir nesne tanımıyla (ikonları, renkleri, yazı tipleri, CSS değişkenleri ile) sisteme sorunsuz ve çökmesiz dahil edilebileceği altyapı kuruldu.
+- **Reaktif Simge Ayrıştırıcısı (`AppIconResolver.tsx`) Tam Dinamikleşme**:
+  - Sert kodlanmış `if (isSwiss)` mantığı tamamen kaldırıldı; simgeler doğrudan aktif temanın `icons` kayıt tablosundan (`appIcons`, `fileIcons`, `brandIcon`, `fallbackAppIcon`, `fallbackFileIcon`) çözülmektedir.
+- **Tema Geçişlerinde Sıfır Boyut Zıplaması (Zero Layout Shift)**:
+  - Üst bar (`--statusbar-height: 40px`), pencere çerçeve başlık çubuğu (`--titlebar-height: 36px`), açık uygulamalar dock'u (`--dock-height: 58px`) ve dock ögeleri (`42x42px`) `:root` seviyesinde sabitlendi.
+  - Tema değiştiğinde pencere, dock veya üst barda hiçbir sıçrama veya boyut titremesi olmaması sağlandı.
+- **Masaüstü İki Satırlı Program İsimlerinin Kesilmesinin Çözümü (`desktop.css`)**:
+  - `.desktop-app-card` ve `.desktop-file-card` yüksekliği 86px'ten 92px'e çıkarıldı; dikey hizalama `flex-start`, `padding: 6px 4px`, `gap: 4px` olarak optimize edildi.
+  - Etiket satır yüksekliği `line-height: 1.25`, font boyutu `11.5px`, azami yükseklik `30px` olarak düzenlenerek 2 satırlı uygulama isimlerinin (`Markdown Editörü` vb.) kesilmesi engellendi.
+- **Simge Arkaplan Eşitsizliği & Boyut Dengesi (`AppLogos.tsx`, `desktop.css`, `Desktop.tsx`, `Dock.tsx`)**:
+  - `TerminalAppLogo`, `MarkdownAppLogo` ve `JsIdeAppLogo` içindeki gereksiz koyu şasi kutuları (`<rect fill="#0d0f14">`) kaldırılarak optik sınırları dolgun saf vektör gliflerine dönüştürüldü; `SettingsAppLogo` dişli mekanizması ile görsel ağırlıkları eşitlendi.
+  - Masaüstü dosya (`.desktop-file-icon`) ve uygulama (`.desktop-app-icon`) simge arkaplanları `50x50px` olarak tekleştirildi.
+  - Masaüstü uygulama simgeleri boyutu `28px`'ten `32px`'e, dosya simgeleri `26px`'ten `30px`'e, dock simgeleri `20px`'ten `24px`'e büyütüldü.
+- **Pencere Çerçevesi Sadeleştirmesi (`WindowFrame.tsx`)**:
+  - Pencere başlık çubuğundaki (`.window-title`) simge kaldırıldı; yalnızca pencere başlığı metni bırakıldı.
+- **Swiss Kontrol Butonları Renk Güncellemesi (`window.css`)**:
+  - Aşağı alma/küçültme butonu: `#eab308` (endüstriyel pirinç/kehribar sarısı),
+  - Büyütme/ekranı kaplama butonu: `#16a34a` (endüstriyel durum yeşili),
+  - Kapatma butonu: `#dc2626` (emniyet kırmızısı) olarak işlevsel ve ayırt edilebilir hale getirildi.
+- **Sağ Üst Koordinatların Kaldırılması (`Desktop.tsx`)**:
+  - Swiss temasında sağ üstteki `SYS.LOC // 39.92°N 32.85°E` telemetri metni arayüzden ve durum çubuğundan kaldırıldı.
+- **Swiss Dosya Simgeleri İç Rozet ve Gliflerinin Büyütülmesi (`AppLogos.tsx`)**:
+  - `MdFileLogo`, `TextFileLogo` ve `JsFileLogo` belgelerinin genel şasi büyüklüğü korunurken, iç kısımdaki rozet kutusu (`rect`) `14.4px x 11px` boyutuna genişletildi.
+  - Markdown `M ↓` glifleri 4px'ten 6.7px'e (%67+ büyüme) çıkarıldı; `TXT` ve `JS` tipografik etiketleri merkezlenip font boyutları büyütülerek uzaktan rahatça okunur hale getirildi.
+- **Test ve Kalite Durumu**:
+  - Vitest: **18 test dosyasında 106 testin tamamı (%100) başarıyla geçti** (ThemeRegistry için 7 yeni birim testi eklendi; monorepo genelinde 120/120 test yeşil).
+  - ESLint / SonarJS: **0 hata, 0 uyarı** (Bilişsel karmaşıklık kurallarına tam uyum).
+  - TypeScript Typecheck: 4 paketin tamamında (`shared`, `admin-interface`, `backend`, `user-interface`) **0 hata**.
+
 
 
 

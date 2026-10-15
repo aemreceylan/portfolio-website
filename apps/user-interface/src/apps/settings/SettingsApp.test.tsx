@@ -8,7 +8,7 @@ import { useFileSystemStore } from '#stores/filesystem.store';
 describe('SettingsApp Component', () => {
   beforeEach(() => {
     useI18nStore.getState().setLanguage('en');
-    useThemeStore.getState().setWallpaper('deep-space');
+    useThemeStore.getState().reset();
     useFileSystemStore.getState().reset();
   });
 
@@ -31,31 +31,36 @@ describe('SettingsApp Component', () => {
     expect(screen.getByText('Sistem Ayarları')).toBeInTheDocument();
   });
 
-  it('should render wallpaper options and switch wallpaper on click', () => {
+  it('should render dual-engine theme options and switch theme on card click', () => {
     render(<SettingsApp />);
 
-    const cyberpunkWp = screen.getByRole('button', { name: /Wallpaper Cyberpunk Neon/i });
-    expect(cyberpunkWp).toBeInTheDocument();
+    expect(screen.getByText('Spatial Dark Glass')).toBeInTheDocument();
+    expect(screen.getByText('Swiss Industrial')).toBeInTheDocument();
 
-    fireEvent.click(cyberpunkWp);
-    expect(useThemeStore.getState().wallpaper).toBe('cyberpunk');
-    // Auto accent should update to purple
-    expect(useThemeStore.getState().accent).toBe('purple');
+    const swissCard = screen.getByTestId('theme-card-swiss-industrial');
+    expect(swissCard).toBeInTheDocument();
+
+    fireEvent.click(swissCard);
+    expect(useThemeStore.getState().currentTheme).toBe('swiss-industrial');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('swiss-industrial');
   });
 
-  it('should allow manual accent color selection', () => {
+  it('should toggle back to spatial-glass theme on card click', () => {
+    useThemeStore.getState().setTheme('swiss-industrial');
+
     render(<SettingsApp />);
 
-    const emeraldBtn = screen.getByRole('button', { name: /Accent color Matrix Emerald/i });
-    fireEvent.click(emeraldBtn);
+    const spatialCard = screen.getByTestId('theme-card-spatial-glass');
+    expect(spatialCard).toBeInTheDocument();
 
-    expect(useThemeStore.getState().accent).toBe('emerald');
-    expect(useThemeStore.getState().isAutoAccent).toBe(false);
+    fireEvent.click(spatialCard);
+    expect(useThemeStore.getState().currentTheme).toBe('spatial-glass');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('spatial-glass');
   });
 
   it('should render factory reset section and trigger reset on confirmation', () => {
     // 1. Modify some state
-    useThemeStore.getState().setWallpaper('cyberpunk');
+    useThemeStore.getState().setTheme('swiss-industrial');
     useFileSystemStore.getState().createFile('temp-note.txt', 'test');
 
     render(<SettingsApp />);
@@ -77,7 +82,7 @@ describe('SettingsApp Component', () => {
     fireEvent.click(confirmBtn);
 
     // Verify reset executed
-    expect(useThemeStore.getState().wallpaper).toBe('deep-space');
+    expect(useThemeStore.getState().currentTheme).toBe('spatial-glass');
     expect(useFileSystemStore.getState().getFile('temp-note.txt')).toBeUndefined();
     expect(screen.getByTestId('settings-reset-success-alert')).toBeInTheDocument();
   });
@@ -96,4 +101,3 @@ describe('SettingsApp Component', () => {
     expect(screen.queryByTestId('settings-reset-confirm-box')).not.toBeInTheDocument();
   });
 });
-

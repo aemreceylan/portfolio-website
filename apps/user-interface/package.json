@@ -6,6 +6,7 @@
   "type": "module",
   "imports": {
     "#components/*": "./src/components/*",
+    "#themes/*": "./src/themes/*",
     "#stores/*": "./src/stores/*",
     "#styles/*": "./src/styles/*",
     "#apps/*": "./src/apps/*",

@@ -1,4 +1,4 @@
-/* Spatial Dark Glass Settings App Styles */
+/* Spatial Dark Glass & Swiss Industrial Settings App Styles */
 .settings-container {
   padding: 24px;
   display: flex;
@@ -7,7 +7,6 @@
   height: 100%;
   overflow-y: auto;
   color: var(--text-primary);
-  /* Firefox scrollbar compatibility */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
@@ -44,7 +43,7 @@
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--aurora-cyan);
+  color: var(--color-accent);
 }
 
 .settings-section-desc {
@@ -80,9 +79,9 @@
 }
 
 .language-card.active {
-  background: rgba(56, 189, 248, 0.12);
-  border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.15);
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 16px var(--color-accent-subtle);
 }
 
 .language-info {
@@ -120,23 +119,23 @@
   text-transform: uppercase;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(56, 189, 248, 0.2);
-  color: var(--aurora-cyan);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
 }
 
-/* Wallpaper Selection Grid */
-.wallpaper-grid {
+/* Dual-Engine Theme Selector Grid */
+.theme-selector-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
   margin-top: 4px;
 }
 
-.wallpaper-card {
+.theme-card {
   display: flex;
   flex-direction: column;
-  padding: 8px;
-  border-radius: 10px;
+  padding: 10px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--glass-border);
   cursor: pointer;
@@ -145,82 +144,162 @@
   text-align: left;
 }
 
-.wallpaper-card:hover {
-  background: rgba(255, 255, 255, 0.08);
+.theme-card:hover {
+  background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
 
-.wallpaper-card.active {
-  border-color: var(--aurora-cyan);
-  box-shadow: 0 0 16px rgba(34, 211, 238, 0.2);
+.theme-card.active {
+  border-color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 18px var(--color-accent-subtle);
 }
 
-.wallpaper-thumb {
-  height: 70px;
-  border-radius: 6px;
-  margin-bottom: 8px;
+/* Theme Visual Preview Box */
+.theme-preview-box {
+  height: 96px;
+  border-radius: 8px;
+  margin-bottom: 10px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.wallpaper-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: #f1f5f9;
+.theme-preview-box.preview-spatial-glass {
+  background: radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.28) 0%, transparent 65%), #0a0d14;
 }
 
-/* Accent Color Selection Row */
-.accent-row {
+.theme-preview-box.preview-swiss-industrial {
+  background-color: #0b0d10;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.preview-decor-window {
+  width: 140px;
+  height: 64px;
+  border-radius: 6px;
+  background: rgba(18, 22, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.preview-swiss-industrial .preview-decor-window {
+  border-radius: 2px;
+  background: #14171d;
+  border: 1px solid #282f3c;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+}
+
+.preview-decor-bar {
+  height: 16px;
+  padding: 0 6px;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 6px;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.accent-auto-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--glass-border);
-  color: #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
+.preview-decor-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.preview-decor-dot.close { background: #ff5f56; }
+.preview-decor-dot.min { background: #ffbd2e; }
+.preview-decor-dot.max { background: #27c93f; }
+
+.preview-swiss-industrial .preview-decor-dot {
+  border-radius: 1px;
+}
+
+.preview-decor-accent {
+  margin-left: auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.preview-swiss-industrial .preview-decor-accent {
+  border-radius: 1px;
+}
+
+.preview-decor-body {
+  flex: 1;
+  padding: 8px 10px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
-  transition: all 0.15s ease;
 }
 
-.accent-auto-btn.active {
-  background: rgba(34, 211, 238, 0.15);
-  border-color: var(--aurora-cyan);
-  color: var(--aurora-cyan);
+.preview-decor-line {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
 }
 
-.accent-circle-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  border: 2px solid transparent;
-  cursor: pointer;
+.preview-decor-line.long { width: 80%; }
+.preview-decor-line.short { width: 45%; }
+
+/* Theme Card Content */
+.theme-card-body {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.accent-circle-btn:hover {
-  transform: scale(1.15);
+.theme-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.accent-circle-btn.active {
-  border-color: #fff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+.theme-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.theme-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.theme-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.theme-description {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.theme-active-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-border);
+  flex-shrink: 0;
 }
 
 /* Danger Zone / Factory Reset in Settings */
@@ -346,4 +425,3 @@
   background: #f43f5e;
   box-shadow: 0 0 14px rgba(244, 63, 94, 0.4);
 }
-

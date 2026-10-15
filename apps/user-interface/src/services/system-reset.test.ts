@@ -29,20 +29,17 @@ describe('System Reset Service', () => {
     expect(useFileSystemStore.getState().getFile('demo.js')).toBeDefined();
   });
 
-  it('should restore wallpaper to deep-space and accent to cyan with auto-sync', () => {
-    // Change theme to emerald
-    useThemeStore.getState().setWallpaper('emerald-matrix');
-    useThemeStore.getState().setAccent('amber');
-    expect(useThemeStore.getState().wallpaper).toBe('emerald-matrix');
-    expect(useThemeStore.getState().accent).toBe('amber');
+  it('should restore theme to default spatial-glass on system reset', () => {
+    // Change theme to swiss-industrial
+    useThemeStore.getState().setTheme('swiss-industrial');
+    expect(useThemeStore.getState().currentTheme).toBe('swiss-industrial');
 
     // Perform reset
     performSystemReset();
 
-    // Theme must be restored
-    expect(useThemeStore.getState().wallpaper).toBe('deep-space');
-    expect(useThemeStore.getState().accent).toBe('cyan');
-    expect(useThemeStore.getState().isAutoAccent).toBe(true);
+    // Theme must be restored to default spatial-glass
+    expect(useThemeStore.getState().currentTheme).toBe('spatial-glass');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('spatial-glass');
   });
 
   it('should clear custom desktop positions from localStorage and dispatch aec-system-reset event', () => {
