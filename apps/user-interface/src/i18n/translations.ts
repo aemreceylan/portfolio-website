@@ -56,6 +56,9 @@ export interface Translations {
 
   // Status Bar
   statusbar_brand: string;
+  sound_mute: string;
+  sound_unmute: string;
+  sound_volume: string;
 
   // Terminal CLI
   terminal_welcome_title: string;
@@ -154,6 +157,9 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     window_ctx_restore: 'Restore',
     dock_manage_window: 'Manage window',
     statusbar_brand: 'AEC',
+    sound_mute: 'Mute Sound',
+    sound_unmute: 'Unmute Sound',
+    sound_volume: 'Sound Volume',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Welcome to the Computer Engineer & Software Architect portfolio.',
     terminal_welcome_help: 'Type "help" to see available commands.',
@@ -240,6 +246,9 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     window_ctx_restore: 'Normal Boyuta Dön',
     dock_manage_window: 'Pencereyi yönet',
     statusbar_brand: 'AEC',
+    sound_mute: 'Sesi Kapat',
+    sound_unmute: 'Sesi Aç',
+    sound_volume: 'Ses Düzeyi',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Bilgisayar Mühendisi & Yazılım Mimarı portfolyosuna hoş geldiniz.',
     terminal_welcome_help: 'Kullanılabilir komutları görmek için "help" yazın.',
@@ -326,6 +335,9 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     window_ctx_restore: 'Wiederherstellen',
     dock_manage_window: 'Fenster verwalten',
     statusbar_brand: 'AEC',
+    sound_mute: 'Ton stummschalten',
+    sound_unmute: 'Ton einschalten',
+    sound_volume: 'Lautstärke',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Willkommen im Portfolio des Informatikers & Softwarearchitekten.',
     terminal_welcome_help: 'Geben Sie "help" ein, um verfügbare Befehle anzuzeigen.',
@@ -412,6 +424,9 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     window_ctx_restore: 'Restaurer',
     dock_manage_window: 'Gérer la fenêtre',
     statusbar_brand: 'AEC',
+    sound_mute: 'Couper le son',
+    sound_unmute: 'Activer le son',
+    sound_volume: 'Volume sonore',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: "Bienvenue dans le portfolio de l'ingénieur logiciel & architecte.",
     terminal_welcome_help: 'Tapez "help" pour voir les commandes disponibles.',
@@ -498,6 +513,9 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     window_ctx_restore: 'Restaurar',
     dock_manage_window: 'Administrar ventana',
     statusbar_brand: 'AEC',
+    sound_mute: 'Silenciar sonido',
+    sound_unmute: 'Activar sonido',
+    sound_volume: 'Volumen de sonido',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Bienvenido al portafolio del ingeniero informático y arquitecto.',
     terminal_welcome_help: 'Escribe "help" para ver los comandos disponibles.',
@@ -584,6 +602,9 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     window_ctx_restore: 'Восстановить',
     dock_manage_window: 'Управление окном',
     statusbar_brand: 'AEC',
+    sound_mute: 'Выключить звук',
+    sound_unmute: 'Включить звук',
+    sound_volume: 'Громкость',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Добро пожаловать в портфолио инженера-программиста и архитектора.',
     terminal_welcome_help: 'Введите "help" для просмотра доступных команд.',
@@ -670,6 +691,9 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     window_ctx_restore: '元に戻す',
     dock_manage_window: 'ウィンドウを管理',
     statusbar_brand: 'AEC',
+    sound_mute: '消音',
+    sound_unmute: '音声を有効化',
+    sound_volume: '音量',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'コンピューターエンジニア＆ソフトウェアアーキテクトのポートフォリオへようこそ。',
     terminal_welcome_help: '利用可能なコマンドを確認するには "help" と入力してください。',

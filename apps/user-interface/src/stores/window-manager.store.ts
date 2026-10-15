@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { AppManifest, WindowBounds, WindowSize, WindowState } from '@personal-os/shared';
+import { useSoundStore } from '#stores/sound.store';
 
 /**
  * Top menu status bar height in pixels.
@@ -82,6 +83,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
           activeWindowId: app.id,
           highestZIndex: nextZIndex,
         });
+        useSoundStore.getState().playSound('window-open');
         return;
       }
 
@@ -100,6 +102,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
         activeWindowId: app.id,
         highestZIndex: nextZIndex,
       });
+      useSoundStore.getState().playSound('window-open');
       return;
     }
 
@@ -147,6 +150,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
       activeWindowId: app.id,
       highestZIndex: nextZIndex,
     });
+    useSoundStore.getState().playSound('window-open');
   },
 
   closeWindow: (windowId) => {
@@ -178,6 +182,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
       windows: updatedWindows,
       activeWindowId: nextActiveId,
     });
+    useSoundStore.getState().playSound('window-close');
   },
 
   minimizeWindow: (windowId) => {
@@ -208,6 +213,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
       windows: updatedWindows,
       activeWindowId: nextActiveId,
     });
+    useSoundStore.getState().playSound('window-minimize');
   },
 
   maximizeWindow: (windowId, screenBounds) => {
@@ -240,6 +246,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
         activeWindowId: windowId,
         highestZIndex: nextZIndex,
       });
+      useSoundStore.getState().playSound('window-restore');
     } else {
       // Maximize window directly below the statusbar
       const currentBounds = { ...target.bounds };
@@ -267,6 +274,7 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
         activeWindowId: windowId,
         highestZIndex: nextZIndex,
       });
+      useSoundStore.getState().playSound('window-maximize');
     }
   },
 

@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useWindowManager, STATUSBAR_HEIGHT } from './window-manager.store';
+import { useSoundStore } from '#stores/sound.store';
 import { AppManifest } from '@personal-os/shared';
 
 const mockApp: AppManifest = {
@@ -97,7 +98,8 @@ describe('Window Manager Store (Zustand)', () => {
     expect(focused.activeWindowId).toBe('terminal');
   });
 
-  it('should toggle maximize and place window directly beneath statusbar without overlap', () => {
+  it('should toggle maximize and place window directly beneath statusbar without overlap and play sounds', () => {
+    const playSpy = vi.spyOn(useSoundStore.getState(), 'playSound');
     const store = useWindowManager.getState();
     store.openWindow(mockApp);
 
@@ -112,12 +114,14 @@ describe('Window Manager Store (Zustand)', () => {
     expect(maximized.bounds.width).toBe(1920);
     expect(maximized.bounds.height).toBe(1080 - STATUSBAR_HEIGHT);
     expect(maximized.previousBounds).toEqual(initialBounds);
+    expect(playSpy).toHaveBeenCalledWith('window-maximize');
 
     // Restoring
     store.maximizeWindow('terminal');
     const restored = useWindowManager.getState().windows['terminal'];
     expect(restored.isMaximized).toBe(false);
     expect(restored.bounds).toEqual(initialBounds);
+    expect(playSpy).toHaveBeenCalledWith('window-restore');
   });
 
   it('should update window bounds while enforcing minSize constraints', () => {

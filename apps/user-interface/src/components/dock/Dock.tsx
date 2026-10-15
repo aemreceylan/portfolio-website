@@ -1,5 +1,6 @@
 import React from 'react';
 import { useWindowManager } from '#stores/window-manager.store';
+import { useSoundStore } from '#stores/sound.store';
 import { useTranslation } from '#i18n/i18n.store';
 import { AppIconResolver } from '#components/icons/AppIconResolver';
 import '#styles/dock.css';
@@ -28,6 +29,7 @@ export const Dock: React.FC = () => {
    * - If backgrounded: brings it to the top focus
    */
   const handleDockItemClick = (appId: string) => {
+    useSoundStore.getState().playSound('click');
     const win = windows[appId];
     if (!win) return;
 

@@ -503,6 +503,44 @@
   - ESLint / SonarJS: **0 hata, 0 uyarı**.
   - TypeScript: `tsc --noEmit && vite build` **0 hata**.
 
+## [2026-10-15] - Web Audio Sentetik Ses Motoru & Üst Bar Etkileşimli Ses Denetimi
+
+### Yapılanlar
+- **Web Audio API Sentetik Ses Motoru (`sound.service.ts`)**:
+  - Dış ses dosyalarının getirdiği ağ trafiği, gecikme ve megabaytlık yükü ortadan kaldıran **0 KB ek yüklü, sıfır gecikmeli (zero-latency)** matematiksel ses sentezleyicisi geliştirildi.
+  - `OscillatorNode`, `GainNode` ve `AudioContext` kullanılarak mikrosaniyelik üstel sönümlemeli (exponential decay envelope) saf tonlar ve mikro-çıtlamalar üretildi.
+  - Tarayıcı `Autoplay Policy` kısıtlamalarına tam uyumlu, kullanıcı ilk etkileşiminde (`pointerdown`, `click`) bağlamı uyandıran `getContext()` yaşam döngüsü kuruldu.
+- **Dört Temaya Özel Akustik Kimlikler (Theme-Aware Acoustics)**:
+  1. **Spatial Dark Glass**: 480Hz -> 240Hz yumuşak sinüs dalgalı su damlası ve buzlu cam pıtırtısı.
+  2. **Swiss Industrial**: 280Hz -> 60Hz üçgen dalga ve sert mekanik röle / mikro-anahtar çıtlaması (Tactile Microswitch).
+  3. **Cyberpunk Neon**: 1100Hz -> 550Hz rezonans filtreli testere dişi (sawtooth) sibernetik HUD cıvıltısı.
+  4. **Classic Macintosh**: 880Hz -> 440Hz Susan Kare 1984 tarzı saf 8-bit kare dalga (Square Wave) ve vintage disket kafası vuruşu.
+  - Tema değişiminde her temanın felsefesini yansıtan 3 notalı karakteristik imza akoru (`theme-switch`) çalınır.
+- **Zustand Ses Durum Deposu (`sound.store.ts`)**:
+  - `isMuted` (varsayılan: `false`) ve `volume` (0.0 - 1.0, varsayılan: `0.4`) state'leri `localStorage` (`aec_portfolio_sound_muted`, `aec_portfolio_sound_volume`) ile kalıcılaştırıldı.
+  - Sesi kapatıp açma (`toggleMute`, `setMuted`) ve ses seviyesini ayarlama (`setVolume`) fonksiyonları tanımlandı.
+  - Döngüsel bağımlılıkları (circular dependencies) engellemek amacıyla aktif tema doğrudan DOM `data-theme` özniteliği üzerinden çözüldü.
+- **Üst Durum Çubuğu Ses Denetim Bileşeni (`SoundControl.tsx`, `desktop.css`)**:
+  - Durum çubuğunun sağ tarafına (`.statusbar-right`) saatin hemen yanına kompakt ve şık bir ses denetim paneli yerleştirildi.
+  - **Doğrudan Kapatıp Açma (Mute Toggle)**: Dinamik Lucide ikonları (`Volume2`, `Volume1`, `VolumeX`) ile tek tıkla sesi tamamen susturma veya açma.
+  - **Barda Sürükleyerek Ses Ayarlama (Draggable Volume Slider)**:
+    - 68px genişliğinde, özel stillendirilmiş yatay range input kaydırıcısı (`sound-volume-slider`).
+    - Sürükleme anında ses seviyesini anlık günceller (`setVolume`), seviye 0'a çekilirse otomatik mute'a geçer, 0'ın üstüne çekilirse otomatik sesi açar.
+    - Sürükleme bittiğinde (`pointerup`) kullanıcının seçtiği ses yüksekliğini kulağıyla test edebilmesi için anlık `volume-tick` önizleme sesi çalar.
+  - 4 temanın tasarım dillerine özel yüzey, kenarlık, track dolgusu ve thumb geometrileri uygulandı (Swiss temasında sert turuncu sürgü, Cyberpunk'ta neon parıltı, Mac'te retro beveled platin buton).
+- **İşletim Sistemi Etkileşimlerine Ses Bağlantısı**:
+  - `window-manager.store.ts`: Pencere açıldığında (`window-open`), kapandığında (`window-close`), simge durumuna küçültüldüğünde (`window-minimize`), tam ekrana kaplandığında (`window-maximize` - yükselen genişletici akor) ve tam ekrandan önceki boyuta geri dönüldüğünde (`window-restore` - daralan geri dönüş çıtlaması).
+  - `theme.store.ts`: Tema değiştirildiğinde (`theme-switch`).
+  - `Dock.tsx`: Dock üzerindeki açık uygulama simgelerine tıklandığında (`click`).
+- **7 Dilli Yerelleştirme (`translations.ts`)**:
+  - `sound_mute`, `sound_unmute`, `sound_volume` anahtarları 7 dilde (İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça, Japonca) tanımlandı.
+- **Test ve Kalite Durumu**:
+  - Vitest: **21 test dosyasında 132 testin tamamı (%100) başarıyla geçti** (`sound.service.test.ts` ve `SoundControl.test.tsx` dahil).
+  - ESLint / SonarJS: **0 hata, 0 uyarı** (SonarJS floating-point kurallarına tam uyum).
+  - TypeScript: Monorepo genelinde `tsc --noEmit` **0 hata**.
+  - Üretim Paketi: `npm run build` sıfır hatayla derlendi.
+
+
 
 
 

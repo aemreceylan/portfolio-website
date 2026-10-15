@@ -412,6 +412,36 @@ Kullanıcı arayüzünde tema ekleme ve tema değiştirme deneyimini endüstri s
     - **Dinamik Açıklama Paragrafı**: Başlığın altındaki açıklama metni (`activeThemeDescription`), seçilen temanın tasarım felsefesini (buzlu cam, Rams fonksiyonalizmi, sibernetik telemetre veya Susan Kare retro piksel estetiği) 7 desteklenen dilde reaktif olarak yansıtır.
     - **Tema Kartları İçi Yerelleştirme**: Seçim kartlarındaki açıklama metinleri de `getThemeDescription()` çözümleyicisi sayesinde 7 dilin tamamında yerelleştirilmiş olarak sunulur.
 
+---
+
+## 20. Web Audio Sentetik Ses Motoru & Üst Bar Etkileşimli Ses Denetimi Mimarisi
+
+Kullanıcı arayüzüne fiziksel bir işletim sistemi ve enstrüman duyarlılığı kazandırmak üzere, dış ses dosyalarının getirdiği ağ yükü ve gecikmeyi tamamen ortadan kaldıran **Saf Web Audio API Tabanlı Sentetik Ses Sistemi** entegre edilmiştir:
+
+* **Sıfır Ek Yük & Matematiksel Sentezleyici (`sound.service.ts`)**:
+  - Harici hiçbir `.mp3`/`.wav` dosyası kullanılmaz (0 KB asset footprint).
+  - Tarayıcının yerel `AudioContext`, `OscillatorNode` ve `GainNode` arabirimleri kullanılarak, üstel sönümlemeli (exponential decay envelope) saf mikro-sesler üretilir.
+  - Tarayıcıların katı `Autoplay Policy` kısıtlamalarını aşmak için ilk kullanıcı etkileşiminde (`pointerdown`, `click`) bağlamı uyandıran tekil (singleton) `SoundService` motoru çalışır.
+* **4 Temaya Özel Akustik Kimlikler (Theme-Aware Sound Profiles)**:
+  1. **Spatial Dark Glass**: 480Hz -> 240Hz yumuşak sinüs dalgalı (`sine`) su damlası ve buzlu cam pıtırtısı.
+  2. **Swiss Industrial**: 280Hz -> 60Hz üçgen dalgalı (`triangle`) sert mekanik mikro-anahtar ve röle çıtlaması (Tactile Relay Click).
+  3. **Cyberpunk Neon**: 1100Hz -> 550Hz rezonans filtreli testere dişi (`sawtooth`) sibernetik HUD cıvıltısı.
+  4. **Classic Macintosh**: 880Hz -> 440Hz saf 8-bit kare dalga (`square`) Susan Kare 1984 System 7 vintage bip ve disket kafası vuruşu.
+  - Tema değişiminde her temanın felsefesini yansıtan 3 notalı karakteristik imza akoru (`theme-switch`) çalınır.
+* **Üst Durum Çubuğu Ses Denetim Paneli (`SoundControl.tsx`, `desktop.css`)**:
+  - `.spatial-statusbar` sağ kısmında (`.statusbar-right`), saatin hemen solunda konumlandırılmıştır.
+  - **Doğrudan Kapatıp Açma (Mute Button)**: Dinamik Lucide ikonları (`Volume2`, `Volume1`, `VolumeX`) ile tek tıkla ses durumunu değiştirir (`toggleMute`).
+  - **Barda Sürükleyerek Ses Ayarlama (Draggable Slider)**:
+    - 68px genişliğinde, temalara göre stillendirilmiş yatay aralık çubuğu (`sound-volume-slider`).
+    - Sürükleme anında ses seviyesini anlık günceller (`setVolume`), 0'a çekilirse otomatik sessize alır, 0'ın üstüne çekildiğinde sesi otomatik açar.
+    - Sürükleme bırakıldığında (`pointerup`) kullanıcının seçilen seviyeyi duyması için anlık `volume-tick` önizleme sesi tetiklenir.
+* **Durum Kalıcılığı (`sound.store.ts`)**:
+  - `isMuted` ve `volume` tercihleri `localStorage` üzerinde saklanır (`aec_portfolio_sound_muted`, `aec_portfolio_sound_volume`).
+  - Döngüsel bağımlılıkları önlemek için aktif tema doğrudan DOM `data-theme` özniteliğinden okunur.
+* **İşletim Sistemi Olay Entegrasyonu**:
+  - Pencere açma (`window-open`), kapatma (`window-close`), küçültme (`window-minimize`), tam ekrana alma (`window-maximize`), tam ekrandan dönme (`window-restore`), tema değiştirme (`theme-switch`) ve dock tıklamaları (`click`) reaktif olarak ses motoruna bağlanmıştır.
+
+
 
 
 

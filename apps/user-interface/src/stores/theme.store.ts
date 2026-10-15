@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useSoundStore } from '#stores/sound.store';
 import {
   ThemeId,
   ThemeMeta,
@@ -79,6 +80,7 @@ export const useThemeStore = create<ThemeStoreState>((set) => {
       }
 
       set({ currentTheme: validTheme });
+      useSoundStore.getState().playSound('theme-switch');
     },
 
     initializeTheme: (backendDefault?: string) => {
