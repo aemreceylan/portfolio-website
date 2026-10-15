@@ -576,10 +576,17 @@
 - **7 Dilli Yerelleştirme (`translations.ts`)**:
   - `music_play`, `music_pause`, `music_next` anahtarları 7 dilde (İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça, Japonca) sisteme işlendi.
 - **Test ve Kalite Güvencesi**:
-  - Vitest: **24 test dosyasında 147 testin tamamı (%100) başarıyla geçti** (`music.service.test.ts`, `music.store.test.ts`, `MusicPlayer.test.tsx` dahil).
+  - Vitest: **24 test dosyasında 149 testin tamamı (%100) başarıyla geçti** (`music.service.test.ts`, `music.store.test.ts`, `MusicPlayer.test.tsx` dahil).
   - ESLint / SonarJS: **0 hata, 0 uyarı** (SonarJS cognitive complexity <= 15, `prefer-specific-assertions` kurallarına tam uyum).
   - TypeScript: Monorepo genelinde `tsc --noEmit` **0 hata**.
   - Üretim Paketi: `npm run build` hatasız derlendi.
+
+- **MP3 Akış & Yükleniyor (Loading) Durumu Animasyonları (`MusicPlayer.tsx`, `music.service.ts`, `desktop.css`)**:
+  - **Asenkron Yükleme Durumu (`isLoading`)**: Müzik dosyası ağdan tamponlanırken görselleştirici çubukların erken zıplaması engellendi (`:not(.loading)`).
+  - **Dönen Yükleme Spinner'ı**: Oynat butonuna tıklandığında parça başlayana kadar `Loader2` dönen spinner ikonu gösterildi (`.music-player-spinner`).
+  - **Sıralı Dalga Animasyonu (`@keyframes eqLoadingWave`)**: Parça yüklenirken 4 ekolayzır çubuğu soldan sağa ritmik olarak hafifçe parlayıp sönerek kullanıcının parçanın hazırlandığını anlamasını sağladı.
+  - **Çalma Sırası Özelleştirmesi**: 1 ve 2. temalarda standart sıra (Parça 1 -> Parça 2), 3 ve 4. temalarda ise kullanıcının talebiyle 2. parça ilk sırada (Neon Horizon ve Pixel Dream ilk) çalacak şekilde yapılandırıldı.
+
 
 
 

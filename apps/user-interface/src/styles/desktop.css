@@ -125,6 +125,24 @@
   transition: height 0.2s ease;
 }
 
+@keyframes musicSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.music-player-spinner {
+  animation: musicSpin 0.9s linear infinite;
+  color: var(--color-accent);
+}
+
+.music-player-btn.loading {
+  cursor: wait;
+}
+
 @keyframes eqBounce {
   0%, 100% {
     height: 3px;
@@ -134,20 +152,47 @@
   }
 }
 
-.statusbar-music-player.playing .eq-bar.bar-1 {
+.statusbar-music-player.playing:not(.loading) .eq-bar.bar-1 {
   animation: eqBounce 0.65s ease-in-out infinite;
 }
 
-.statusbar-music-player.playing .eq-bar.bar-2 {
+.statusbar-music-player.playing:not(.loading) .eq-bar.bar-2 {
   animation: eqBounce 0.5s ease-in-out infinite 0.15s;
 }
 
-.statusbar-music-player.playing .eq-bar.bar-3 {
+.statusbar-music-player.playing:not(.loading) .eq-bar.bar-3 {
   animation: eqBounce 0.75s ease-in-out infinite 0.3s;
 }
 
-.statusbar-music-player.playing .eq-bar.bar-4 {
+.statusbar-music-player.playing:not(.loading) .eq-bar.bar-4 {
   animation: eqBounce 0.6s ease-in-out infinite 0.1s;
+}
+
+@keyframes eqLoadingWave {
+  0%, 100% {
+    height: 3px;
+    opacity: 0.35;
+  }
+  50% {
+    height: 8px;
+    opacity: 0.95;
+  }
+}
+
+.statusbar-music-player.loading .eq-bar.bar-1 {
+  animation: eqLoadingWave 0.9s ease-in-out infinite 0s;
+}
+
+.statusbar-music-player.loading .eq-bar.bar-2 {
+  animation: eqLoadingWave 0.9s ease-in-out infinite 0.15s;
+}
+
+.statusbar-music-player.loading .eq-bar.bar-3 {
+  animation: eqLoadingWave 0.9s ease-in-out infinite 0.3s;
+}
+
+.statusbar-music-player.loading .eq-bar.bar-4 {
+  animation: eqLoadingWave 0.9s ease-in-out infinite 0.45s;
 }
 
 /* Status Bar Sound Control Widget */

@@ -15,3 +15,7 @@ Bu projede uygulanan temel kalite standartları:
 
 4. **Sıkı Güvenlik İncelemesi (DevSecOps / Security Audit)**:
    - Geliştirilen her yeni sistem, endpoint veya kullanıcı etkileşim noktası (iframe sandbox, terminal komut ayrıştırıcı, telemetry servisi) OWASP standartlarına göre güvenlik şapkası takılarak denetlenmelidir.
+
+5. **Git ve Sürüm Kontrol Disiplini**:
+   - Kullanıcı açıkça talimat vermedikçe (onay veya doğrudan "commit yap", "push yap" demedikçe) **ASLA** `git commit` veya `git push` komutları çalıştırılmamalıdır. Tüm değişiklikler yerel çalışma alanında geliştirilmeli, test edilmeli ve kullanıcının onayı beklenmelidir.
+

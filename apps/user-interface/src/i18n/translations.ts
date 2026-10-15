@@ -62,6 +62,7 @@ export interface Translations {
   music_play: string;
   music_pause: string;
   music_next: string;
+  music_loading: string;
 
   // Terminal CLI
   terminal_welcome_title: string;
@@ -166,6 +167,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     music_play: 'Play Music',
     music_pause: 'Pause Music',
     music_next: 'Next Track',
+    music_loading: 'Loading Music...',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Welcome to the Computer Engineer & Software Architect portfolio.',
     terminal_welcome_help: 'Type "help" to see available commands.',
@@ -258,6 +260,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     music_play: 'Müziği Çal',
     music_pause: 'Müziği Duraklat',
     music_next: 'Sonraki Parça',
+    music_loading: 'Müzik Yükleniyor...',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Bilgisayar Mühendisi & Yazılım Mimarı portfolyosuna hoş geldiniz.',
     terminal_welcome_help: 'Kullanılabilir komutları görmek için "help" yazın.',
@@ -350,6 +353,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     music_play: 'Musik abspielen',
     music_pause: 'Musik anhalten',
     music_next: 'Nächster Titel',
+    music_loading: 'Musik wird geladen...',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Willkommen im Portfolio des Informatikers & Softwarearchitekten.',
     terminal_welcome_help: 'Geben Sie "help" ein, um verfügbare Befehle anzuzeigen.',
@@ -442,6 +446,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     music_play: 'Lire la musique',
     music_pause: 'Mettre en pause',
     music_next: 'Piste suivante',
+    music_loading: 'Chargement de la musique...',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: "Bienvenue dans le portfolio de l'ingénieur logiciel & architecte.",
     terminal_welcome_help: 'Tapez "help" pour voir les commandes disponibles.',
@@ -534,6 +539,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     music_play: 'Reproducir música',
     music_pause: 'Pausar música',
     music_next: 'Siguiente pista',
+    music_loading: 'Cargando música...',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Bienvenido al portafolio del ingeniero informático y arquitecto.',
     terminal_welcome_help: 'Escribe "help" para ver los comandos disponibles.',
@@ -626,6 +632,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     music_play: 'Воспроизвести музыку',
     music_pause: 'Приостановить музыку',
     music_next: 'Следующий трек',
+    music_loading: 'Загрузка музыки...',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'Добро пожаловать в портфолио инженера-программиста и архитектора.',
     terminal_welcome_help: 'Введите "help" для просмотра доступных команд.',
@@ -718,6 +725,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     music_play: '音楽を再生',
     music_pause: '音楽を一時停止',
     music_next: '次の曲',
+    music_loading: '音楽を読み込み中...',
     terminal_welcome_title: 'AEC Portfolio Shell [v1.0.0]',
     terminal_welcome_subtitle: 'コンピューターエンジニア＆ソフトウェアアーキテクトのポートフォリオへようこそ。',
     terminal_welcome_help: '利用可能なコマンドを確認するには "help" と入力してください。',

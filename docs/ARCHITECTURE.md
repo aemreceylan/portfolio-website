@@ -474,12 +474,17 @@ Sistemin tematik derinliğini ve retro-fütüristik atmosferini zirveye taşıma
   - **Oynat / Duraklat Butonu (`music-player-btn`)**: Lucide `Play` / `Pause` ikonları ile sezgisel kontrol.
   - **Animasyonlu Ritmik Ekolayzır (`music-eq-visualizer`)**:
     - 4 adet dikey ekolayzır çubuğu (`.eq-bar.bar-1..4`).
-    - Müzik çalarken (`.playing`) CSS `@keyframes eqBounce` ile ritmik ve asenkron dalgalanır; duraklatıldığında sabit dinlenme boyuna çekilir.
+    - Müzik çalarken (`.playing:not(.loading)`) CSS `@keyframes eqBounce` ile ritmik ve asenkron dalgalanır; duraklatıldığında sabit dinlenme boyuna çekilir.
+  - **Yükleniyor (Loading) Durumu ve Spinner (`isLoading`)**:
+    - Müzik dosyası ağdan yüklenirken / tamponlanırken erken zıplamayı önler.
+    - Oynat butonunda dönen `Loader2` ikonu (`.music-player-spinner`) belirir.
+    - Ekolayzır çubukları `@keyframes eqLoadingWave` ile soldan sağa zarifçe parlayarak dosyanın hazırlandığını gösterir.
   - **Parça Başlığı Rozeti (`music-player-title`)**: Çalan parçanın adını ve BPM değerini tooltip ve kompakt etiket olarak gösterir.
   - **Sonraki Parça Butonu (`next-track-btn`)**: Lucide `SkipForward` ikonu ile temanın diğer parçasına anında geçer.
   - 4 temaya özel CSS görünümleri uygulanmıştır (Spatial buzlu cam, Swiss grafit/turuncu, Cyberpunk neon pembe/camgöbeği, Classic Mac beveled retro platin).
 * **7 Dilde Yerelleştirme**:
-  - `music_play`, `music_pause`, `music_next` anahtarları 7 dilde (İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça, Japonca) desteklenir.
+  - `music_play`, `music_pause`, `music_next`, `music_loading` anahtarları 7 dilde (İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça, Japonca) desteklenir.
+
 
 
 

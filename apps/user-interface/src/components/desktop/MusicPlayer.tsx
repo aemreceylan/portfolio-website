@@ -1,32 +1,53 @@
 import React from 'react';
-import { Play, Pause, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipForward, Loader2 } from 'lucide-react';
 import { useMusicStore } from '#stores/music.store';
 import { useTranslation } from '#i18n/i18n.store';
 
 /**
- * Procedural Web Audio Topbar Music Player.
- * Features track playback controls, track title display, and animated equalizer bars.
+ * Topbar Music Player with loading state indicator and animated equalizer bars.
  */
 export const MusicPlayer: React.FC = () => {
-  const { isPlaying, currentTrack, togglePlay, nextTrack } = useMusicStore();
+  const { isPlaying, isLoading, currentTrack, togglePlay, nextTrack } = useMusicStore();
   const { t } = useTranslation();
+
+  const getButtonLabel = () => {
+    if (isLoading) return t('music_loading');
+    if (isPlaying) return t('music_pause');
+    return t('music_play');
+  };
+
+  const renderPlayIcon = () => {
+    if (isLoading) {
+      return (
+        <Loader2
+          size={13}
+          className="music-player-spinner"
+          data-testid="music-loading-spinner"
+        />
+      );
+    }
+    if (isPlaying) {
+      return <Pause size={13} />;
+    }
+    return <Play size={13} />;
+  };
 
   return (
     <div
-      className={`statusbar-music-player ${isPlaying ? 'playing' : ''}`}
+      className={`statusbar-music-player ${isPlaying ? 'playing' : ''} ${isLoading ? 'loading' : ''}`}
       data-testid="statusbar-music-player"
       role="region"
       aria-label="Music Player"
     >
       <button
         type="button"
-        className="music-player-btn play-pause-btn"
+        className={`music-player-btn play-pause-btn ${isLoading ? 'loading' : ''}`}
         onClick={togglePlay}
-        title={isPlaying ? t('music_pause') : t('music_play')}
-        aria-label={isPlaying ? t('music_pause') : t('music_play')}
+        title={getButtonLabel()}
+        aria-label={getButtonLabel()}
         data-testid="music-play-btn"
       >
-        {isPlaying ? <Pause size={13} /> : <Play size={13} />}
+        {renderPlayIcon()}
       </button>
 
       <div

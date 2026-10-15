@@ -1,12 +1,13 @@
 /**
- * Procedural Web Audio Music Sequencer.
- * Synthesizes zero-asset, theme-adaptive generative ambient and chiptune tracks.
+ * Web Audio & MP3 Music Engine.
+ * Plays high-fidelity theme tracks with procedural synthesizer fallback.
  */
 
 export interface TrackDefinition {
   id: string;
   title: string;
   themeId: string;
+  src?: string;
   bpm: number;
   leadType: OscillatorType;
   leadNotes: number[];
@@ -60,7 +61,10 @@ const N = {
 };
 
 /**
- * 8 Procedural Theme Tracks (2 per theme)
+ * 8 Theme Tracks (2 per theme).
+ * Ordering:
+ * Themes 1 & 2 play in standard order (Track 1 then Track 2).
+ * Themes 3 & 4 play the 2nd track first (Neon Horizon, Pixel Dream), then Track 1.
  */
 export const THEME_TRACKS: Record<string, [TrackDefinition, TrackDefinition]> = {
   'spatial-glass': [
@@ -68,6 +72,7 @@ export const THEME_TRACKS: Record<string, [TrackDefinition, TrackDefinition]> = 
       id: 'spatial-ethereal',
       title: 'Ethereal Orbit',
       themeId: 'spatial-glass',
+      src: '/audio/tracks/ethereal-orbit.mp3',
       bpm: 78,
       leadType: 'sine',
       leadNotes: [
@@ -85,6 +90,7 @@ export const THEME_TRACKS: Record<string, [TrackDefinition, TrackDefinition]> = 
       id: 'spatial-starlight',
       title: 'Starlight Float',
       themeId: 'spatial-glass',
+      src: '/audio/tracks/starlight-float.mp3',
       bpm: 84,
       leadType: 'sine',
       leadNotes: [
@@ -104,6 +110,7 @@ export const THEME_TRACKS: Record<string, [TrackDefinition, TrackDefinition]> = 
       id: 'swiss-kalkul',
       title: 'Kalkül 1960',
       themeId: 'swiss-industrial',
+      src: '/audio/tracks/kalkul-1960.mp3',
       bpm: 112,
       leadType: 'triangle',
       leadNotes: [
@@ -121,6 +128,7 @@ export const THEME_TRACKS: Record<string, [TrackDefinition, TrackDefinition]> = 
       id: 'swiss-raster',
       title: 'Raster & Modul',
       themeId: 'swiss-industrial',
+      src: '/audio/tracks/raster-and-modul.mp3',
       bpm: 100,
       leadType: 'triangle',
       leadNotes: [
@@ -137,26 +145,10 @@ export const THEME_TRACKS: Record<string, [TrackDefinition, TrackDefinition]> = 
   ],
   'cyberpunk-neon': [
     {
-      id: 'cyber-night-city',
-      title: 'Night City Drive',
-      themeId: 'cyberpunk-neon',
-      bpm: 122,
-      leadType: 'sawtooth',
-      leadNotes: [
-        N.Fs4, N.Fs4, N.A4, N.Cs5, N.E5, N.Cs5, N.A4, N.Fs4,
-        N.B4, N.Cs5, N.E5, N.Fs5, N.E5, N.Cs5, N.B4, N.A4,
-      ],
-      bassType: 'sawtooth',
-      bassNotes: [
-        N.Fs3, N.Fs3, N.Fs3, N.A3, N.B3, N.B3, N.Cs4, N.Cs4,
-        N.D4, N.D4, N.Cs4, N.Cs4, N.B3, N.B3, N.A3, N.Fs3,
-      ],
-      filterFreq: 2400,
-    },
-    {
       id: 'cyber-neon-horizon',
       title: 'Neon Horizon',
       themeId: 'cyberpunk-neon',
+      src: '/audio/tracks/neon-horizon.mp3',
       bpm: 110,
       leadType: 'sawtooth',
       leadNotes: [
@@ -170,29 +162,31 @@ export const THEME_TRACKS: Record<string, [TrackDefinition, TrackDefinition]> = 
       ],
       filterFreq: 2200,
     },
+    {
+      id: 'cyber-night-city',
+      title: 'Night City Drive',
+      themeId: 'cyberpunk-neon',
+      src: '/audio/tracks/night-city-drive.mp3',
+      bpm: 122,
+      leadType: 'sawtooth',
+      leadNotes: [
+        N.Fs4, N.Fs4, N.A4, N.Cs5, N.E5, N.Cs5, N.A4, N.Fs4,
+        N.B4, N.Cs5, N.E5, N.Fs5, N.E5, N.Cs5, N.B4, N.A4,
+      ],
+      bassType: 'sawtooth',
+      bassNotes: [
+        N.Fs3, N.Fs3, N.Fs3, N.A3, N.B3, N.B3, N.Cs4, N.Cs4,
+        N.D4, N.D4, N.Cs4, N.Cs4, N.B3, N.B3, N.A3, N.Fs3,
+      ],
+      filterFreq: 2400,
+    },
   ],
   'classic-mac': [
-    {
-      id: 'mac-silicon-valley',
-      title: 'Silicon Valley 1984',
-      themeId: 'classic-mac',
-      bpm: 128,
-      leadType: 'square',
-      leadNotes: [
-        N.C4, N.E4, N.G4, N.C5, N.B4, N.G4, N.A4, N.F4,
-        N.G4, N.E4, N.F4, N.D4, N.C4, N.E4, N.G4, N.REST,
-      ],
-      bassType: 'square',
-      bassNotes: [
-        N.C3, N.REST, N.G3, N.REST, N.F3, N.REST, N.C3, N.REST,
-        N.G3, N.REST, N.G2, N.REST, N.C3, N.REST, N.C3, N.REST,
-      ],
-      filterFreq: 4000,
-    },
     {
       id: 'mac-pixel-dream',
       title: 'Pixel Dream',
       themeId: 'classic-mac',
+      src: '/audio/tracks/pixel-dream.mp3',
       bpm: 106,
       leadType: 'square',
       leadNotes: [
@@ -206,22 +200,55 @@ export const THEME_TRACKS: Record<string, [TrackDefinition, TrackDefinition]> = 
       ],
       filterFreq: 3800,
     },
+    {
+      id: 'mac-silicon-valley',
+      title: 'Silicon Valley 1984',
+      themeId: 'classic-mac',
+      src: '/audio/tracks/silicon-valley-1984.mp3',
+      bpm: 128,
+      leadType: 'square',
+      leadNotes: [
+        N.C4, N.E4, N.G4, N.C5, N.B4, N.G4, N.A4, N.F4,
+        N.G4, N.E4, N.F4, N.D4, N.C4, N.E4, N.G4, N.REST,
+      ],
+      bassType: 'square',
+      bassNotes: [
+        N.C3, N.REST, N.G3, N.REST, N.F3, N.REST, N.C3, N.REST,
+        N.G3, N.REST, N.G2, N.REST, N.C3, N.REST, N.C3, N.REST,
+      ],
+      filterFreq: 4000,
+    },
   ],
 };
 
 /**
- * Procedural Music Engine class managing scheduling and step synthesis.
+ * Music Engine managing both MP3 playback and procedural synthesis fallback.
  */
 class MusicService {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private filterNode: BiquadFilterNode | null = null;
+  private audioElement: HTMLAudioElement | null = null;
   private currentTrack: TrackDefinition | null = null;
   private isPlaying = false;
+  private isLoading = false;
   private stepIndex = 0;
   private intervalTimer: number | null = null;
   private masterVolume = 0.4;
   private isMuted = false;
+  private listeners = new Set<(status: { isPlaying: boolean; isLoading: boolean }) => void>();
+
+  private notifyListeners(): void {
+    const status = { isPlaying: this.isPlaying, isLoading: this.isLoading };
+    this.listeners.forEach((listener) => listener(status));
+  }
+
+  public subscribe(listener: (status: { isPlaying: boolean; isLoading: boolean }) => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
 
   private initContext(): boolean {
     if (typeof window === 'undefined') return false;
@@ -252,10 +279,13 @@ class MusicService {
   }
 
   private updateGainLevel(): void {
-    if (!this.masterGain || !this.ctx) return;
-    const effective = this.isMuted ? 0 : Math.max(0, this.masterVolume * 0.22);
-    const now = this.ctx.currentTime;
-    this.masterGain.gain.setValueAtTime(effective, now);
+    if (this.masterGain && this.ctx) {
+      const effective = this.isMuted ? 0 : Math.max(0, this.masterVolume * 0.22);
+      this.masterGain.gain.setValueAtTime(effective, this.ctx.currentTime);
+    }
+    if (this.audioElement) {
+      this.audioElement.volume = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * 0.5));
+    }
   }
 
   private playTone(
@@ -286,7 +316,7 @@ class MusicService {
   private scheduleNextStep(): void {
     if (!this.isPlaying || !this.currentTrack || !this.ctx) return;
 
-    const stepDuration = 60 / this.currentTrack.bpm / 2; // Eighth-notes
+    const stepDuration = 60 / this.currentTrack.bpm / 2;
     const now = this.ctx.currentTime;
     const leadFreq = this.currentTrack.leadNotes[this.stepIndex % this.currentTrack.leadNotes.length];
 
@@ -305,32 +335,111 @@ class MusicService {
     this.stepIndex++;
   }
 
-  public start(track: TrackDefinition): void {
-    this.stop();
-    this.currentTrack = track;
-    this.stepIndex = 0;
-
+  public startProceduralSynth(track: TrackDefinition): void {
     const ready = this.initContext();
-    if (!ready || !this.ctx) return;
+    if (!ready || !this.ctx) {
+      this.isPlaying = false;
+      this.isLoading = false;
+      this.notifyListeners();
+      return;
+    }
+
+    this.isPlaying = true;
+    this.isLoading = false;
+    this.notifyListeners();
 
     if (this.filterNode && track.filterFreq) {
       this.filterNode.frequency.setValueAtTime(track.filterFreq, this.ctx.currentTime);
     }
 
-    this.isPlaying = true;
     const stepIntervalMs = Math.round((60 / track.bpm / 2) * 1000);
-
     this.scheduleNextStep();
     this.intervalTimer = window.setInterval(() => {
       this.scheduleNextStep();
     }, stepIntervalMs);
   }
 
+  private getOrCreateAudioElement(): HTMLAudioElement {
+    if (!this.audioElement) {
+      this.audioElement = new Audio();
+      this.audioElement.loop = true;
+      this.audioElement.preload = 'none';
+
+      this.audioElement.addEventListener('loadstart', () => {
+        this.isLoading = true;
+        this.notifyListeners();
+      });
+      this.audioElement.addEventListener('waiting', () => {
+        this.isLoading = true;
+        this.notifyListeners();
+      });
+      this.audioElement.addEventListener('playing', () => {
+        this.isLoading = false;
+        this.isPlaying = true;
+        this.notifyListeners();
+      });
+      this.audioElement.addEventListener('pause', () => {
+        this.isLoading = false;
+        this.isPlaying = false;
+        this.notifyListeners();
+      });
+      this.audioElement.addEventListener('error', () => {
+        this.isLoading = false;
+        this.notifyListeners();
+      });
+    }
+    return this.audioElement;
+  }
+
+  public start(track: TrackDefinition, forceProcedural = false): void {
+    this.stop();
+    this.currentTrack = track;
+    this.stepIndex = 0;
+
+    if (forceProcedural || !track.src) {
+      this.startProceduralSynth(track);
+      return;
+    }
+
+    if (typeof window !== 'undefined' && typeof Audio !== 'undefined') {
+      try {
+        const audio = this.getOrCreateAudioElement();
+        audio.src = track.src;
+        this.isPlaying = true;
+        this.isLoading = true;
+        this.updateGainLevel();
+        this.notifyListeners();
+
+        const playPromise = audio.play();
+        if (playPromise) {
+          playPromise.catch(() => {
+            this.startProceduralSynth(track);
+          });
+        }
+        return;
+      } catch {
+        // Fallback to synthesizer
+      }
+    }
+
+    this.startProceduralSynth(track);
+  }
+
   public stop(): void {
     this.isPlaying = false;
+    this.isLoading = false;
+    this.notifyListeners();
     if (this.intervalTimer !== null) {
       clearInterval(this.intervalTimer);
       this.intervalTimer = null;
+    }
+    if (this.audioElement) {
+      try {
+        this.audioElement.pause();
+        this.audioElement.currentTime = 0;
+      } catch {
+        // Safe catch for JSDOM
+      }
     }
   }
 
@@ -346,6 +455,10 @@ class MusicService {
 
   public getIsPlaying(): boolean {
     return this.isPlaying;
+  }
+
+  public getIsLoading(): boolean {
+    return this.isLoading;
   }
 }
 

@@ -5,8 +5,8 @@ import { musicService } from '#services/music.service';
 vi.mock('#services/music.service', () => {
   const dummyTracks = {
     'spatial-glass': [
-      { id: 'spatial-1', title: 'Spatial One', themeId: 'spatial-glass', bpm: 80, leadType: 'sine', leadNotes: [440] },
-      { id: 'spatial-2', title: 'Spatial Two', themeId: 'spatial-glass', bpm: 90, leadType: 'sine', leadNotes: [523] },
+      { id: 'spatial-1', title: 'Spatial One', themeId: 'spatial-glass', bpm: 80, leadType: 'sine', leadNotes: [440], src: '/audio/tracks/track1.mp3' },
+      { id: 'spatial-2', title: 'Spatial Two', themeId: 'spatial-glass', bpm: 90, leadType: 'sine', leadNotes: [523], src: '/audio/tracks/track2.mp3' },
     ],
     'cyberpunk-neon': [
       { id: 'cyber-1', title: 'Cyber One', themeId: 'cyberpunk-neon', bpm: 120, leadType: 'sawtooth', leadNotes: [330] },
@@ -22,6 +22,8 @@ vi.mock('#services/music.service', () => {
       setVolume: vi.fn(),
       getCurrentTrack: vi.fn(),
       getIsPlaying: vi.fn(),
+      getIsLoading: vi.fn().mockReturnValue(false),
+      subscribe: vi.fn().mockReturnValue(() => {}),
     },
   };
 });
@@ -39,19 +41,22 @@ describe('useMusicStore', () => {
   it('initializes with default track and idle playing state', () => {
     const state = useMusicStore.getState();
     expect(state.isPlaying).toBe(false);
+    expect(state.isLoading).toBe(false);
     expect(state.currentTrackIndex).toBe(0);
     expect(state.currentTrack.id).toBe('spatial-1');
   });
 
-  it('toggles play and pause correctly', () => {
-    // Start play
+  it('toggles play and pause correctly with loading transition', () => {
+    // Start play (track has src, so isLoading becomes true initially)
     useMusicStore.getState().togglePlay();
     expect(useMusicStore.getState().isPlaying).toBe(true);
+    expect(useMusicStore.getState().isLoading).toBe(true);
     expect(musicService.start).toHaveBeenCalledWith(expect.objectContaining({ id: 'spatial-1' }));
 
     // Pause play
     useMusicStore.getState().togglePlay();
     expect(useMusicStore.getState().isPlaying).toBe(false);
+    expect(useMusicStore.getState().isLoading).toBe(false);
     expect(musicService.stop).toHaveBeenCalled();
   });
 
@@ -94,9 +99,11 @@ describe('useMusicStore', () => {
     useMusicStore.getState().togglePlay();
     useMusicStore.getState().stop();
     expect(useMusicStore.getState().isPlaying).toBe(false);
+    expect(useMusicStore.getState().isLoading).toBe(false);
 
     useMusicStore.getState().reset();
     expect(useMusicStore.getState().currentTrackIndex).toBe(0);
     expect(useMusicStore.getState().activeThemeId).toBe('spatial-glass');
+    expect(useMusicStore.getState().isLoading).toBe(false);
   });
 });
