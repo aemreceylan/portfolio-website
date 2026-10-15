@@ -484,6 +484,25 @@
   - ESLint / SonarJS: **0 hata, 0 uyarı**.
   - TypeScript: `tsc --noEmit && vite build` **0 hata**.
 
+## [2026-10-15] - Masaüstü Dosyaları Tek Tık ile Açma & Markdown Düzenleyici Varsayılan Düzenle Modu
+
+### Yapılanlar
+- **Masaüstü Dosyalarında Tek Tık (Single-Click) Etkileşimi (`Desktop.tsx`)**:
+  - Masaüstündeki sanal dosyalar (`.desktop-file-card`), uygulamalar ile birebir aynı etkileşim modeline kavuşturuldu.
+  - `onDoubleClick` yerine doğrudan `onClick` tetikleyicisi bağlandı; kullanıcı bir dosya kartına tek tıkladığında ilgili uygulama (Markdown Düzenleyici veya JS IDE) anında açılarak dosyayı aktif sekme olarak yükler.
+  - Sürükleme hareketi sonrasındaki 150ms'lik `justDraggedRef` koruması korunarak taşıma esnasında kazara dosya açılması engellendi.
+- **Markdown Düzenleyici Varsayılan "Düzenle" Modu (`MarkdownViewerApp.tsx`)**:
+  - Markdown Düzenleyici'de bir dosya açıldığında veya sekmeler arasında geçiş yapıldığında varsayılan görünüm modu `split` yerine doğrudan `edit` ("Düzenle") olarak ayarlandı.
+  - İlk state `useState<'edit' | 'preview' | 'split'>('edit')` ve `currentFile?.id` değişiminde `setViewMode('edit')` işletilerek kullanıcının bölünmüş ekran yerine doğrudan metin ve satır numaralı editör çalışma alanına odaklanması sağlandı.
+  - Araç çubuğundaki `split` ve `preview` modları korunarak istenildiğinde tek tıkla canlı önizlemeye veya çift panelli bölünmüş görünüme geçiş olanağı devam ettirildi.
+- **Birim ve Entegrasyon Testleri (`Desktop.test.tsx`, `MarkdownViewerApp.test.tsx`)**:
+  - `Desktop.test.tsx`: Dosyaların tek tıkla (`fireEvent.click`) Markdown Viewer ve JS IDE pencerelerini açtığını doğrulayan testler güncellendi.
+  - `MarkdownViewerApp.test.tsx`: Dosyaların varsayılan olarak `edit` modunda açıldığını (`markdown-raw-view` render edilirken `markdown-rendered-view`'ın başlangıçta gizli kaldığı) ve `edit`/`preview`/`split` geçişlerinin eksiksiz çalıştığını doğrulayan testler güncellendi.
+- **Test ve Kalite Durumu**:
+  - Vitest: **18 test dosyasında 116 testin tamamı (%100) başarıyla geçti**.
+  - ESLint / SonarJS: **0 hata, 0 uyarı**.
+  - TypeScript: `tsc --noEmit && vite build` **0 hata**.
+
 
 
 

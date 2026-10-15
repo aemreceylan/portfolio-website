@@ -28,17 +28,18 @@ describe('MarkdownViewerApp Component', () => {
 
     // Tab should now be present
     expect(screen.getByRole('tab', { name: /bio\.md/i })).toBeInTheDocument();
-    // Preview should display content
-    expect(screen.getAllByText(/Ahmet Emre Ceylan/i).length).toBeGreaterThanOrEqual(1);
+    // Raw editor should display content in edit mode
+    const rawEditor = screen.getByTestId('markdown-raw-view') as HTMLTextAreaElement;
+    expect(rawEditor.value).toContain('Ahmet Emre Ceylan');
   });
 
-  it('should switch between Edit, Preview, and Split modes', () => {
+  it('should automatically open files in edit mode by default and switch between Edit, Preview, and Split modes', () => {
     useFileSystemStore.getState().openInViewer('sys-bio');
     render(<MarkdownViewerApp />);
 
-    // By default in split mode, both preview and editor are rendered
-    expect(screen.getByTestId('markdown-rendered-view')).toBeInTheDocument();
+    // By default in edit mode, editor raw view is rendered and preview is not
     expect(screen.getByTestId('markdown-raw-view')).toBeInTheDocument();
+    expect(screen.queryByTestId('markdown-rendered-view')).not.toBeInTheDocument();
 
     // Switch to preview mode
     const previewBtn = screen.getByRole('button', { name: /Preview/i });
@@ -47,7 +48,14 @@ describe('MarkdownViewerApp Component', () => {
     expect(screen.getByTestId('markdown-rendered-view')).toBeInTheDocument();
     expect(screen.queryByTestId('markdown-raw-view')).not.toBeInTheDocument();
 
-    // Switch to edit mode
+    // Switch to split mode
+    const splitBtn = screen.getByRole('button', { name: /Split/i });
+    fireEvent.click(splitBtn);
+
+    expect(screen.getByTestId('markdown-rendered-view')).toBeInTheDocument();
+    expect(screen.getByTestId('markdown-raw-view')).toBeInTheDocument();
+
+    // Switch back to edit mode
     const editBtn = screen.getByRole('button', { name: /Edit/i });
     fireEvent.click(editBtn);
 

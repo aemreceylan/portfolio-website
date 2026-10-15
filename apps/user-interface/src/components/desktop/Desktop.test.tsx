@@ -39,21 +39,21 @@ describe('Desktop Component', () => {
     expect(screen.getByTestId('desktop-file-demo.js')).toBeInTheDocument();
   });
 
-  it('should open Markdown Viewer when double-clicking a markdown file', () => {
+  it('should open Markdown Viewer when single-clicking a markdown file', () => {
     render(<Desktop />);
 
     const bioFile = screen.getByTestId('desktop-file-bio.md');
-    fireEvent.doubleClick(bioFile);
+    fireEvent.click(bioFile);
 
     expect(useWindowManager.getState().windows['markdown-viewer']).toBeDefined();
     expect(useWindowManager.getState().windows['markdown-viewer'].isOpen).toBe(true);
   });
 
-  it('should open JS IDE when double-clicking a js file', () => {
+  it('should open JS IDE when single-clicking a js file', () => {
     render(<Desktop />);
 
     const jsFile = screen.getByTestId('desktop-file-demo.js');
-    fireEvent.doubleClick(jsFile);
+    fireEvent.click(jsFile);
 
     expect(useWindowManager.getState().windows['js-ide']).toBeDefined();
     expect(useWindowManager.getState().windows['js-ide'].isOpen).toBe(true);

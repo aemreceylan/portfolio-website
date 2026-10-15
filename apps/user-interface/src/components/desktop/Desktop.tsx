@@ -115,7 +115,7 @@ const resolveCollisionFreeCoordinates = (
  * Primary Desktop Workspace Viewport orchestrating:
  * - Top spatial status bar (Brand logo, localized active window indicator, live digital clock)
  * - Desktop application shortcuts grid (Terminal, Settings, Markdown Viewer, JS IDE)
- * - Virtual File System (VFS) desktop files grid with double-click open
+ * - Virtual File System (VFS) desktop files grid with single-click open
  * - Spatial Right-Click Context Menu for file/desktop actions (Rename, Delete, Upload, Create)
  * - Spatial Dark Glass Alert Modal for system file protection warnings
  * - Floating windows with 8-directional fluid resizing
@@ -468,7 +468,7 @@ export const Desktop: React.FC = () => {
   const activeWindow = activeWindowId ? windows[activeWindowId] : null;
 
   /**
-   * Opens the file in the appropriate application upon double-click
+   * Opens the file in the appropriate application upon single-click
    */
   const handleOpenFile = (file: VFSFile) => {
     if (file.extension === 'md' || file.extension === 'txt') {
@@ -721,7 +721,7 @@ export const Desktop: React.FC = () => {
         })}
       </section>
 
-      {/* Desktop Virtual Files (Double-click to open in viewer or IDE) */}
+      {/* Desktop Virtual Files (Single-click to open in viewer or IDE) */}
       <section className="desktop-files-grid" aria-label="Desktop Files">
         {Object.values(files).map((file, fileIdx) => {
           const isJs = file.extension === 'js';
@@ -741,7 +741,7 @@ export const Desktop: React.FC = () => {
                 zIndex: isDragging ? 1000 : 2,
               }}
               onPointerDown={(e) => handleIconPointerDown(e, itemId, pos)}
-              onDoubleClick={() => {
+              onClick={() => {
                 if (justDraggedRef.current) return;
                 handleOpenFile(file);
               }}

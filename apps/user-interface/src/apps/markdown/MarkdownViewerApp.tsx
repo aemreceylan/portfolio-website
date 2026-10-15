@@ -22,6 +22,7 @@ import '#styles/markdown-viewer.css';
  * - Close individual tabs via (x) button
  * - Create new .md and .txt documents (+ button)
  * - Read & Write: Full editing mode with line numbers, live HTML preview, and side-by-side split mode
+ * - Automatically defaults to Edit mode upon opening documents for direct editing
  * - Save changes directly to Virtual File System (VFS) with Save button and Ctrl+S hotkey
  * - 7-locale multilingual localization support
  */
@@ -38,7 +39,7 @@ export const MarkdownViewerApp: React.FC = () => {
   } = useFileSystemStore();
   const { t } = useTranslation();
 
-  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('split');
+  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit');
   const [editContent, setEditContent] = useState<string>('');
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
   const [newDocName, setNewDocName] = useState<string>('belge.md');
@@ -69,11 +70,12 @@ export const MarkdownViewerApp: React.FC = () => {
     return openFiles[0] || null;
   }, [activeViewerFileId, openFiles]);
 
-  // Synchronize local edit content when switching active document
+  // Synchronize local edit content and set mode to edit when switching active document
   useEffect(() => {
     if (currentFile) {
       setEditContent(currentFile.content);
       setSaveSuccess(false);
+      setViewMode('edit');
     } else {
       setEditContent('');
     }

@@ -149,7 +149,11 @@ PersonalWebSite/
 * **İki Yönlü Markdown Editörü (`MarkdownViewerApp.tsx`)**:
   - Uygulama sadece okuyucu olmaktan çıkarılarak tam bir düzenleyiciye dönüştürülmüştür.
   - `edit`, `preview` ve `split` (bölünmüş ekran) görüntüleme modları sunulur.
+  - Bir dosya açıldığında veya sekmeler arasında geçiş yapıldığında sistem varsayılan olarak **Düzenle (`edit`)** modunda açılır; böylece kullanıcı bölünmüş ekran yerine doğrudan metin ve satır numaralı düzenleme alanına odaklanır. İstenildiğinde üst araç çubuğundan `split` veya `preview` moduna geçiş yapılabilir.
   - Düzenleme panelinde satır numaralı metin alanı ve araç çubuğunda `Kaydet` butonu (`Ctrl+S` / `Cmd+S`) ile VFS (`updateFile`) anlık kaydedilir; sekmede kaydedilmemiş değişiklikler için `md-dirty-dot` gösterilir.
+* **Birleşik Masaüstü Tek Tık (Single-Click) Etkileşim Modeli (`Desktop.tsx`)**:
+  - Masaüstündeki sanal dosyalar (`.desktop-file-card`), uygulama kısayolları (`.desktop-app-card`) ile tam uyumlu hale getirilerek çift tıklama (`onDoubleClick`) yerine doğrudan **tek tıklama (`onClick`)** ile ilgili uygulamada açılacak şekilde yapılandırılmıştır.
+  - Simge taşıma ve serbest konumlandırma esnasında yanlışlıkla dosya veya uygulama açılmasını engelleyen `justDraggedRef` güvenlik bariyeri masaüstü dosyalarında da tam koruma sağlar.
 * **Dinamik & Yerelleştirilmiş Tarayıcı Sekme Başlığı (`document.title`)**:
   - Sayfa başlığı aktif seçilen dile göre dinamik senkronize edilir: Türkçe için `AEC — Uygulama Portfolyosu`, İngilizce için `AEC — Application Portfolio` ve diğer 5 dilde eksiksiz yerelleştirme sağlanır.
 
