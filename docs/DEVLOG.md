@@ -464,6 +464,26 @@
   - ESLint / SonarJS: **0 hata, 0 uyarı**.
   - TypeScript: 4 paketin tamamında `tsc --noEmit` **0 hata**.
 
+## [2026-10-15] - Pencere Başlık Çubuğu: Orta Tık ile Pencere Kapatma (Middle-Click to Close)
+
+### Yapılanlar
+- **Pencere Başlık Çubuğunda Fare Orta Tık (Scroll Wheel) Aksiyonu (`WindowFrame.tsx`)**:
+  - Uygulama pencerelerinin üst başlık çubuğuna (`.window-titlebar`) fare orta tuşu (`button === 1`) ile tıklandığında pencereyi anında kapatan `handleTitlebarAuxClick` mekanizması entegre edildi.
+  - Tıpkı X butonuna basılmış gibi `closeWindow(win.id)` store fonksiyonu tetiklenir; aktif pencere kapandığında z-index hiyerarşisindeki bir sonraki pencereye odak yumuşakça devredilir.
+- **Tarayıcı Otomatik Kaydırma (Autoscroll / Panning) Modu Engellendi**:
+  - Windows Chromium ve Gecko tabanlı tarayıcılarda farenin orta tuşuna basıldığında tetiklenen dairesel yönlendirici kaydırma imleci (autoscroll) `onPointerDown` ve `onMouseDown` olaylarında `e.button === 1` tespitiyle `e.preventDefault()` çağrılarak tamamen engellendi.
+- **Akıllı Kontrol Filtresi (Misclick Guard)**:
+  - Kullanıcı küçültme (`.minimize`) veya tam ekran / geri yükleme (`.maximize`, `.restore`) butonlarına gelip kazara orta tık yaptığında pencerenin yanlışlıkla kapanmasını önlemek amacıyla buton filtre koruması (`.closest('.window-control-btn.minimize, .window-control-btn.maximize, .window-control-btn.restore')`) uygulandı.
+- **Kapsamlı Birim ve Entegrasyon Testleri (`WindowFrame.test.tsx`)**:
+  - Başlık çubuğuna ve başlık metnine orta tık yapıldığında pencerenin kapandığını doğrulayan testler eklendi.
+  - Küçültme ve büyütme butonlarına orta tık yapıldığında pencerenin açık kalmaya devam ettiği test edildi.
+  - Sol ve sağ tık kombinasyonlarının orta tık kapama mantığını tetiklemediği doğrulandı.
+  - `pointerdown` ve `mousedown` olaylarında varsayılan tarayıcı eylemlerinin engellendiği (`preventDefault`) doğrulandı.
+- **Test ve Kalite Durumu**:
+  - Vitest: **18 test dosyasında 116 testin tamamı (%100) başarıyla geçti**.
+  - ESLint / SonarJS: **0 hata, 0 uyarı**.
+  - TypeScript: `tsc --noEmit && vite build` **0 hata**.
+
 
 
 

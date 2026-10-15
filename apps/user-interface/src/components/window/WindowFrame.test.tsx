@@ -89,5 +89,91 @@ describe('WindowFrame Component', () => {
     expect(screen.getByRole('button', { name: /^Minimize$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Maximize$/i })).toBeInTheDocument();
   });
+
+  const triggerAuxClick = (element: Element, button = 1) => {
+    fireEvent(
+      element,
+      new MouseEvent('auxclick', {
+        bubbles: true,
+        cancelable: true,
+        button,
+      })
+    );
+  };
+
+  it('should close window when middle-clicking on titlebar', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div>Content</div>
+      </WindowFrame>
+    );
+
+    const titlebar = screen.getByText('Test Application').closest('.window-titlebar')!;
+    expect(titlebar).toBeInTheDocument();
+
+    // Middle click is button 1
+    triggerAuxClick(titlebar, 1);
+    expect(useWindowManager.getState().windows['test-app'].isOpen).toBe(false);
+  });
+
+  it('should close window when middle-clicking on title text inside titlebar', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div>Content</div>
+      </WindowFrame>
+    );
+
+    const titleText = screen.getByText('Test Application');
+    triggerAuxClick(titleText, 1);
+    expect(useWindowManager.getState().windows['test-app'].isOpen).toBe(false);
+  });
+
+  it('should not close window when middle-clicking on minimize or maximize buttons', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div>Content</div>
+      </WindowFrame>
+    );
+
+    const minimizeBtn = screen.getByLabelText('Minimize Window');
+    triggerAuxClick(minimizeBtn, 1);
+    expect(useWindowManager.getState().windows['test-app'].isOpen).toBe(true);
+
+    const maximizeBtn = screen.getByLabelText('Maximize Window');
+    triggerAuxClick(maximizeBtn, 1);
+    expect(useWindowManager.getState().windows['test-app'].isOpen).toBe(true);
+  });
+
+  it('should not close window on auxClick if button is not middle mouse button (button !== 1)', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div>Content</div>
+      </WindowFrame>
+    );
+
+    const titlebar = screen.getByText('Test Application').closest('.window-titlebar')!;
+    // Secondary click (button 2)
+    triggerAuxClick(titlebar, 2);
+    expect(useWindowManager.getState().windows['test-app'].isOpen).toBe(true);
+
+    // Primary click (button 0)
+    triggerAuxClick(titlebar, 0);
+    expect(useWindowManager.getState().windows['test-app'].isOpen).toBe(true);
+  });
+
+  it('should prevent default browser autoscroll on titlebar middle pointerdown and mousedown', () => {
+    render(
+      <WindowFrame window={mockWindowState}>
+        <div>Content</div>
+      </WindowFrame>
+    );
+
+    const titlebar = screen.getByText('Test Application').closest('.window-titlebar')!;
+    const pointerDownEvent = fireEvent.pointerDown(titlebar, { button: 1 });
+    expect(pointerDownEvent).toBe(false); // default was prevented
+
+    const mouseDownEvent = fireEvent.mouseDown(titlebar, { button: 1 });
+    expect(mouseDownEvent).toBe(false); // default was prevented
+  });
 });
 

@@ -16,6 +16,7 @@ interface WindowFrameProps {
  * - Native pointer events dragging with GPU-accelerated translate3d transforms
  * - Window controls (Close, Minimize, Maximize / Restore) with localized tooltips
  * - Double-click on titlebar to toggle maximize / restore
+ * - Middle-click (scroll wheel) on titlebar to close window (mimicking close button)
  * - Titlebar right-click context menu (Close, Minimize, Maximize / Restore)
  * - Isolated window-content context handling (native browser menu preserved for text copy/paste)
  * - Cross-browser backdrop blur and touch/pointer handling (Safari, Firefox, Chromium)
@@ -75,6 +76,29 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
     });
   };
 
+  /**
+   * Closes the window when middle-clicking (mouse button 1 / scroll wheel click) on the titlebar,
+   * mimicking the behavior of clicking the close (X) button.
+   * Prevents browser default autoscroll/panning behavior and stops event propagation.
+   */
+  const handleTitlebarAuxClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 1) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Do not trigger close if middle-clicking specifically on minimize or maximize/restore buttons
+    if (
+      (e.target as HTMLElement).closest(
+        '.window-control-btn.minimize, .window-control-btn.maximize, .window-control-btn.restore'
+      )
+    ) {
+      return;
+    }
+
+    closeWindow(win.id);
+  };
+
   // Track initial pointer coordinates and window position during drag
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(
     null
@@ -104,6 +128,12 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
    * Initiates window dragging across the desktop viewport
    */
   const handleTitlebarPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Middle-click (scroll wheel): prevent default browser autoscroll / panning behavior
+    if (e.button === 1) {
+      e.preventDefault();
+      return;
+    }
+
     // Only primary button (left click) initiates window dragging; right click (button === 2) must not capture pointer
     if (e.button !== 0 || (e.target as HTMLElement).closest('.window-controls') || isMaximized) {
       return;
@@ -256,10 +286,16 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
       role="dialog"
       aria-label={win.title}
     >
-      {/* Titlebar with double-click maximize toggle and right-click context menu */}
+      {/* Titlebar with double-click maximize toggle, middle-click close, and right-click context menu */}
       <div
         className="window-titlebar"
         onPointerDown={handleTitlebarPointerDown}
+        onMouseDown={(e) => {
+          if (e.button === 1) {
+            e.preventDefault();
+          }
+        }}
+        onAuxClick={handleTitlebarAuxClick}
         onDoubleClick={() => maximizeWindow(win.id)}
         onContextMenu={handleTitlebarContextMenu}
       >
