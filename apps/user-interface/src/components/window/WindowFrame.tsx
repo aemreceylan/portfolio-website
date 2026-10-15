@@ -4,6 +4,30 @@ import { X, Minus, Maximize2, Minimize2 } from 'lucide-react';
 import { WindowState } from '@personal-os/shared';
 import { useWindowManager } from '#stores/window-manager.store';
 import { useTranslation } from '#i18n/i18n.store';
+import {
+  TerminalAppLogo,
+  SettingsAppLogo,
+  MarkdownAppLogo,
+  JsIdeAppLogo,
+} from '#components/icons/AppLogos';
+
+/**
+ * Resolves window titlebar icon based on application manifest iconName
+ */
+const renderWindowTitleIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'Terminal':
+      return <TerminalAppLogo size={14} />;
+    case 'Settings':
+      return <SettingsAppLogo size={14} />;
+    case 'FileText':
+      return <MarkdownAppLogo size={14} />;
+    case 'Code2':
+      return <JsIdeAppLogo size={14} />;
+    default:
+      return null;
+  }
+};
 
 interface WindowFrameProps {
   window: WindowState;
@@ -298,6 +322,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
         </div>
 
         <div className="window-title">
+          {renderWindowTitleIcon(win.iconName)}
           <span>{win.title}</span>
         </div>
 

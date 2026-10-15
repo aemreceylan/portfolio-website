@@ -1,14 +1,19 @@
-/* Spatial Dark Terminal Styles */
+/* ==========================================================================
+   Functionalist Terminal & GNU Nano Styles
+   Lineage: Dieter Rams & Swiss Graphic Design.
+   Solid matte charcoal, monospaced tabular clarity, single signal accent.
+   ========================================================================== */
+
 .terminal-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #08090d;
-  color: #e2e8f0;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  padding: 14px;
+  background: #0b0c0f;
+  color: #e4e4e7;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  padding: 12px 14px;
   overflow: hidden;
 }
 
@@ -17,7 +22,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   padding-right: 4px;
 }
 
@@ -26,13 +31,15 @@
 }
 
 .terminal-welcome {
-  color: var(--aurora-cyan);
-  margin-bottom: 8px;
-  font-weight: 500;
+  color: #f4f4f5;
+  margin-bottom: 6px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-hairline);
+  padding-bottom: 6px;
 }
 
 .terminal-prompt-prefix {
-  color: var(--aurora-emerald);
+  color: #a1a1aa;
   margin-right: 8px;
   font-weight: 600;
 }
@@ -40,7 +47,7 @@
 .terminal-input-row {
   display: flex;
   align-items: center;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .terminal-input {
@@ -48,22 +55,22 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #f8fafc;
+  color: #f4f4f5;
   font-family: inherit;
   font-size: inherit;
-  caret-color: var(--aurora-cyan);
+  caret-color: var(--color-accent);
 }
 
 .terminal-output-success {
-  color: #94a3b8;
+  color: #a1a1aa;
 }
 
 .terminal-output-error {
-  color: var(--aurora-rose);
+  color: var(--color-status-danger);
 }
 
 .terminal-output-accent {
-  color: var(--aurora-cyan);
+  color: var(--color-accent);
 }
 
 /* GNU Nano In-Terminal Editor */
@@ -71,10 +78,10 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #08090d;
-  color: #e2e8f0;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  background: #0b0c0f;
+  color: #e4e4e7;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
   overflow: hidden;
 }
 
@@ -82,31 +89,31 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
+  background: #17191f;
   padding: 4px 10px;
-  color: #f8fafc;
+  color: #f4f4f5;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 12px;
+  border-bottom: 1px solid var(--border-hairline);
+  font-size: 11.5px;
 }
 
 .nano-modified-tag {
-  color: #f59e0b;
+  color: var(--color-status-warning);
   margin-left: 6px;
 }
 
 .nano-textarea {
   flex: 1;
   background: transparent;
-  color: #f1f5f9;
+  color: #f4f4f5;
   border: none;
   outline: none;
   resize: none;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.6;
   padding: 10px;
-  caret-color: var(--aurora-cyan);
+  caret-color: var(--color-accent);
   white-space: pre;
   overflow-y: auto;
 }
@@ -114,34 +121,34 @@
 .nano-footer {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  gap: 6px;
+  background: #131519;
   padding: 6px 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border-hairline);
 }
 
 .nano-shortcut-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
-  padding: 3px 8px;
+  background: var(--color-surface-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-badge);
+  padding: 2px 7px;
   font-family: inherit;
   font-size: 11px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
-  transition: all 0.15s ease;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .nano-shortcut-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
-  border-color: var(--aurora-cyan);
+  background: var(--color-surface-hover);
+  color: #ffffff;
+  border-color: var(--border-prominent);
 }
 
 .nano-shortcut-key {
-  color: var(--aurora-cyan);
+  color: var(--color-accent);
   font-weight: 700;
 }

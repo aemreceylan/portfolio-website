@@ -318,6 +318,56 @@
   - `deploy.yml` içine eklenen Base64 senkronizasyon adımı ile `docker/docker-compose.yml` doğrudan sunucuya aktarıldı.
   - Sunucu üzerinde `docker compose` ve `docker-compose` komut sürümleri dinamik olarak algılandı; GHCR imajları çekilerek izole, güvenli ve sıfır yetki riskiyle ayağa kaldırılması sağlandı.
 
+## [2026-10-15] - Fonksiyonel Tasarım Sistemi & Dieter Rams / Swiss Ekolü Arayüz Dönüşümü
+
+### Yapılanlar
+- **Anti-Gimmick Tasarım Refaktörü**:
+  - Geçici Dribbble trendleri, yapay zeka şablon klişeleri (mor/indigo neon zeminler, cam efektleri/glassmorphism, `backdrop-filter: blur`, neon parıltılar, kart içi süs Sparkles ikonları) kullanıcı arayüzünden (`apps/user-interface`) tamamen temizlendi.
+  - Tüm arayüz yüzeyleri katı, monolitik, mat ve endüstriyel gövde katmanlarına (`#0e1013`, `#131519`, `#171920`) kavuşturuldu.
+  - Masaüstü arka planına mimari CAD çizim hassasiyetini hissettiren 32px teknik kılavuz ızgarası eklendi.
+- **Tek Fonksiyonel Vurgu Rengi (Braun / Leica Emniyet Turuncusu - `#ff5500`)**:
+  - Çok renkli neon paletler tekil, işlevsel ve ölçülü endüstriyel emniyet sinyali turuncusu ile sınırlandırıldı. Sadece durum göstergeleri (aktif pencere, kaydedilmemiş dosya noktası, imleç, odak çerçevesi) için deterministik olarak devreye alındı.
+- **Tipografi Öncelikli Swiss Style Hiyerarşi**:
+  - `Inter` ve `JetBrains Mono` fontları ile net boyut, satır aralığı ve harf aralığı (`letter-spacing: -0.015em` / `-0.025em`) kontrastı kuruldu.
+  - Saatler, satır numaraları ve teknik metrikler `font-variant-numeric: tabular-nums` ile deterministik hizalandı.
+- **Yüksek Bilgi Yoğunluğu & 4/8pt Geometri**:
+  - Pofuduk 14-20px yuvarlatılmış köşeler yerine 4px pencere yarıçapı, 3px kontrol yarıçapı ve 2px etiket yarıçapı standartlaştırıldı.
+  - Yüzen VisionOS benzeri 9999px hap dock, 46px kompakt, bölümlenmiş bir enstrüman görev çubuğuna dönüştürüldü.
+  - Yükleme iskeletlerindeki dönen neon orb minimal, mat mimari yükleyici ile değiştirildi; Ayarlar uygulamasındaki süs amaçlı `Sparkles` ikonu endüstriyel `SlidersHorizontal` simgesiyle güncellendi.
+- **Özel Fonksiyonel Vektör Logo & İkon Sistemi (`AppLogos.tsx`)**:
+  - Standart genel geçer Lucide ikonları yerine, her uygulama ve dosya türü için Dieter Rams / İsviçre grafik tasarım ekolünde özel SVG logolar geliştirildi:
+    - `AecBrandLogo`: Üst barda ve `favicon.svg`'de monolitik konstrüktivist marka monogramı.
+    - `TerminalAppLogo`: Şasi çerçeveli CLI ve emniyet turuncusu imleç bloğu.
+    - `TerminalAppLogo`: Şasi çerçeveli CLI ve emniyet turuncusu imleç bloğu.
+    - `SettingsAppLogo`: Hassas işlenmiş 8 dişli endüstriyel makine çarkı (precision horology gear), iç rotor göbeği ve tema vurgulu tahrik çekirdeği.
+    - `MarkdownAppLogo`: İsviçre editoryal belge şeması ve 'M' tipografisi.
+    - `JsIdeAppLogo`: Hassas kodlama parantezleri ve derleyici durumu.
+    - `TextFileLogo`: Monospace `TXT` rozetli ve teknik belge taban çizgili düz metin simgesi.
+    - `MdFileLogo`: İsviçre 'M ↓' Markdown amblemli ve tema vurgulu Markdown belge simgesi.
+    - `JsFileLogo`: Amber `JS` rozetli JavaScript script modülü simgesi.
+  - Pencerelerin başlık çubuğuna (`WindowFrame.tsx`) uygulamanın kendi logosu entegre edildi.
+  - `apps/user-interface/src/components/icons/AppLogos.test.tsx` birim test paketi eklendi.
+- **Masaüstü Simgelerinde Tema-Reaktif Kontrast & Ayrıştırılmış Dosya Kimlikleri**:
+  - Ayarlar uygulamasının logosu, döner kadrandan net ve evrensel bir endüstriyel makine çarkı (`SettingsAppLogo`) tasarımına dönüştürüldü; pencerelerde, dock'ta ve masaüstünde yüksek kontrastla çalışması sağlandı.
+  - Düz metin (`.txt`) ve Markdown (`.md`) dosyalarının masaüstündeki görsel simgeleri birbirinden tamamen ayrıştırıldı:
+    - `.txt`: İnce teknik çizgi kılavuzları ve monospace `TXT` rozetine sahip nötr arduvaz/çelik şasi.
+    - `.md`: Aktif temayla uyumlu `M ↓` Markdown rozeti ve tema renginde üst pah çizgisi.
+    - `.js`: Özel amber kodlama rozetine sahip script kartı.
+  - Masaüstü uygulama simgeleri render boyutu `36px`'e, sanal dosya simgeleri `32px`'e, dock simgeleri `22px`'e yükseltildi.
+  - Simge şasi kutuları (`.desktop-app-icon` 56x56px, `.desktop-file-icon` 52x52px) aktif tema rengine (`var(--color-accent)`, `--accent-rgb`) duyarlı radyal arka plan tonlaması, tema sınır çizgisi (`rgba(var(--accent-rgb), 0.38)`) ve üst pah (bevel) ışıltısı ile güçlendirildi.
+  - SonarJS `sonarjs/no-nested-conditional` kuralı uyarınca `getFileCardClass` ve `renderFileIcon` yardımcı fonksiyonları üst seviyeye taşınarak bilişsel karmaşıklık engellendi.
+- **Masaüstü Simgelerinde 2 Satırlı Başlık Hover Çakışması & Dikey Ortalama**:
+  - Başlık veya dosya adı iki satıra taştığında (`Terminal CLI`, `JavaScript IDE`, `Markdown Viewer`, uzun dosya adları), kart yüksekliğinin 113px'e ulaşarak 100px'lik hücre yüksekliğini aşması ve hover arkaplanının bir alt satırdaki kartın üzerine binmesi ("birbirine girmesi") sorunu çözüldü.
+  - `.desktop-app-card` ve `.desktop-file-card` bileşenlerine deterministik `height: 86px; max-height: 86px; box-sizing: border-box; justify-content: center;` uygulandı.
+  - Kart içeriğinin hover kutusunun üst kısmında sıkışık kalması ("üstte kalmış gözükmesi") `justify-content: center` ve simetrik `padding: 5px 4px; gap: 5px;` ile giderildi; simge ve metin hover çerçevesinde kusursuz dikey ortalandı.
+  - Başlık etiketlerine (`.desktop-app-label`, `.desktop-file-name`) `-webkit-line-clamp: 2` ve `max-height: 28px` verilerek metinlerin deterministik 2 satırda kalması ve hücre sınırını asla aşmaması sağlandı.
+  - İkon şasisi `48x48px` (SVG `32px` ve `30px`) olarak dengelenerek 100px ızgara yüksekliği içinde ardışık satırlar arasında her koşulda 14px emniyet payı bırakıldı; hover arkaplanlarının birbirine temas etmesi kesin olarak engellendi.
+- **Test ve Kalite Durumu**:
+  - `npm test`: Monorepo genelinde **17 test dosyasında 101 testin tamamı (%100) başarıyla geçti** (8 shared, 2 admin, 4 backend, 87 user-interface).
+  - `npm run lint`: ESLint ve SonarJS kontrollerinde **0 hata, 0 uyarı**.
+  - `npm run typecheck`: 4 pakette (`shared`, `admin-interface`, `backend`, `user-interface`) **0 hata**.
+  - `npm run build`: 7.7 saniyede hatasız üretim derlemesi alındı.
+
 
 
 

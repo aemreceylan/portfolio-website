@@ -311,6 +311,41 @@ Docker ortamında orkestrasyonun ve konteynerin ayakta kalmasını (keep-alive) 
   - `docker/docker-compose.yml` orkestrasyon dosyası GitHub Actions tarafından Base64 formatında doğrudan sunucuya iletilir.
   - Sunucu yalnızca bir Docker hostu olarak davranır; `docker compose` ve `docker-compose` komutlarını dinamik olarak destekler, GitHub Container Registry'den imajları çeker ve ayağa kaldırır. Bu yaklaşım sunucunun ele geçirilmesi durumunda kaynak koda veya GitHub hesabına erişim riskini sıfıra indirir.
 
+---
+
+## 18. Fonksiyonel Tasarım Sistemi & İsviçre Grafik Tasarım (Swiss Style / Dieter Rams) Mimarisi
+
+Kullanıcı arayüzü (`apps/user-interface`), geçici Dribbble trendlerinden ve "AI-generated" web şablonu klişelerinden (mor/indigo neon zeminler, cam efektleri/glassmorphism, bulanıklık/blur, gradient metinler, süsleme amaçlı parıltı/sparkle ikonları) tamamen arındırılarak **Dieter Rams ("Weniger, aber besser")** ve **İsviçre Uluslararası Tipografik Tasarım (Swiss Style)** ilkeleri doğrultusunda yeniden mimarize edilmiştir:
+
+* **Anti-Gimmick & Katı Malzeme Disiplini**:
+  - `backdrop-filter: blur(...)` ve yarı saydam cam katmanları kaldırılmış; yerini monolitik, mat, işlenmiş endüstriyel gövde yüzeylerine (`#0e1013`, `#131519`, `#171920`) bırakmıştır.
+  - Arka plandaki yapay nebula/parıltı efektleri yerine, mimari çizim ve CAD hassasiyetini hissettiren 32px teknik kılavuz ızgarası (`linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px)`) konumlandırılmıştır.
+* **Tek Fonksiyonel Vurgu Rengi (Braun / Leica Ekolü Endüstriyel Emniyet Turuncusu)**:
+  - Göz yoran neon paletler yerine, Braun T3 / ET66 ve Leica cihazlarındaki gibi tekil fonksiyonel emniyet sinyali rengi benimsenmiştir (`--color-accent: #ff5500`).
+  - Vurgu rengi yalnızca durum göstergelerinde (aktif pencere göstergesi, kaydedilmemiş dosya noktası, metin imleci, odak halkası) amaca hizmet edecek şekilde kullanılır; dekoratif arka plan dolgusu veya gradyan olarak asla harcanmaz.
+* **Tipografi Öncelikli Hiyerarşi (Swiss Typographic Hierarchy)**:
+  - Arayüz gücünü renk cümbüşünden değil; `Inter` ve `JetBrains Mono` tipografisinin doğru font boyutu, satır aralığı (`line-height`) ve harf aralığı (`letter-spacing: -0.015em` / `-0.025em`) kontrastından alır.
+  - Sayısal veriler, saatler ve satır numaraları `font-variant-numeric: tabular-nums` ile deterministik hizalanır.
+* **Yüksek Bilgi Yoğunluğu & Deterministik 4/8pt Izgara**:
+  - Pofuduk 14-20px yuvarlatılmış köşeler yerine, ölçülü ve disiplinli 4px pencere yarıçapı (`--radius-window: 4px`), 3px kontrol yarıçapı (`--radius-control: 3px`) ve 2px etiket yarıçapı uygulanmıştır.
+  - Yüzen 9999px hap dock yerine; alt kenara yakın, kompakt (46px), bölümlenmiş modüler bir enstrüman görev çubuğu tasarlanmıştır.
+* **Yalın Mühendislik Göstergeleri & Özel Vektör Logo Sistemi**:
+  - Ayarlar uygulamasındaki süs amaçlı `<Sparkles>` ikonu, endüstriyel ayar/kalibrasyon simgesi olan `<SlidersHorizontal>` ile değiştirilmiştir.
+  - Yükleme iskeletlerindeki dönen neon parıltılı küre (`skeleton-orb`) temiz, minimal, mat bir mimari yükleyiciye dönüştürülmüştür.
+  - **AEC Sistem Markası & Favicon (`AecBrandLogo`)**: Bauhaus ve İsviçre konstrüktivist ızgarasında tasarlanan monolitik `AEC` tipografik monogramı ve endüstriyel turuncu durum işareti; hem üst durum çubuğuna hem de tarayıcı sekme ikonuna (`favicon.svg`) taşınmıştır.
+  - **Özel Fonksiyonel Uygulama Logoları (`AppLogos.tsx`)**:
+    - **Terminal (`TerminalAppLogo`)**: Dieter Rams / Braun laboratuvar bilgisayarı şasisi, `>` istemi ve turuncu imleç bloğu.
+    - **Ayarlar (`SettingsAppLogo`)**: Hassas işlenmiş 8 dişli endüstriyel makine çarkı mekanizması (precision horology gear), iç rotor göbeği ve tema vurgulu merkez tahrik çekirdeği.
+    - **Markdown Editörü (`MarkdownAppLogo`)**: İsviçre editoryal ızgarası, monolitik 'M' işareti ve tipografik taban çizgileri.
+    - **JavaScript IDE (`JsIdeAppLogo`)**: Hassas kod bloğu parantezleri, derleyici eğik çizgisi ve amber durum işareti.
+    - **Dosya Simgeleri (`TextFileLogo`, `MdFileLogo`, `JsFileLogo`)**: Monospace `TXT` rozetli düz metin simgesi, tema vurgulu `M ↓` rozetli Markdown simgesi ve amber `JS` rozetli script modülü simgesi.
+  - **Masaüstü Simgelerinde Tema-Reaktif Kontrast, Bounded Geometri & Hover İzolasyonu**:
+    - Masaüstü uygulama ve dosya simgeleri 48x48px boyutunda mat şasi kutularında (`.desktop-app-icon`, `.desktop-file-icon`) sunulur.
+    - SVG vektör glifleri (32px ve 30px) kalın çizgilerle çizilmiş olup doğrudan aktif temanın vurgu rengine (`--color-accent`, `--accent-rgb`) reaktif radyal derinlik ve kenarlık tonlaması içerir.
+    - İki satıra sarkan uzun başlıkların alt satırdaki kartın üzerine binmesini engellemek için kartlar `height: 86px; max-height: 86px; justify-content: center;` ile sınırlandırılmış; etiketlere `-webkit-line-clamp: 2` ve `max-height: 28px` uygulanmıştır. Kart içeriği hover kutusunda kusursuz dikey ortalanmış olup 100px ızgara adımı içinde ardışık satırlar arasında 14px emniyet payı bırakılarak hover arka planlarının birbirine girmesi tamamen önlenmiştir.
+
+
+
 
 
 

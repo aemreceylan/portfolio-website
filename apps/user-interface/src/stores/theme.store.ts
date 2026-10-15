@@ -22,43 +22,39 @@ export const WALLPAPER_OPTIONS: WallpaperOption[] = [
   {
     id: 'deep-space',
     name: 'Deep Space Nebula',
-    background:
-      'radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.16) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(99, 102, 241, 0.14) 0%, transparent 50%), #06070a',
+    background: '#0d0f12',
     defaultAccent: 'cyan',
-    previewGradient: 'linear-gradient(135deg, #06b6d4, #6366f1, #06070a)',
+    previewGradient: 'linear-gradient(180deg, #181b21 0%, #0d0f12 100%)',
   },
   {
     id: 'cyberpunk',
     name: 'Cyberpunk Neon',
-    background:
-      'radial-gradient(ellipse at 20% 30%, rgba(168, 85, 247, 0.22) 0%, transparent 50%), radial-gradient(ellipse at 75% 70%, rgba(236, 72, 153, 0.16) 0%, transparent 50%), #08070d',
+    background: '#101115',
     defaultAccent: 'purple',
-    previewGradient: 'linear-gradient(135deg, #a855f7, #ec4899, #08070d)',
+    previewGradient: 'linear-gradient(180deg, #1b1d24 0%, #101115 100%)',
   },
   {
     id: 'emerald-matrix',
     name: 'Emerald Matrix',
-    background:
-      'radial-gradient(ellipse at 30% 25%, rgba(16, 185, 129, 0.2) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(20, 184, 166, 0.16) 0%, transparent 50%), #060908',
+    background: '#0d100e',
     defaultAccent: 'emerald',
-    previewGradient: 'linear-gradient(135deg, #10b981, #14b8a6, #060908)',
+    previewGradient: 'linear-gradient(180deg, #151a17 0%, #0d100e 100%)',
   },
   {
     id: 'obsidian-minimal',
     name: 'Obsidian Minimal',
-    background:
-      'radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 60%), #050607',
+    background: '#08080a',
     defaultAccent: 'rose',
-    previewGradient: 'linear-gradient(135deg, #475569, #1e293b, #050607)',
+    previewGradient: 'linear-gradient(180deg, #141416 0%, #08080a 100%)',
   },
 ];
 
 export const ACCENT_COLOR_OPTIONS: AccentColorOption[] = [
-  { id: 'cyan', name: 'Aurora Cyan', hex: '#22d3ee', rgb: '34, 211, 238' },
-  { id: 'purple', name: 'Neon Purple', hex: '#a855f7', rgb: '168, 85, 247' },
-  { id: 'emerald', name: 'Matrix Emerald', hex: '#10b981', rgb: '16, 185, 129' },
-  { id: 'amber', name: 'Sunset Amber', hex: '#f59e0b', rgb: '245, 158, 11' },
-  { id: 'rose', name: 'Cyber Rose', hex: '#f43f5e', rgb: '244, 63, 94' },
+  { id: 'cyan', name: 'Aurora Cyan', hex: '#ff5500', rgb: '255, 85, 0' },
+  { id: 'purple', name: 'Neon Purple', hex: '#71717a', rgb: '113, 113, 122' },
+  { id: 'emerald', name: 'Matrix Emerald', hex: '#16a34a', rgb: '22, 163, 74' },
+  { id: 'amber', name: 'Sunset Amber', hex: '#d97706', rgb: '217, 119, 6' },
+  { id: 'rose', name: 'Cyber Rose', hex: '#dc2626', rgb: '220, 38, 38' },
 ];
 
 const THEME_STORAGE_KEY = 'aec_portfolio_theme';
@@ -84,6 +80,9 @@ function applyThemeToDom(wallpaperId: WallpaperId, accentId: AccentColorId) {
   const ac = ACCENT_COLOR_OPTIONS.find((a) => a.id === accentId) || ACCENT_COLOR_OPTIONS[0];
 
   document.documentElement.style.setProperty('--wallpaper-bg', wp.background);
+  document.documentElement.style.setProperty('--color-accent', ac.hex);
+  document.documentElement.style.setProperty('--color-accent-subtle', `rgba(${ac.rgb}, 0.12)`);
+  document.documentElement.style.setProperty('--color-accent-border', `rgba(${ac.rgb}, 0.35)`);
   document.documentElement.style.setProperty('--aurora-cyan', ac.hex);
   document.documentElement.style.setProperty('--accent-color', ac.hex);
   document.documentElement.style.setProperty('--accent-rgb', ac.rgb);

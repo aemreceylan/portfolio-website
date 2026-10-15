@@ -1,67 +1,72 @@
-/* Spatial Dark Glass JavaScript IDE Styles */
+/* ==========================================================================
+   Functionalist JavaScript Studio Styles
+   Lineage: Dieter Rams & Swiss Graphic Design.
+   High density, solid matte panels, monospaced tabular console, tactile controls.
+   ========================================================================== */
+
 .js-ide-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #090b10;
-  color: #f1f5f9;
-  font-family: 'JetBrains Mono', monospace;
+  background: #0d0f13;
+  color: #f4f4f5;
+  font-family: var(--font-mono);
   overflow: hidden;
 }
 
+/* Precision Instrument Toolbar */
 .js-ide-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  background: #14171d;
+  border-bottom: 1px solid var(--border-hairline);
   gap: 12px;
 }
 
 .js-ide-file-tabs {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
   max-width: 60%;
 }
 
 .js-file-tab {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-muted);
-  border-radius: 6px;
+  background: #171920;
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  border-radius: var(--radius-control);
   padding: 4px 8px 4px 10px;
-  font-size: 12px;
+  font-size: 11.5px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .js-file-tab:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--color-surface-hover);
+  color: #ffffff;
 }
 
 .js-file-tab.active {
-  background: rgba(245, 158, 11, 0.12);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.4);
-  font-weight: 500;
+  background: #1d212b;
+  color: #ffffff;
+  border-color: var(--border-prominent);
+  font-weight: 600;
 }
 
 .js-dirty-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #f59e0b;
   display: inline-block;
   flex-shrink: 0;
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
   margin-left: 2px;
   margin-right: 2px;
 }
@@ -70,7 +75,7 @@
   background: transparent;
   border: none;
   padding: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-badge);
   color: inherit;
   opacity: 0.6;
   cursor: pointer;
@@ -78,82 +83,84 @@
   align-items: center;
   justify-content: center;
   margin-left: 2px;
-  transition: all 0.15s ease;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
 }
 
 .js-file-tab-close:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.15);
-  color: #f87171;
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
 }
 
 .js-file-tab-new {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: var(--color-surface-subtle);
+  border: 1px dashed var(--border-structural);
   color: var(--text-muted);
-  border-radius: 6px;
-  padding: 4px 8px;
+  border-radius: var(--radius-control);
+  padding: 4px 7px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .js-file-tab-new:hover {
-  background: rgba(var(--accent-rgb, 34, 211, 238), 0.15);
-  color: var(--accent-color, #22d3ee);
-  border-color: var(--accent-color, #22d3ee);
+  background: var(--color-surface-hover);
+  color: #ffffff;
+  border-color: var(--border-prominent);
 }
 
 .js-error-indicator {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(244, 63, 94, 0.15);
-  border: 1px solid rgba(244, 63, 94, 0.35);
-  color: #fb7185;
-  padding: 4px 10px;
-  border-radius: 6px;
+  background: #251417;
+  border: 1px solid #571b23;
+  color: #fca5a5;
+  padding: 3px 8px;
+  border-radius: var(--radius-control);
   font-size: 11px;
 }
 
 .js-ide-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .js-ide-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #cbd5e1;
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 600;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  border-radius: var(--radius-control);
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.15s ease;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .js-ide-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  background: var(--color-surface-hover);
+  color: #ffffff;
+  border-color: var(--border-structural);
 }
 
 .js-ide-btn.run-btn {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: rgba(16, 185, 129, 0.5);
-  color: #34d399;
+  background: #152418;
+  border-color: #245c2c;
+  color: #4ade80;
+  font-weight: 600;
 }
 
 .js-ide-btn.run-btn:hover {
-  background: rgba(16, 185, 129, 0.35);
-  color: #fff;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+  background: #1c3321;
+  border-color: #327e3d;
+  color: #ffffff;
 }
 
 .js-ide-main {
@@ -163,48 +170,50 @@
   overflow: hidden;
 }
 
+/* Editor Workspace */
 .js-editor-wrapper {
   flex: 1;
   display: flex;
   position: relative;
-  background: #06070a;
+  background: #0b0c0f;
   overflow: hidden;
 }
 
 .js-line-numbers {
   width: 44px;
-  padding: 12px 6px;
-  background: rgba(0, 0, 0, 0.4);
-  color: #475569;
+  padding: 12px 8px;
+  background: #08090c;
+  color: var(--text-muted);
   text-align: right;
   font-size: 12px;
   line-height: 20px;
+  font-variant-numeric: tabular-nums;
   user-select: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid var(--border-hairline);
 }
 
 .js-code-textarea {
   flex: 1;
   background: transparent;
-  color: #f8fafc;
+  color: #f4f4f5;
   border: none;
   outline: none;
   resize: none;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 20px;
   padding: 12px 14px;
   white-space: pre;
   tab-size: 2;
-  caret-color: var(--aurora-cyan);
+  caret-color: var(--color-accent);
   overflow: auto;
 }
 
-/* Bottom Console Output Panel */
+/* Bottom Console Output Panel: Structured Developer Log */
 .js-console-panel {
-  height: 160px;
-  background: #040508;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  height: 150px;
+  background: #090a0d;
+  border-top: 1px solid var(--border-hairline);
   display: flex;
   flex-direction: column;
 }
@@ -213,12 +222,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 11px;
+  padding: 5px 10px;
+  background: #12141a;
+  font-size: 10.5px;
   font-weight: 600;
-  color: #94a3b8;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-hairline);
 }
 
 .js-console-clear-btn {
@@ -227,32 +238,33 @@
   color: var(--text-muted);
   font-size: 11px;
   cursor: pointer;
+  transition: color var(--transition-fast);
 }
 
 .js-console-clear-btn:hover {
-  color: #fff;
+  color: #ffffff;
 }
 
 .js-console-logs {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 12px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
+  gap: 3px;
+  font-size: 11.5px;
 }
 
 .js-log-line {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  line-height: 1.4;
+  line-height: 1.45;
   word-break: break-all;
 }
 
 .js-log-line.log {
-  color: #cbd5e1;
+  color: #d4d4d8;
 }
 
 .js-log-line.warn {
@@ -264,11 +276,11 @@
 }
 
 .js-log-line.system {
-  color: var(--aurora-cyan);
+  color: var(--color-accent);
   font-style: italic;
 }
 
-/* Empty State */
+/* Empty State: Architectural Studio */
 .js-empty-state {
   flex: 1;
   display: flex;
@@ -277,15 +289,15 @@
   justify-content: center;
   padding: 32px;
   text-align: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .js-empty-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--border-hairline);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -293,69 +305,71 @@
 }
 
 .js-empty-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
 }
 
 .js-empty-desc {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text-muted);
-  max-width: 360px;
+  max-width: 340px;
+  line-height: 1.5;
 }
 
 .js-empty-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .js-empty-btn {
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: #fbbf24;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--border-prominent);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: var(--radius-control);
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 6px;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .js-empty-btn:hover {
-  background: rgba(245, 158, 11, 0.25);
-  transform: translateY(-1px);
+  background: var(--color-surface-active);
+  border-color: #4b5563;
 }
 
 .js-quick-files-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
-  max-width: 440px;
-  margin-top: 12px;
+  max-width: 400px;
+  margin-top: 10px;
 }
 
 .js-quick-file-chip {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-muted);
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 12px;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: var(--radius-control);
+  font-size: 11.5px;
+  font-family: var(--font-mono);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.15s ease;
+  gap: 5px;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .js-quick-file-chip:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--color-surface-hover);
+  color: #ffffff;
+  border-color: var(--border-structural);
 }
-

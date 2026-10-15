@@ -1,45 +1,86 @@
 :root {
-  /* Core Spatial Dark Palette */
-  --color-void: #060709;
-  --color-bg-base: #0a0c10;
-  --color-bg-elevated: #10131a;
-  --color-surface-subtle: rgba(255, 255, 255, 0.03);
+  /* ==========================================================================
+     Functionalist Design System Tokens
+     Lineage: Dieter Rams & Swiss International Graphic Design Style.
+     Guiding Principles: "Weniger, aber besser", anti-gimmick, high typographic
+     hierarchy, deterministic 4/8pt spatial rhythm, solid matte surfaces,
+     single functional industrial accent color.
+     ========================================================================== */
 
-  /* Spatial Glass Tokens with Cross-browser fallbacks */
-  --glass-bg: rgba(16, 20, 28, 0.65);
-  --glass-bg-active: rgba(20, 26, 38, 0.78);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-highlight: rgba(255, 255, 255, 0.18);
-  --glass-blur: 24px;
-  --glass-blur-heavy: 36px;
-  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 1px 1px rgba(255, 255, 255, 0.07);
-  --glass-shadow-active: 0 25px 65px rgba(0, 0, 0, 0.75), 0 0 2px 1px rgba(99, 179, 237, 0.25);
+  /* Industrial Neutral Surfaces (Solid, Matte, Engineered Chassis) */
+  --color-void: #090a0c;
+  --color-canvas: #0e1013;
+  --color-surface-base: #131519;
+  --color-surface-subtle: #181b20;
+  --color-surface-elevated: #1e2128;
+  --color-surface-hover: #252932;
+  --color-surface-active: #2c313c;
 
-  /* Aurora Accent Glows */
-  --aurora-cyan: #38bdf8;
-  --aurora-indigo: #818cf8;
-  --aurora-emerald: #34d399;
-  --aurora-amber: #fbbf24;
-  --aurora-rose: #fb7185;
+  /* Backward Compatibility Surface Mappings */
+  --color-bg-base: var(--color-canvas);
+  --color-bg-elevated: var(--color-surface-elevated);
 
-  /* Typography Colors */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-code: #38bdf8;
+  /* Solid Hairline Boundaries (1px Precision, No Blurry Glows) */
+  --border-hairline: #22262f;
+  --border-structural: #2c313c;
+  --border-prominent: #3b4251;
+  --border-focus: #ff5500;
 
-  /* Geometry & Layout - Increased statusbar thickness as requested */
-  --radius-window: 14px;
-  --radius-control: 8px;
-  --radius-pill: 9999px;
-  --dock-height: 60px;
-  --titlebar-height: 40px;
-  --statusbar-height: 42px;
+  /* Chassis Window Tokens: Solid Opaque Precision (Zero Glassmorphism / Zero Blur) */
+  --glass-bg: #131519;
+  --glass-bg-active: #171a20;
+  --glass-border: #22262f;
+  --glass-border-highlight: #353b49;
+  --glass-blur: 0px;
+  --glass-blur-heavy: 0px;
+  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.75), 0 0 0 1px #22262f;
+  --glass-shadow-active: 0 18px 44px rgba(0, 0, 0, 0.85), 0 0 0 1px #383e4c;
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-smooth: 260ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Single Functional Accent (Braun / Dieter Rams / Leica Industrial Safety Signal Orange) */
+  --color-accent: #ff5500;
+  --color-accent-subtle: rgba(255, 85, 0, 0.12);
+  --color-accent-border: rgba(255, 85, 0, 0.35);
+  --color-accent-hover: #e04a00;
+  --color-accent-contrast: #ffffff;
+  --accent-color: var(--color-accent);
+  --accent-rgb: 255, 85, 0;
+
+  /* Utilitarian Signal Tones (Strictly Informative, Never Decorative) */
+  --color-status-success: #16a34a;
+  --color-status-warning: #d97706;
+  --color-status-danger: #dc2626;
+
+  /* Backward Compatibility Aliases */
+  --aurora-cyan: var(--color-accent);
+  --aurora-indigo: #4b5563;
+  --aurora-emerald: var(--color-status-success);
+  --aurora-amber: var(--color-status-warning);
+  --aurora-rose: var(--color-status-danger);
+
+  /* Swiss Typography Hierarchy & Contrast */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --text-muted: #52525b;
+  --text-code: #e4e4e7;
+
+  /* Deterministic Geometry (Disciplined 4/8pt Grid Scale, Measured Radii) */
+  --radius-window: 4px;
+  --radius-control: 3px;
+  --radius-badge: 2px;
+  --radius-pill: 4px;
+  --dock-height: 46px;
+  --titlebar-height: 36px;
+  --statusbar-height: 36px;
+
+  /* Fast, Deterministic Non-bouncy Transitions */
+  --transition-instant: 60ms cubic-bezier(0, 0, 0.2, 1);
+  --transition-fast: 100ms cubic-bezier(0, 0, 0.2, 1);
+  --transition-smooth: 160ms cubic-bezier(0, 0, 0.2, 1);
+  --transition-spring: 120ms cubic-bezier(0, 0, 0.2, 1);
 }
 
 /* Base Reset & Typography with Cross-Browser Compatibility */
@@ -51,13 +92,13 @@
   -moz-osx-font-smoothing: grayscale;
   /* Firefox custom scrollbar support */
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: #2c313a transparent;
 }
 
-/* WebKit (Chrome, Safari, Edge) Custom Glassmorphism Scrollbars */
+/* WebKit Precision Monolithic Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -65,13 +106,13 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: var(--radius-pill);
+  background: #272b34;
+  border-radius: var(--radius-badge);
   transition: background var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.45);
+  background: #3b414e;
 }
 
 html, body {
@@ -80,34 +121,36 @@ html, body {
   overflow: hidden;
   background-color: var(--color-void);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
+  letter-spacing: -0.011em;
   user-select: none;
   -webkit-user-select: none;
 }
 
 code, pre, .font-mono {
-  font-family: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
 }
 
-/* Fluid Wallpaper & Aurora Background with Safari and Firefox support */
+/* Technical Drafting Viewport */
 .desktop-viewport {
   position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: var(--wallpaper-bg, #06070a);
-  transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--wallpaper-bg, var(--color-canvas));
+  transition: background var(--transition-smooth);
 }
 
-/* Subtle Spatial Grid Texture */
+/* Architectural CAD Drafting Grid Texture (Subtle Structural Guide, Not Decorative Noise) */
 .desktop-viewport::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 32px 32px;
   pointer-events: none;
   z-index: 1;
 }

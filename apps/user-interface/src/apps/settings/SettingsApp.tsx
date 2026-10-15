@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, Palette, Check, Sparkles, Image, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Globe, Palette, Check, SlidersHorizontal, Image, RotateCcw, AlertTriangle } from 'lucide-react';
 import { LANGUAGE_OPTIONS } from '#i18n/translations';
 import { useTranslation } from '#i18n/i18n.store';
 import { LanguageFlag } from '#components/LanguageFlag';
@@ -137,7 +137,7 @@ export const SettingsApp: React.FC = () => {
             onClick={() => setAutoAccent(!isAutoAccent)}
             aria-pressed={isAutoAccent}
           >
-            <Sparkles size={14} />
+            <SlidersHorizontal size={14} />
             <span>Otomatik Senkronizasyon {isAutoAccent ? '(Açık)' : '(Kapalı)'}</span>
           </button>
 

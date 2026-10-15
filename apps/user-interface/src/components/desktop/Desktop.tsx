@@ -5,7 +5,6 @@ import {
   AppWindow,
   FileText,
   FileCode,
-  Code2,
   ShieldAlert,
   FolderPlus,
   Edit3,
@@ -28,22 +27,32 @@ import { useFileSystemStore, VFSFile, parseAllowedExtension } from '#stores/file
 import '#styles/design-tokens.css';
 import '#styles/window.css';
 import '#styles/desktop.css';
+import {
+  AecBrandLogo,
+  TerminalAppLogo,
+  SettingsAppLogo,
+  MarkdownAppLogo,
+  JsIdeAppLogo,
+  TextFileLogo,
+  MdFileLogo,
+  JsFileLogo,
+} from '#components/icons/AppLogos';
 
 /**
- * Maps iconName string from manifest to standard Lucide React SVG icon
+ * Maps iconName string from manifest to custom functionalist SVG logos
  */
 const renderDesktopIcon = (iconName: string) => {
   switch (iconName) {
     case 'Terminal':
-      return <Terminal size={24} />;
+      return <TerminalAppLogo size={32} />;
     case 'Settings':
-      return <Settings size={24} />;
+      return <SettingsAppLogo size={32} />;
     case 'FileText':
-      return <FileText size={24} />;
+      return <MarkdownAppLogo size={32} />;
     case 'Code2':
-      return <Code2 size={24} />;
+      return <JsIdeAppLogo size={32} />;
     default:
-      return <AppWindow size={24} />;
+      return <AppWindow size={30} />;
   }
 };
 
@@ -84,6 +93,24 @@ const getDefaultExtensionForMode = (mode: 'rename' | 'new-txt' | 'new-md' | 'new
     default:
       return '.txt';
   }
+};
+
+/**
+ * Resolves CSS modifier class for desktop file card based on extension
+ */
+const getFileCardClass = (extension: string): string => {
+  if (extension === 'js') return 'js-file';
+  if (extension === 'md') return 'md-file';
+  return 'txt-file';
+};
+
+/**
+ * Resolves custom SVG icon component for desktop file based on extension
+ */
+const renderFileIcon = (extension: string) => {
+  if (extension === 'js') return <JsFileLogo size={30} />;
+  if (extension === 'md') return <MdFileLogo size={30} />;
+  return <TextFileLogo size={30} />;
 };
 
 /**
@@ -676,8 +703,8 @@ export const Desktop: React.FC = () => {
       {/* Top Status Bar with enhanced thickness */}
       <header className="spatial-statusbar" role="banner">
         <div className="statusbar-left">
-          <div className="os-brand">
-            <span className="os-brand-icon" aria-hidden="true" />
+          <div className="os-brand" onClick={() => openWindow(terminalManifest)}>
+            <AecBrandLogo size={18} />
             <span>AEC</span>
           </div>
           {activeWindow && (
@@ -735,7 +762,7 @@ export const Desktop: React.FC = () => {
       {/* Desktop Virtual Files (Double-click to open in viewer or IDE) */}
       <section className="desktop-files-grid" aria-label="Desktop Files">
         {Object.values(files).map((file, fileIdx) => {
-          const isJs = file.extension === 'js';
+          const fileClass = getFileCardClass(file.extension);
           const itemId = `file-${file.id}`;
           const autoIndex = Object.values(APP_REGISTRY).length + fileIdx;
           const pos = getItemPosition(itemId, autoIndex);
@@ -744,7 +771,7 @@ export const Desktop: React.FC = () => {
           return (
             <div
               key={file.id}
-              className={`desktop-file-card ${isJs ? 'js-file' : ''} ${isDragging ? 'dragging' : ''}`}
+              className={`desktop-file-card ${fileClass} ${isDragging ? 'dragging' : ''}`}
               style={{
                 position: 'absolute',
                 left: `${pos.x}px`,
@@ -766,7 +793,7 @@ export const Desktop: React.FC = () => {
               }}
             >
               <div className="desktop-file-icon">
-                {isJs ? <FileCode size={22} /> : <FileText size={22} />}
+                {renderFileIcon(file.extension)}
               </div>
               <span className="desktop-file-name">{file.name}</span>
             </div>

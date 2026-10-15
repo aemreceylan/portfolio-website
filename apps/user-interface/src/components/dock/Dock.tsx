@@ -1,23 +1,28 @@
-import { Terminal, Settings, AppWindow, FileText, Code2 } from 'lucide-react';
+import { AppWindow } from 'lucide-react';
 import { useWindowManager } from '#stores/window-manager.store';
 import { APP_REGISTRY } from '#apps/app-registry';
 import { useTranslation } from '#i18n/i18n.store';
+import {
+  TerminalAppLogo,
+  SettingsAppLogo,
+  MarkdownAppLogo,
+  JsIdeAppLogo,
+} from '#components/icons/AppLogos';
 import '#styles/dock.css';
 
 /**
- * Maps application iconName to corresponding Lucide icon component.
- * Guaranteed to only use non-deprecated standard geometric Lucide icons.
+ * Maps application iconName to corresponding custom functionalist SVG logo component.
  */
-const renderAppIcon = (iconName: string, size = 20) => {
+const renderAppIcon = (iconName: string, size = 22) => {
   switch (iconName) {
     case 'Terminal':
-      return <Terminal size={size} />;
+      return <TerminalAppLogo size={size} />;
     case 'Settings':
-      return <Settings size={size} />;
+      return <SettingsAppLogo size={size} />;
     case 'FileText':
-      return <FileText size={size} />;
+      return <MarkdownAppLogo size={size} />;
     case 'Code2':
-      return <Code2 size={size} />;
+      return <JsIdeAppLogo size={size} />;
     default:
       return <AppWindow size={size} />;
   }

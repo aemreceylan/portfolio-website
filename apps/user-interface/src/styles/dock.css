@@ -1,72 +1,79 @@
-/* Floating Spatial Frosted Glass Dock */
+/* ==========================================================================
+   Functionalist Dock (Task Instrument Rack)
+   Lineage: Dieter Rams & Swiss Graphic Design.
+   Precision segmented rack, crisp tactile buttons, single functional indicator.
+   ========================================================================== */
+
 .spatial-dock-container {
   position: absolute;
-  bottom: 14px;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  height: var(--dock-height);
-  padding: 0 16px;
+  height: var(--dock-height, 46px);
+  padding: 4px 6px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur-heavy)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur-heavy)) saturate(180%);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-pill);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+  gap: 4px;
+  background: #131519;
+  border: 1px solid var(--border-structural);
+  border-radius: var(--radius-window);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.03);
   z-index: 9999;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform var(--transition-spring), opacity var(--transition-smooth);
+  transition: opacity var(--transition-fast);
 }
 
 .dock-item {
   position: relative;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--border-hairline);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-primary);
-  /* Balanced scale that stays harmoniously within dock boundaries */
-  transition: transform var(--transition-spring), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  color: var(--text-secondary);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .dock-item:hover {
-  transform: scale(1.12) translateY(-2px);
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), 0 0 14px rgba(56, 189, 248, 0.3);
+  background: var(--color-surface-hover);
+  border-color: var(--border-prominent);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.dock-item.active {
+  background: var(--color-surface-elevated);
+  border-color: var(--border-prominent);
+  color: #ffffff;
 }
 
 .dock-item:active {
-  transform: scale(1.04) translateY(0);
+  transform: translateY(0);
 }
 
-/* Tooltip on Hover */
+/* Tooltip: Crisp Technical Monolithic Badge */
 .dock-tooltip {
   position: absolute;
-  bottom: 54px;
-  padding: 5px 12px;
-  background: rgba(15, 20, 28, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 6px;
+  bottom: 48px;
+  padding: 4px 8px;
+  background: #181a20;
+  border: 1px solid var(--border-prominent);
+  border-radius: var(--radius-badge);
   font-size: 11px;
   font-weight: 500;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(4px);
+  transform: translateY(3px);
   transition: opacity var(--transition-fast), transform var(--transition-fast);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 .dock-item:hover .dock-tooltip {
@@ -74,13 +81,12 @@
   transform: translateY(0);
 }
 
-/* Running App Indicator Dot */
+/* Running App Indicator: Disciplined 8px Signal Bar (Zero Neon Blur) */
 .dock-dot {
   position: absolute;
-  bottom: -3px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--aurora-cyan);
-  box-shadow: 0 0 6px var(--aurora-cyan);
+  bottom: 2px;
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  transition: background var(--transition-fast);
 }
