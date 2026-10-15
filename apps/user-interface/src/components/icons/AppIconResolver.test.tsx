@@ -74,5 +74,23 @@ describe('AppIconResolver', () => {
     });
     const { container: swissBrand } = render(<AppIconResolver variant="brand" size={24} />);
     expect(swissBrand.querySelector('svg')).toHaveAttribute('aria-label', 'AEC System Logo');
+
+    act(() => {
+      useThemeStore.getState().setTheme('classic-mac');
+    });
+    const { container: macBrand } = render(<AppIconResolver variant="brand" size={24} />);
+    expect(macBrand.querySelector('svg')).toHaveAttribute('aria-label', 'Happy Mac Logo');
+  });
+
+  it('renders custom Classic Mac icons for terminal and files', () => {
+    act(() => {
+      useThemeStore.getState().setTheme('classic-mac');
+    });
+
+    const { container: termContainer } = render(<AppIconResolver appId="terminal" size={24} />);
+    expect(termContainer.querySelector('svg')).toHaveAttribute('aria-label', 'Terminal Logo');
+
+    const { container: txtContainer } = render(<AppIconResolver fileExtension="txt" size={24} />);
+    expect(txtContainer.querySelector('svg')).toHaveAttribute('aria-label', 'TXT File Logo');
   });
 });

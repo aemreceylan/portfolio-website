@@ -172,6 +172,45 @@
 }
 
 /* --------------------------------------------------------------------------
+   Tier 5: Classic Macintosh Tokens (1984 System 7 & Susan Kare GUI)
+   -------------------------------------------------------------------------- */
+[data-theme="classic-mac"] {
+  --color-void: #787d85;
+  --color-bg-base: #dcdfe5;
+  --color-bg-elevated: #eceef2;
+  --color-surface-subtle: rgba(0, 0, 0, 0.05);
+
+  --glass-bg: #dcdfe5;
+  --glass-bg-active: #e4e7ed;
+  --glass-border: #111111;
+  --glass-border-highlight: #ffffff;
+  --glass-blur: 0px;
+  --glass-blur-heavy: 0px;
+  --glass-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4), inset 1px 1px 0px #ffffff, inset -1px -1px 0px #555555;
+  --glass-shadow-active: 3px 3px 0px rgba(0, 0, 0, 0.5), inset 1px 1px 0px #ffffff, inset -1px -1px 0px #444444;
+
+  --color-accent: #000080;
+  --color-accent-subtle: rgba(0, 0, 128, 0.12);
+  --color-accent-border: rgba(0, 0, 128, 0.45);
+  --aurora-cyan: #000080;
+  --accent-color: #000080;
+  --accent-rgb: 0, 0, 128;
+
+  --text-primary: #111111;
+  --text-secondary: #333338;
+  --text-muted: #555560;
+  --text-code: #000080;
+
+  --radius-window: 2px;
+  --radius-control: 0px;
+  --radius-pill: 2px;
+  --font-sans: 'Geneva', 'Chicago', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Monaco', 'Courier New', monospace;
+
+  --wallpaper-bg: repeating-conic-gradient(#767b85 0% 25%, #8c919c 0% 50%) 0 0 / 4px 4px;
+}
+
+/* --------------------------------------------------------------------------
    Base Reset & Cross-Browser Typography
    -------------------------------------------------------------------------- */
 *, *::before, *::after {
@@ -257,3 +296,10 @@ code, pre, .font-mono {
     linear-gradient(90deg, rgba(6, 182, 212, 0.025) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+/* 1984 50% Dither Pattern Texture (Classic Macintosh) */
+[data-theme="classic-mac"] .desktop-viewport::before {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+

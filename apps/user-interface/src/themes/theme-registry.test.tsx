@@ -54,11 +54,12 @@ describe('ThemeRegistry Engine', () => {
     document.documentElement.removeAttribute('data-theme');
   });
 
-  it('initializes with default built-in themes: spatial-glass, swiss-industrial, and cyberpunk-neon', () => {
+  it('initializes with default built-in themes: spatial-glass, swiss-industrial, cyberpunk-neon, and classic-mac', () => {
     expect(hasTheme('spatial-glass')).toBe(true);
     expect(hasTheme('swiss-industrial')).toBe(true);
     expect(hasTheme('cyberpunk-neon')).toBe(true);
-    expect(getAllThemes().length).toBeGreaterThanOrEqual(3);
+    expect(hasTheme('classic-mac')).toBe(true);
+    expect(getAllThemes().length).toBeGreaterThanOrEqual(4);
   });
 
   it('retrieves theme definitions correctly', () => {
@@ -73,6 +74,10 @@ describe('ThemeRegistry Engine', () => {
     const cyber = getTheme('cyberpunk-neon');
     expect(cyber.id).toBe('cyberpunk-neon');
     expect(cyber.colors.accentColor).toBe('#f43f5e');
+
+    const mac = getTheme('classic-mac');
+    expect(mac.id).toBe('classic-mac');
+    expect(mac.colors.accentColor).toBe('#000080');
   });
 
   it('gracefully falls back to DEFAULT_THEME for non-existent theme IDs', () => {
@@ -118,5 +123,6 @@ describe('ThemeRegistry Engine', () => {
     expect(ids).toContain('spatial-glass');
     expect(ids).toContain('swiss-industrial');
     expect(ids).toContain('cyberpunk-neon');
+    expect(ids).toContain('classic-mac');
   });
 });

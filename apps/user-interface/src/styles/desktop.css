@@ -583,3 +583,110 @@
   box-shadow: 0 0 8px rgba(244, 63, 94, 0.25);
 }
 
+/* --------------------------------------------------------------------------
+   Classic Macintosh Desktop Scoping (1984 System 7 & Susan Kare GUI)
+   -------------------------------------------------------------------------- */
+[data-theme="classic-mac"] .spatial-statusbar {
+  height: var(--statusbar-height, 40px);
+  background: #dcdfe5;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid #111111;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  color: #111111;
+  font-family: var(--font-sans);
+}
+
+[data-theme="classic-mac"] .os-brand {
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13px;
+  color: #111111;
+}
+
+[data-theme="classic-mac"] .os-brand-icon {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme="classic-mac"] .statusbar-clock {
+  color: #111111;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+[data-theme="classic-mac"] .desktop-app-card,
+[data-theme="classic-mac"] .desktop-file-card {
+  border-radius: 0;
+}
+
+[data-theme="classic-mac"] .desktop-app-card:hover,
+[data-theme="classic-mac"] .desktop-file-card:hover {
+  background: rgba(0, 0, 128, 0.08);
+  box-shadow: 0 0 0 1px #000080;
+  transform: none;
+}
+
+[data-theme="classic-mac"] .desktop-app-icon,
+[data-theme="classic-mac"] .desktop-file-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 2px;
+  background: #ffffff;
+  border: 1px solid #111111;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.35), inset 1px 1px 0px #ffffff, inset -1px -1px 0px #888888;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme="classic-mac"] .desktop-app-card:hover .desktop-app-icon,
+[data-theme="classic-mac"] .desktop-file-card:hover .desktop-file-icon {
+  transform: none;
+  border-color: #000080;
+  box-shadow: 2px 2px 0px #000080;
+}
+
+[data-theme="classic-mac"] .desktop-app-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: #111111;
+  background: rgba(220, 223, 229, 0.92);
+  padding: 1px 4px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="classic-mac"] .desktop-file-name {
+  color: #111111;
+  background: rgba(220, 223, 229, 0.92);
+  padding: 1px 4px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="classic-mac"] .spatial-context-menu {
+  background: #dcdfe5;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid #111111;
+  border-radius: 0;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.4), inset 1px 1px 0px #ffffff;
+  color: #111111;
+}
+
+[data-theme="classic-mac"] .context-menu-item {
+  border-radius: 0;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: #111111;
+}
+
+[data-theme="classic-mac"] .context-menu-item:hover {
+  background: #000080;
+  color: #ffffff;
+}
+
+

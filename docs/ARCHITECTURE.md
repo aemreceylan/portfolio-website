@@ -384,6 +384,23 @@ Kullanıcı arayüzünde tema ekleme ve tema değiştirme deneyimini endüstri s
       - `CyberMarkdownLogo` & `CyberJsIdeLogo`: Neon çerçeveli, çift katmanlı fütüristik kod ve belge glifleri.
       - Dosya Simgeleri (`txt`, `md`, `js`): Neon katlanır köşe, yüksek kontrastlı rozetler ve dosya tipi telemetrisi.
     - **Sıfır Boyut Zıplaması**: Üst bar (40px), dock (58px), kart boyutları (88x92px) ve simge kapsayıcıları (50x50px) birebir korunmuştur.
+  - **4. Yerleşik Tema: Classic Macintosh (`classic-mac`)**:
+    - **Tasarım Felsefesi**: 1984 Apple Macintosh System 7 & Susan Kare retro piksel GUI estetiği. Koyu/gece temalarından tamamen ayrılan nostaljik açık gri platin şasi (`#dcdfe5`), ikonik 1-bit dithered masaüstü dokusu ve 3D kabartmalı (`beveled`) buton geometrisi.
+    - **Tarihsel GUI Zaman Çizelgesi**: Sistem artık arayüz tasarım tarihini 4 farklı çağ ile simgeler:
+      1. 1960: **Swiss Industrial** (Dieter Rams / Bauhaus Fonksiyonalizmi)
+      2. 1984: **Classic Macintosh** (Susan Kare / Erken Dönem Kişisel Bilgisayar Devrimi)
+      3. 2024: **Spatial Dark Glass** (Apple VisionOS / Çağdaş Buzlu Cam & Uzamsal Bilişim)
+      4. 2077: **Cyberpunk Neon** (Night City / Sibernetik HUD & Fütüristik Yüksek Voltaj)
+    - **Pencere & Dock Geometrisi**: 2px köşeli platin pencere kasası, yatay pinstripe başlık çubuğu, ortalanmış katı platin başlık plaketi, 13x13px kare beveled kontrol butonları ve Control Strip tarzı alt dock rafı.
+    - **Özel Susan Kare Homage SVG Simgeleri (`classic-mac.theme.tsx`)**:
+      - `MacBrandLogo`: İkonik gülümseyen "Happy Mac" CRT bilgisayar ve disket yuvası.
+      - `MacTerminalLogo`: Tersine çevrilmiş siyah başlık çubuklu retro komut kutusu, pinstripe ve kare imleç.
+      - `MacSettingsLogo`: System 7 Control Panels donanım potansiyometreleri ve sürgülü ayar kolları.
+      - `MacMarkdownLogo`: TeachText / Document tüy kalem ve metin rulosu.
+      - `MacJsIdeLogo`: 3.5 inçlik manyetik geliştirici disketi ve "JS" sistem etiketi.
+      - Dosya Simgeleri (`txt`, `md`, `js`): Katlanır köşeli kağıt dokümanlar ve klasik piksel rozetler.
+    - **Sıfır Boyut Zıplaması**: Üst bar (40px), dock (58px), kart boyutları (88x92px) ve simge kutuları (50x50px) birebir muhafaza edilmiştir.
+
 
 
 

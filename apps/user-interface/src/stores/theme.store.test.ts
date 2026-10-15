@@ -33,6 +33,14 @@ describe('theme.store', () => {
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('cyberpunk-neon');
   });
 
+  it('should switch theme to classic-mac and persist in localStorage', () => {
+    useThemeStore.getState().setTheme('classic-mac');
+
+    expect(useThemeStore.getState().currentTheme).toBe('classic-mac');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('classic-mac');
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('classic-mac');
+  });
+
   it('should switch back to spatial-glass', () => {
     useThemeStore.getState().setTheme('swiss-industrial');
     expect(useThemeStore.getState().currentTheme).toBe('swiss-industrial');

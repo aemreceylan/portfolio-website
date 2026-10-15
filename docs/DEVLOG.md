@@ -412,6 +412,37 @@
   - ESLint / SonarJS: **0 hata, 0 uyarı**.
   - TypeScript: 4 paketin tamamında `tsc --noEmit` **0 hata**.
 
+## [2026-10-15] - Classic Macintosh (1984 System 7) Teması & Retro Zaman Çizelgesi
+
+### Yapılanlar
+- **4. Yerleşik Tema Entegrasyonu (`classic-mac.theme.tsx`)**:
+  - `ThemeDefinition` standardında `classic-mac` kimliğiyle tam kapsamlı tema nesnesi oluşturuldu.
+  - Vurgu rengi: Derin Klasik Mac Laciverti (`#000080`, `rgb(0, 0, 128)`).
+  - Şasi ve Zemin: Nostaljik açık gri platin taban (`#dcdfe5`), beyaz pencere içi (`#ffffff`) ve 1984 ikonik 50% dither dama deseni (`repeating-conic-gradient(#767b85 0% 25%, #8c919c 0% 50%) 0 0 / 4px 4px`).
+  - Tipografi: Klasik Apple Geneva & Chicago font ailesi (`'Geneva', 'Chicago', sans-serif`).
+- **Özel Susan Kare Homage SVG Simgeleri**:
+  - `MacBrandLogo`: 1984'ün efsanevi gülümseyen "Happy Mac" bilgisayarı, CRT ekranı ve disket yuvası.
+  - `MacTerminalLogo`: Tersine çevrilmiş siyah başlık çubuklu, pinstripe ve kare imleçli vintage komut kabuğu.
+  - `MacSettingsLogo`: System 7 Control Panels donanım potansiyometreleri, kanal kızakları ve düğmeleri.
+  - `MacMarkdownLogo`: TeachText / Document tüy kalem, mühür ve doküman rulosu.
+  - `MacJsIdeLogo`: 3.5" manyetik geliştirici disketi ve kontrastlı "JS" sistem etiketi.
+  - `MacTextFileLogo`, `MacMdFileLogo`, `MacJsFileLogo`: 3D kabartmalı katlanır köşeli sayfalar ve Susan Kare tarzı rozetler.
+- **Kapsamlı Stil & Görsel Ayrıştırma**:
+  - `design-tokens.css`: `[data-theme="classic-mac"]` kök değişkenleri, 3D kabartma gölgeleri (`inset 1px 1px #fff, inset -1px -1px #555`), açık zemin renkleri ve dither ızgara masaüstü deseni eklendi.
+  - `desktop.css`: Platin üst durum çubuğu, siyah çerçeveli 3D beveled masaüstü uygulama/dosya simge kutuları, katı platin bağlam menüsü.
+  - `window.css`: Yatay pinstripe başlık çubuğu (`repeating-linear-gradient`), ortalanmış katı platin başlık plaketi, 13x13px kare kabartmalı kontrol butonları, beyaz pencere çalışma alanı.
+  - `dock.css`: Alt kenara kilitli System 7 Control Strip tarzı platin raf, 42x42px kare beveled dock kartları, katı lacivert aktif durum göstergesi (`#000080`).
+  - `settings.css`: Ayarlar uygulamasında `.theme-preview-box.preview-classic-mac` dither desenli önizleme kutusu, pinstripe pencere ve kare buton LED'leri.
+- **Tema Motoru & Test Kapsamı**:
+  - `theme.types.ts`: `ThemeId` tipi `'spatial-glass' | 'swiss-industrial' | 'cyberpunk-neon' | 'classic-mac' | string` olarak genişletildi.
+  - `theme-registry.ts`: `classicMacTheme` 4. yerleşik tema olarak kaydedildi.
+  - `theme-registry.test.tsx`, `theme.store.test.ts`, `AppIconResolver.test.tsx`: Classic Mac için birim testleri eklendi.
+- **Test ve Kalite Durumu**:
+  - Vitest: **18 test dosyasında 109 testin tamamı (%100) başarıyla geçti**.
+  - ESLint / SonarJS: **0 hata, 0 uyarı**.
+  - TypeScript: 4 paketin tamamında `tsc --noEmit` **0 hata**.
+
+
 
 
 

@@ -188,6 +188,12 @@
     radial-gradient(ellipse at 85% 85%, rgba(6, 182, 212, 0.28) 0%, transparent 60%);
 }
 
+.theme-preview-box.preview-classic-mac {
+  background-color: #80858e;
+  background-image: repeating-conic-gradient(#767b85 0% 25%, #8c919c 0% 50%);
+  background-size: 4px 4px;
+}
+
 .preview-decor-window {
   width: 140px;
   height: 64px;
@@ -212,6 +218,13 @@
   background: #090d16;
   border: 1px solid rgba(244, 63, 94, 0.5);
   box-shadow: 0 0 16px rgba(244, 63, 94, 0.25);
+}
+
+.preview-classic-mac .preview-decor-window {
+  border-radius: 2px;
+  background: #dcdfe5;
+  border: 1px solid #111111;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4), inset 1px 1px 0px #ffffff, inset -1px -1px 0px #555555;
 }
 
 .preview-decor-bar {
@@ -271,6 +284,41 @@
 .preview-cyberpunk-neon .preview-decor-accent {
   border-radius: 2px;
   box-shadow: 0 0 6px #f43f5e;
+}
+
+.preview-classic-mac .preview-decor-bar {
+  background-color: #dcdfe5;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 1px,
+    #111111 1px,
+    #111111 2px
+  );
+  border-bottom: 1px solid #111111;
+}
+
+.preview-classic-mac .preview-decor-dot {
+  border-radius: 0;
+  width: 5px;
+  height: 5px;
+  border: 1px solid #111111;
+  background: #dcdfe5;
+  box-shadow: inset 1px 1px 0px #ffffff;
+}
+
+.preview-classic-mac .preview-decor-accent {
+  border-radius: 0;
+  background: #000080;
+  box-shadow: none;
+}
+
+.preview-classic-mac .preview-decor-body {
+  background: #ffffff;
+}
+
+.preview-classic-mac .preview-decor-line {
+  background: #111111;
 }
 
 .preview-decor-body {

@@ -2,6 +2,7 @@ import { ThemeDefinition, ThemeId, ThemeMeta } from './theme.types';
 import { spatialGlassTheme } from './spatial-glass.theme';
 import { swissIndustrialTheme } from './swiss-industrial.theme';
 import { cyberpunkNeonTheme } from './cyberpunk-neon.theme';
+import { classicMacTheme } from './classic-mac.theme';
 
 export const DEFAULT_THEME: ThemeId = 'spatial-glass';
 
@@ -12,6 +13,7 @@ class ThemeRegistry {
     this.registerTheme(spatialGlassTheme);
     this.registerTheme(swissIndustrialTheme);
     this.registerTheme(cyberpunkNeonTheme);
+    this.registerTheme(classicMacTheme);
   }
 
   /**
