@@ -58,6 +58,51 @@ describe('SettingsApp Component', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('spatial-glass');
   });
 
+  it('should dynamically update selected theme info title and description when theme changes', () => {
+    render(<SettingsApp />);
+
+    // Default theme: Spatial Dark Glass
+    expect(screen.getByText('Spatial Dark Glass Theme')).toBeInTheDocument();
+    const desc = screen.getByTestId('settings-theme-description');
+    expect(desc).toHaveTextContent('Hardware accelerated frosted glass, glowing borders and fluid spring physics.');
+
+    // Switch to Swiss Industrial
+    const swissCard = screen.getByTestId('theme-card-swiss-industrial');
+    fireEvent.click(swissCard);
+
+    expect(screen.getByText('Swiss Industrial Theme')).toBeInTheDocument();
+    expect(desc).toHaveTextContent('Solid matte graphite chassis, Dieter Rams functionalism and safety orange accents.');
+
+    // Switch to Cyberpunk Neon
+    const cyberpunkCard = screen.getByTestId('theme-card-cyberpunk-neon');
+    fireEvent.click(cyberpunkCard);
+
+    expect(screen.getByText('Cyberpunk Neon Theme')).toBeInTheDocument();
+    expect(desc).toHaveTextContent('High-voltage neon glow, deep OLED obsidian surfaces and cybernetic HUD telemetry.');
+
+    // Switch to Classic Macintosh
+    const macCard = screen.getByTestId('theme-card-classic-mac');
+    fireEvent.click(macCard);
+
+    expect(screen.getByText('Classic Macintosh Theme')).toBeInTheDocument();
+    expect(desc).toHaveTextContent('Nostalgic 1984 platinum chassis, pinstripe titlebars and Susan Kare pixel aesthetics.');
+  });
+
+  it('should update theme title and description dynamically in Turkish localization', () => {
+    useI18nStore.getState().setLanguage('tr');
+    render(<SettingsApp />);
+
+    expect(screen.getByText('Spatial Dark Glass Teması')).toBeInTheDocument();
+    const desc = screen.getByTestId('settings-theme-description');
+    expect(desc).toHaveTextContent('Donanım hızlandırmalı buzlu cam, parıldayan kenarlıklar ve akıcı yay fiziği.');
+
+    const swissCard = screen.getByTestId('theme-card-swiss-industrial');
+    fireEvent.click(swissCard);
+
+    expect(screen.getByText('Swiss Industrial Teması')).toBeInTheDocument();
+    expect(desc).toHaveTextContent('Masif mat grafit şasi, Dieter Rams fonksiyonalizmi ve emniyet turuncusu vurgusu.');
+  });
+
   it('should render factory reset section and trigger reset on confirmation', () => {
     // 1. Modify some state
     useThemeStore.getState().setTheme('swiss-industrial');

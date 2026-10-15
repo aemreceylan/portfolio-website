@@ -402,6 +402,10 @@ Kullanıcı arayüzünde tema ekleme ve tema değiştirme deneyimini endüstri s
       - `MacJsIdeLogo`: 3.5 inçlik manyetik geliştirici disketi ve "JS" sistem etiketi.
       - Dosya Simgeleri (`txt`, `md`, `js`): Katlanır köşeli kağıt dokümanlar ve klasik piksel rozetler.
     - **Sıfır Boyut Zıplaması**: Üst bar (40px), dock (58px), kart boyutları (88x92px) ve simge kutuları (50x50px) birebir muhafaza edilmiştir.
+  - **Ayarlar Uygulamasında Dinamik Tema Bilgi Başlığı ve Çok Dilli Açıklamalar**:
+    - **Dinamik Başlık & Rozet**: Tema seçim ızgarasının üzerindeki bölüm başlığı (`activeThemeTitle`), aktif temanın adına ve kullanıcının seçtiği dile göre dinamik olarak güncellenir (`{name} Teması`, `{name} Theme`, `{name}-Design`, `Thème {name}` vb.). Başlığın yanında o temanın tasarım diliyle uyumlu aktif durum rozeti (`.settings-active-theme-pill`) yer alır.
+    - **Dinamik Açıklama Paragrafı**: Başlığın altındaki açıklama metni (`activeThemeDescription`), seçilen temanın tasarım felsefesini (buzlu cam, Rams fonksiyonalizmi, sibernetik telemetre veya Susan Kare retro piksel estetiği) 7 desteklenen dilde reaktif olarak yansıtır.
+    - **Tema Kartları İçi Yerelleştirme**: Seçim kartlarındaki açıklama metinleri de `getThemeDescription()` çözümleyicisi sayesinde 7 dilin tamamında yerelleştirilmiş olarak sunulur.
 
 
 

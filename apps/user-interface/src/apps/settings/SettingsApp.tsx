@@ -3,14 +3,14 @@ import { Globe, Palette, Check, RotateCcw, AlertTriangle } from 'lucide-react';
 import { LANGUAGE_OPTIONS } from '#i18n/translations';
 import { useTranslation } from '#i18n/i18n.store';
 import { LanguageFlag } from '#components/LanguageFlag';
-import { useThemeStore, THEME_OPTIONS, ThemeId } from '#stores/theme.store';
+import { useThemeStore, THEME_OPTIONS, THEME_DEFINITIONS, ThemeId } from '#stores/theme.store';
 import { performSystemReset } from '#services/system-reset';
 import '#styles/settings.css';
 
 /**
  * SettingsApp component allowing the user to configure:
  * - Multilingual preferences across 7 locales
- * - Dual-Engine System Design Theme (Spatial Dark Glass vs Swiss Industrial)
+ * - Multi-Engine System Design Theme (Spatial Dark Glass, Swiss Industrial, Cyberpunk Neon, Classic Macintosh)
  * - System factory reset (equivalent to sudo rm -rf in GUI)
  */
 export const SettingsApp: React.FC = () => {
@@ -18,6 +18,27 @@ export const SettingsApp: React.FC = () => {
   const { currentTheme, setTheme } = useThemeStore();
   const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
   const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
+
+  const getThemeDescription = (themeId: ThemeId): string => {
+    switch (themeId) {
+      case 'spatial-glass':
+        return t('settings_theme_desc_spatial_glass');
+      case 'swiss-industrial':
+        return t('settings_theme_desc_swiss_industrial');
+      case 'cyberpunk-neon':
+        return t('settings_theme_desc_cyberpunk_neon');
+      case 'classic-mac':
+        return t('settings_theme_desc_classic_mac');
+      default:
+        return THEME_DEFINITIONS[themeId]?.description || t('settings_appearance_desc');
+    }
+  };
+
+  const activeThemeMeta = THEME_DEFINITIONS[currentTheme];
+  const activeThemeTitle = activeThemeMeta
+    ? t('settings_theme_title_format').replace('{name}', activeThemeMeta.name)
+    : t('settings_appearance_section');
+  const activeThemeDescription = getThemeDescription(currentTheme);
 
   const handleConfirmReset = () => {
     performSystemReset();
@@ -75,13 +96,19 @@ export const SettingsApp: React.FC = () => {
         </div>
       </section>
 
-      {/* Dual-Engine Design System Theme Section */}
-      <section className="settings-section">
+      {/* Design System Theme Section */}
+      <section className="settings-section" aria-label={activeThemeTitle}>
         <div className="settings-section-title">
           <Palette size={16} />
-          <span>{t('settings_appearance_section')}</span>
+          <span>{activeThemeTitle}</span>
+          <span className="settings-active-theme-pill" data-testid="settings-active-theme-badge">
+            <Check size={11} style={{ display: 'inline', marginRight: 4 }} />
+            {t('settings_active_badge')}
+          </span>
         </div>
-        <p className="settings-section-desc">{t('settings_appearance_desc')}</p>
+        <p className="settings-section-desc" data-testid="settings-theme-description">
+          {activeThemeDescription}
+        </p>
 
         <div
           className="theme-selector-grid"
@@ -133,7 +160,7 @@ export const SettingsApp: React.FC = () => {
                     )}
                   </div>
 
-                  <p className="theme-description">{opt.description}</p>
+                  <p className="theme-description">{getThemeDescription(opt.id as ThemeId)}</p>
                 </div>
               </button>
             );

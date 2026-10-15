@@ -444,6 +444,27 @@
   - ESLint / SonarJS: **0 hata, 0 uyarı**.
   - TypeScript: 4 paketin tamamında `tsc --noEmit` **0 hata**.
 
+## [2026-10-15] - Ayarlar Uygulaması: Dinamik Tema Bilgi Başlığı & 7 Dilli Açıklama Sistemi
+
+### Yapılanlar
+- **Dinamik Seçilen Tema Bilgisi (`SettingsApp.tsx`)**:
+  - Tema seçim ızgarasının üstündeki bölüm başlığı (`activeThemeTitle`), statik/sabit "Spatial Dark Glass" yerine o an aktif olan temanın adına göre dinamik oluşturuldu (`activeThemeMeta ? t('settings_theme_title_format').replace('{name}', activeThemeMeta.name) : t('settings_appearance_section')`).
+  - Başlığa tema tasarım diline duyarlı aktif durum rozeti (`.settings-active-theme-pill`, `<Check size={11} /> {t('settings_active_badge')}`) entegre edildi.
+  - Başlığın altındaki açıklama paragrafı (`settings-section-desc`), `getThemeDescription(currentTheme)` fonksiyonu ile reaktif olarak seçilen temanın (Spatial Glass, Swiss Industrial, Cyberpunk Neon, Classic Mac) mimari açıklamasını yansıtacak şekilde bağlandı.
+- **7 Dilli Yerelleştirme Entegrasyonu (`translations.ts`)**:
+  - `Translations` arayüzüne ve 7 dil sözlüğünün (`en`, `tr`, `de`, `fr`, `es`, `ru`, `ja`) tamamına her 4 temanın zengin açıklamaları (`settings_theme_desc_spatial_glass`, `settings_theme_desc_swiss_industrial`, `settings_theme_desc_cyberpunk_neon`, `settings_theme_desc_classic_mac`) ve başlık format şablonu (`settings_theme_title_format`: `{name} Teması` / `{name} Theme` / `{name}-Design` / `Thème {name}` / vb.) eklendi.
+  - Tema seçim kartlarının içerisindeki açıklamalar da hardcoded İngilizce yerine `getThemeDescription(opt.id as ThemeId)` ile kullanıcının seçtiği dile göre yerelleştirildi.
+- **Stil & Tasarım Sistemi Güncellemeleri (`settings.css`)**:
+  - `.settings-active-theme-pill` sınıfı eklendi; varsayılan temada parıltılı cam hap, Swiss Industrial'de keskin 2px emniyet turuncusu monospace etiket, Cyberpunk Neon'da neon ışıltılı etiket, Classic Macintosh'ta ise retro katı lacivert beveled rozet olarak stillendirildi.
+- **Birim ve Entegrasyon Testleri (`SettingsApp.test.tsx`)**:
+  - Tema değiştirildiğinde üstteki başlığın ve açıklama paragrafının doğru içerikle güncellendiğini doğrulayan Vitest testleri eklendi.
+  - Türkçe ve İngilizce dil geçişlerinde dinamik başlık formatının ve yerelleştirilmiş açıklamaların doğruluğu test edildi.
+- **Test ve Kalite Durumu**:
+  - Vitest: **18 test dosyasında 111 testin tamamı (%100) başarıyla geçti**.
+  - ESLint / SonarJS: **0 hata, 0 uyarı**.
+  - TypeScript: 4 paketin tamamında `tsc --noEmit` **0 hata**.
+
+
 
 
 
