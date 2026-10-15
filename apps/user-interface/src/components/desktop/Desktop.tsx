@@ -22,6 +22,7 @@ import {
 import { WindowFrame } from '#components/window/WindowFrame';
 import { SpatialSuspenseSkeleton } from '#components/window/SpatialSuspenseSkeleton';
 import { Dock } from '#components/dock/Dock';
+import { MusicPlayer } from '#components/desktop/MusicPlayer';
 import { SoundControl } from '#components/desktop/SoundControl';
 import { useTranslation } from '#i18n/i18n.store';
 import { useFileSystemStore, VFSFile, parseAllowedExtension } from '#stores/filesystem.store';
@@ -676,6 +677,7 @@ export const Desktop: React.FC = () => {
         </div>
 
         <div className="statusbar-right">
+          <MusicPlayer />
           <SoundControl />
           <time>{timeString}</time>
         </div>

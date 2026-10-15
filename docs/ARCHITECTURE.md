@@ -441,6 +441,47 @@ Kullanıcı arayüzüne fiziksel bir işletim sistemi ve enstrüman duyarlılı�
 * **İşletim Sistemi Olay Entegrasyonu**:
   - Pencere açma (`window-open`), kapatma (`window-close`), küçültme (`window-minimize`), tam ekrana alma (`window-maximize`), tam ekrandan dönme (`window-restore`), tema değiştirme (`theme-switch`) ve dock tıklamaları (`click`) reaktif olarak ses motoruna bağlanmıştır.
 
+---
+
+## 21. Web Audio Prosedürel Arka Plan Müzik Motoru & Üst Bar Müzikçalar Mimarisi
+
+Sistemin tematik derinliğini ve retro-fütüristik atmosferini zirveye taşımak amacıyla, harici ses dosyalarının dosya boyutu, lisans ve ağ gecikmesi dezavantajlarını sıfırlayan **Prosedürel Web Audio Müzik Sentezleme Motoru** geliştirilmiştir:
+
+* **Sıfır Ek Yük & Matematiksel Sekanslayıcı (`music.service.ts`)**:
+  - 0 KB harici asset: Hiçbir `.mp3`, `.wav` veya `.ogg` dosyası indirilmez; tüm ses dalgaları doğrudan kullanıcının işlemcisi ve tarayıcı ses kartı üzerinde anlık sentezlenir.
+  - `OscillatorNode`, `GainNode` ve `BiquadFilterNode` (lowpass) bileşenleri ile dinamik adım sekanslayıcısı (Lookahead Step Sequencer) çalışır.
+  - Her temanın felsefesini, tarihi dönemini ve estetik frekanslarını yansıtan **8 adet tematik parça (her temaya 2 özgün müzik)** mevcuttur:
+    1. **Spatial Dark Glass**:
+       - *Track 1 - "Ethereal Orbit"* (78 BPM, yumuşak sinüs dalgaları, 1800Hz cutoff filtresi, uzamsal ambient arpejler).
+       - *Track 2 - "Starlight Float"* (84 BPM, sinüs lead + alt bas, 2200Hz cutoff, derin uzay hissi).
+    2. **Swiss Industrial**:
+       - *Track 1 - "Kalkül 1960"* (112 BPM, üçgen dalga, 2800Hz cutoff, Dieter Rams fonksiyonalist matematiksel ritmi).
+       - *Track 2 - "Raster & Modul"* (100 BPM, mekanik üçgen bas, 2600Hz cutoff, endüstriyel şasi temposu).
+    3. **Cyberpunk Neon**:
+       - *Track 1 - "Night City Drive"* (122 BPM, agresif testere dişi dalga, 2400Hz cutoff, synthwave arpejleri).
+       - *Track 2 - "Neon Horizon"* (110 BPM, sibernetik bas hatları, 2200Hz cutoff, yüksek voltaj parıltısı).
+    4. **Classic Macintosh**:
+       - *Track 1 - "Silicon Valley 1984"* (128 BPM, saf 8-bit chiptune kare dalga, 4000Hz cutoff, System 7 retro ezgileri).
+       - *Track 2 - "Pixel Dream"* (106 BPM, nostaljik Susan Kare piksel melodileri, 3800Hz cutoff).
+* **Zustand Reaktif Müzik Deposu (`music.store.ts`)**:
+  - `isPlaying: boolean`, `currentTrackIndex: number` (0 veya 1), `activeThemeId: string` ve `currentTrack: TrackDefinition` state'lerini yönetir.
+  - `togglePlay()`, `nextTrack()` (temanın 1. ve 2. parçası arasında geçiş), `setTheme()`, `stop()` ve `reset()` API'larını dışa açar.
+  - **Ana Ses Denetimi ve Tema Senkronizasyonu**:
+    - `useSoundStore` aboneliği: Kullanıcı üst bardan sesi kıstığında veya sessize aldığında müzik seviyesi anında senkronize olur.
+    - `useThemeStore` aboneliği: Ayarlar'dan sistem teması değiştirildiğinde, müzik çalıyorsa otomatik olarak yeni temanın parçasına yumuşak geçiş yapılır.
+* **Üst Bar Mini Müzikçalar Bileşeni (`MusicPlayer.tsx`, `desktop.css`)**:
+  - `.spatial-statusbar` sağ bölümünde (`.statusbar-right`), ses denetiminin solunda konumlandırılmıştır.
+  - **Oynat / Duraklat Butonu (`music-player-btn`)**: Lucide `Play` / `Pause` ikonları ile sezgisel kontrol.
+  - **Animasyonlu Ritmik Ekolayzır (`music-eq-visualizer`)**:
+    - 4 adet dikey ekolayzır çubuğu (`.eq-bar.bar-1..4`).
+    - Müzik çalarken (`.playing`) CSS `@keyframes eqBounce` ile ritmik ve asenkron dalgalanır; duraklatıldığında sabit dinlenme boyuna çekilir.
+  - **Parça Başlığı Rozeti (`music-player-title`)**: Çalan parçanın adını ve BPM değerini tooltip ve kompakt etiket olarak gösterir.
+  - **Sonraki Parça Butonu (`next-track-btn`)**: Lucide `SkipForward` ikonu ile temanın diğer parçasına anında geçer.
+  - 4 temaya özel CSS görünümleri uygulanmıştır (Spatial buzlu cam, Swiss grafit/turuncu, Cyberpunk neon pembe/camgöbeği, Classic Mac beveled retro platin).
+* **7 Dilde Yerelleştirme**:
+  - `music_play`, `music_pause`, `music_next` anahtarları 7 dilde (İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça, Japonca) desteklenir.
+
+
 
 
 

@@ -540,6 +540,47 @@
   - TypeScript: Monorepo genelinde `tsc --noEmit` **0 hata**.
   - Üretim Paketi: `npm run build` sıfır hatayla derlendi.
 
+## [2026-10-15] - Web Audio Prosedürel Müzik Motoru (8 Parça) & Üst Bar Mini Müzikçalar
+
+### Yapılanlar
+- **Sıfır Ek Yüklü Prosedürel Müzik Motoru (`music.service.ts`)**:
+  - Harici hiçbir `.mp3`/`.wav`/`.ogg` ses dosyası kullanılmadan (0 KB asset yükü), Web Audio API (`AudioContext`, `OscillatorNode`, `GainNode`, `BiquadFilterNode`) üzerinde çalışan saf matematiksel adım sekanslayıcısı (Lookahead Step Sequencer) geliştirildi.
+  - Her biri melodik lead ve bas hatlarına, bağımsız BPM değerlerine ve rezonans alçak geçiren filtreye (`lowpass filter`) sahip **8 adet özgün tema parçası (her temaya 2 parça)** bestelendi:
+    1. **Spatial Dark Glass**:
+       - *Track 1*: "Ethereal Orbit" (78 BPM, yumuşak sinüs dalgası, 1800Hz filtre, ambient arpejler).
+       - *Track 2*: "Starlight Float" (84 BPM, sinüs lead + alt bas, 2200Hz filtre, uzamsal süzülme).
+    2. **Swiss Industrial**:
+       - *Track 1*: "Kalkül 1960" (112 BPM, saf üçgen dalga, 2800Hz filtre, Dieter Rams matematiksel ritmi).
+       - *Track 2*: "Raster & Modul" (100 BPM, mekanik üçgen bas yürüyüşü, 2600Hz filtre, katı modüler yapı).
+    3. **Cyberpunk Neon**:
+       - *Track 1*: "Night City Drive" (122 BPM, agresif testere dişi/sawtooth lead, 2400Hz filtre, synthwave arpeji).
+       - *Track 2*: "Neon Horizon" (110 BPM, sibernetik bas hatları, 2200Hz filtre, yüksek voltaj atmosferi).
+    4. **Classic Macintosh**:
+       - *Track 1*: "Silicon Valley 1984" (128 BPM, 8-bit chiptune kare dalga/square, 4000Hz filtre, retro neşeli bilgisayar ezgisi).
+       - *Track 2*: "Pixel Dream" (106 BPM, nostaljik Susan Kare piksel melodisi, 3800Hz filtre).
+- **Zustand Reaktif Müzik Deposu (`music.store.ts`)**:
+  - `isPlaying: boolean`, `currentTrackIndex: number` (0 veya 1), `activeThemeId: string` ve `currentTrack: TrackDefinition` durumları reaktif olarak yönetildi.
+  - `togglePlay()`, `nextTrack()` (aynı temanın 1. ve 2. parçaları arasında döngü kurma), `setTheme()`, `stop()` ve `reset()` fonksiyonları eklendi.
+  - **Otomatik Ses ve Tema Senkronizasyonu**:
+    - `useSoundStore.subscribe`: Ses denetimindeki ana ses seviyesi (`volume`) ve sessize alma (`isMuted`) değiştiğinde müzik ses çıkışı pürüzsüzce senkronize edilir.
+    - `useThemeStore.subscribe`: Ayarlar uygulamasından sistem teması değiştirildiğinde, müzik çalıyorsa kesintisiz şekilde yeni temanın parçasına geçer.
+- **Üst Bar Mini Müzikçalar Bileşeni (`MusicPlayer.tsx`, `desktop.css`)**:
+  - Üst durum çubuğunun sağ tarafına (`.statusbar-right`), ses denetiminin hemen soluna yerleştirildi.
+  - **Oynat / Duraklat Butonu (`music-player-btn`)**: Lucide `Play` ve `Pause` ikonları ile tek tıkla kontrol.
+  - **Dinamik Ekolayzır Görselleştiricisi (`music-eq-visualizer`)**:
+    - Müzik çalarken (`.playing`) CSS keyframe animasyonu (`@keyframes eqBounce`) ile ritmik olarak dalgalanan 4 dikey ekolayzır çubuğu (`.eq-bar.bar-1..4`).
+    - Müzik durduğunda çubuklar zarif ve sabit bir dinlenme seviyesine döner.
+  - **Parça Başlığı Rozeti (`music-player-title`)**: Aktif çalan parçanın başlığını ve BPM bilgisini gösterir.
+  - **Sonraki Parça Butonu (`next-track-btn`)**: Lucide `SkipForward` ikonu ile temanın diğer parçasına hızlı geçiş sağlar.
+  - 4 temaya özel CSS uyarlaması yapıldı (Spatial temada buzlu cam kontur, Swiss'te minimalist grafit ve turuncu çubuklar, Cyberpunk'ta neon pembe ve camgöbeği ışıma, Mac'te 3D beveled retro butonlar).
+- **7 Dilli Yerelleştirme (`translations.ts`)**:
+  - `music_play`, `music_pause`, `music_next` anahtarları 7 dilde (İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça, Japonca) sisteme işlendi.
+- **Test ve Kalite Güvencesi**:
+  - Vitest: **24 test dosyasında 147 testin tamamı (%100) başarıyla geçti** (`music.service.test.ts`, `music.store.test.ts`, `MusicPlayer.test.tsx` dahil).
+  - ESLint / SonarJS: **0 hata, 0 uyarı** (SonarJS cognitive complexity <= 15, `prefer-specific-assertions` kurallarına tam uyum).
+  - TypeScript: Monorepo genelinde `tsc --noEmit` **0 hata**.
+  - Üretim Paketi: `npm run build` hatasız derlendi.
+
 
 
 
