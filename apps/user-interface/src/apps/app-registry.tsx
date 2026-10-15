@@ -20,6 +20,10 @@ export const JsIdeAppComponent = lazy(() =>
   import('#apps/ide/JsIdeApp').then((m) => ({ default: m.JsIdeApp }))
 );
 
+export const GameHubAppComponent = lazy(() =>
+  import('#apps/games/GameHubApp').then((m) => ({ default: m.GameHubApp }))
+);
+
 /**
  * Core Terminal application manifest
  */
@@ -81,6 +85,21 @@ export const jsIdeManifest: AppManifest = {
 };
 
 /**
+ * Arcade Game Hub & Retro Gaming Suite manifest
+ */
+export const gameHubManifest: AppManifest = {
+  id: 'game-hub',
+  name: 'Oyun Merkezi',
+  description: 'Retro arcade games suite with theme-reactive visual styling and Web Audio procedural SFX',
+  iconName: 'Gamepad2',
+  category: 'utilities',
+  defaultSize: { width: 760, height: 560 },
+  minSize: { width: 440, height: 380 },
+  resizable: true,
+  singleton: true,
+};
+
+/**
  * Central registry of all active applications available in AEC Desktop.
  */
 export const APP_REGISTRY: Record<
@@ -106,4 +125,9 @@ export const APP_REGISTRY: Record<
     manifest: jsIdeManifest,
     component: () => <JsIdeAppComponent />,
   },
+  'game-hub': {
+    manifest: gameHubManifest,
+    component: () => <GameHubAppComponent />,
+  },
 };
+

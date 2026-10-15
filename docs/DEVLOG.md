@@ -587,6 +587,52 @@
   - **Sıralı Dalga Animasyonu (`@keyframes eqLoadingWave`)**: Parça yüklenirken 4 ekolayzır çubuğu soldan sağa ritmik olarak hafifçe parlayıp sönerek kullanıcının parçanın hazırlandığını anlamasını sağladı.
   - **Çalma Sırası Özelleştirmesi**: 1 ve 2. temalarda standart sıra (Parça 1 -> Parça 2), 3 ve 4. temalarda ise kullanıcının talebiyle 2. parça ilk sırada (Neon Horizon ve Pixel Dream ilk) çalacak şekilde yapılandırıldı.
 
+## [2026-10-15] - Arcade Game Hub (Oyun Merkezi), Neon Snake, Brick Breaker, Space Defender & Temaya Duyarlı Prosedürel Web Audio Sentezleyici
+
+### Yapılanlar
+- **Arcade Game Hub Uygulaması (`apps/user-interface/src/apps/games/GameHubApp.tsx`)**:
+  - `gameHubManifest` tanımlandı (`id: 'game-hub'`, `name: 'Oyun Merkezi'`, `iconName: 'Gamepad2'`, varsayılan boyut `760x560px`).
+  - `app-registry.tsx` içinde lazy-load importu ve `APP_REGISTRY` kaydı yapıldı.
+  - Merkezi Lobi Görünümü:
+    - Hero başlığı, aktif tema göstergesi, bağımsız oyun içi ses açık/kapalı anahtarı (`isMuted`), ses seviyesi kaydırıcısı ve tema ses efekti test butonu (`Sparkles`).
+    - Lobi skor paneli: Snake, Breakout ve Space Defender için en yüksek skorları gösterir ve tüm rekorları sıfırlama butonu barındırır.
+    - 3 oyunluk seçim kartları: Rozet, ikon, açıklama, kontrol şeması ve en iyi skor gösterimi.
+  - Oyun Görünümü:
+    - Lobiye geri dönme butonu (`← Oyunlar`), aktif oyun başlığı, anlık skor, en yüksek skor, can/dalga sayaçları ve duraklatma/yeniden başlatma kontrolleri.
+- **3 Adet Temaya Duyarlı Klasik Arcade Oyunu**:
+  1. **Neon Snake (`SnakeGame.tsx`)**:
+     - 20x20 dinamik hücre ızgarası, hızlanma adımları, normal yem (+10 puan) ve geri sayımlı altın elma bonus yemleri (+50 puan).
+     - Klavye (Ok tuşları / WASD) ve sanal dokunmatik D-Pad kontrolleri (Yukarı, Aşağı, Sol, Sağ, Duraklat).
+     - Temaya göre reaktif tuval görselleştirmesi (Cyberpunk'ta neon parlamalı kuyruk, Swiss'te mimari kareler, Classic Mac'te 1-bit Susan Kare dither pikseller, Spatial'da buzlu cam orblar).
+  2. **Brick Breaker (`BreakoutGame.tsx`)**:
+     - 4 satır 8 sütun renkli tuğla ızgarası, palet temas açısına göre top fiziği yansıması, parçacık kıvılcımları, 3 can sistemi.
+     - Fare imleci / dokunmatik sürükleme veya klavye ve sanal buton kontrolleri.
+  3. **Space Defender (`SpaceDefenderGame.tsx`)**:
+     - Klasik uzay savunucusu: Oyuncu gemisi, lazer atışları, yana doğru hareket eden ve kademeli inen uzaylı filosu.
+     - Dalga ilerleme mekaniği, uzaylı bombaları, çarpışma kıvılcımları, 3 can sistemi ve ATEŞ butonu.
+- **Prosedürel Web Audio API Oyun Sentezleyici Motoru (`game-sound.service.ts`)**:
+  - Sıfır dış varlık (zero-asset), sıfır gecikmeli procedural sentezleme motoru.
+  - **4 Temaya Duyarlı Dalga Biçimleri & Frekans Profilleri**:
+    - `classic-mac`: 1984 8-bit chiptune kare dalgaları (`square`), neşeli arpejler ve retro 8-bit kaza sesleri.
+    - `cyberpunk-neon`: Agresif testere dişi dalgaları (`sawtooth`), lazer süpürme ve yüksek enerjili sibernetik zıplamalar.
+    - `swiss-industrial`: Temiz, akustik hissiyatlı üçgen dalgaları (`triangle`), kuru tıkırtılar ve endüstriyel baslar.
+    - `spatial-glass`: Saf sinüs dalgaları (`sine`), kristal berraklığında rezonanslı çanlar ve yumuşak sönümlenen uzamsal tonlar.
+  - Desteklenen Olay Sesleri: `snake-move`, `snake-eat`, `snake-bonus`, `snake-die`, `paddle-bounce`, `brick-hit`, `life-lost`, `level-clear`, `laser-shoot`, `alien-hit`, `alien-explode`, `player-hit`, `wave-clear`, `ui-click`, `game-start`, `game-over`, `high-score`, `pause-toggle`.
+- **4 Temaya Özel SVG Uygulama Logoları**:
+  - `spatial-glass`: Lucide `Gamepad2` simgesi.
+  - `swiss-industrial`: `AppLogos.tsx` içinde `GameHubAppLogo` (minimalist geometrik konsol şasisi, hassas D-pad ve turuncu emniyet butonu).
+  - `cyberpunk-neon`: `cyberpunk-neon.theme.tsx` içinde `CyberGameHubLogo` (köşeli HUD şasisi, neon pembe D-pad ve camgöbeği/sarı durum pinleri).
+  - `classic-mac`: `classic-mac.theme.tsx` içinde `MacGameHubLogo` (Susan Kare 1984 System 7 piksel konsol).
+- **Çok Dilli Yerelleştirme (7 Dil)**:
+  - `appName_game_hub` ve `appDesc_game_hub` İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça ve Japonca dillerine eklendi.
+  - Masaüstü kısayollarında (`Desktop.tsx`) ve Açık Uygulamalar Çubuğunda (`Dock.tsx`) dinamik yerelleştirme bağlandı.
+- **Kapsamlı Test & Kalite Doğrulaması**:
+  - 5 yeni test dosyası yazıldı: `game-sound.service.test.ts`, `GameHubApp.test.tsx`, `SnakeGame.test.tsx`, `BreakoutGame.test.tsx`, `SpaceDefenderGame.test.tsx`.
+  - Vitest: **29 test dosyasında 171 testin tamamı %100 başarıyla geçti**.
+  - TypeScript: `npm run typecheck` **0 hata**.
+  - Üretim Paketi: `npm run build` 10 saniyede hatasız tamamlandı; `GameHubApp` bağımsız dinamik chunk olarak optimize edildi (`46.96 kB`, gzip `11.87 kB`).
+
+
 
 
 

@@ -45,8 +45,13 @@ export const Dock: React.FC = () => {
   return (
     <nav className="spatial-dock-container" aria-label="Açık Uygulamalar Çubuğu">
       {openWindows.map((win) => {
-        const titleKey = win.id === 'settings' ? 'appName_settings' : 'appName_terminal';
-        const localizedTitle = t(titleKey);
+        let localizedTitle = win.title;
+        if (win.id === 'settings') localizedTitle = t('appName_settings');
+        else if (win.id === 'terminal') localizedTitle = t('appName_terminal');
+        else if (win.id === 'markdown-viewer') localizedTitle = t('appName_markdown');
+        else if (win.id === 'js-ide') localizedTitle = t('appName_ide');
+        else if (win.id === 'game-hub') localizedTitle = t('appName_game_hub');
+
         const isActive = activeWindowId === win.id && !win.isMinimized;
 
         return (

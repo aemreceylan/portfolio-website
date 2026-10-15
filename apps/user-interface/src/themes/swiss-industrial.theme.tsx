@@ -4,6 +4,7 @@ import {
   SettingsAppLogo,
   MarkdownAppLogo,
   JsIdeAppLogo,
+  GameHubAppLogo,
   TextFileLogo,
   MdFileLogo,
   JsFileLogo,
@@ -30,6 +31,7 @@ export const swissIndustrialTheme: ThemeDefinition = {
       'markdown-viewer': MarkdownAppLogo,
       'js-ide': JsIdeAppLogo,
       settings: SettingsAppLogo,
+      'game-hub': GameHubAppLogo,
     },
     fileIcons: {
       txt: TextFileLogo,

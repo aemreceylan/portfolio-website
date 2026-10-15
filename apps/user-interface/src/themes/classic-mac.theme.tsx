@@ -311,6 +311,32 @@ export const MacJsFileLogo: React.FC<ThemeIconProps> = ({ size = 30, className =
 );
 
 /**
+ * Classic Macintosh Game Hub Logo: Susan Kare 1984 Pixelated Gamepad.
+ */
+export const MacGameHubLogo: React.FC<ThemeIconProps> = ({ size = 32, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-label="Game Hub Logo"
+  >
+    {/* Platinum Beveled Case */}
+    <rect x="2.5" y="6.5" width="19" height="11" rx="1" fill="#dcdfe5" stroke="#111" strokeWidth="1.5" />
+    <line x1="3" y1="7.5" x2="21" y2="7.5" stroke="#ffffff" strokeWidth="1" />
+    <line x1="3" y1="17.5" x2="21" y2="17.5" stroke="#111" strokeWidth="1" />
+    {/* D-Pad Pixel Cross */}
+    <rect x="5.5" y="11" width="5" height="2" fill="#111" />
+    <rect x="7" y="9.5" width="2" height="5" fill="#111" />
+    {/* Retro Action Buttons */}
+    <rect x="15" y="12" width="2.2" height="2.2" fill="#000080" stroke="#111" strokeWidth="0.8" />
+    <rect x="17.5" y="9.5" width="2.2" height="2.2" fill="#000080" stroke="#111" strokeWidth="0.8" />
+  </svg>
+);
+
+/**
  * Classic Macintosh Theme Definition (1984 System 7 / Susan Kare GUI).
  */
 export const classicMacTheme: ThemeDefinition = {
@@ -339,6 +365,7 @@ export const classicMacTheme: ThemeDefinition = {
       'markdown-viewer': MacMarkdownLogo,
       'js-ide': MacJsIdeLogo,
       settings: MacSettingsLogo,
+      'game-hub': MacGameHubLogo,
     },
     fileIcons: {
       txt: MacTextFileLogo,

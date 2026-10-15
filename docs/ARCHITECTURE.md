@@ -485,6 +485,49 @@ Sistemin tematik derinliğini ve retro-fütüristik atmosferini zirveye taşıma
 * **7 Dilde Yerelleştirme**:
   - `music_play`, `music_pause`, `music_next`, `music_loading` anahtarları 7 dilde (İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça, Japonca) desteklenir.
 
+---
+
+## 22. Arcade Game Hub & Prosedürel Temaya Duyarlı Ses Sentezleme Motoru
+
+Kullanıcı etkileşimini ve işletim sistemi deneyimini zenginleştirmek amacıyla, masaüstü ortamına entegre **Arcade Game Hub (`game-hub`)** ve oyunlara özel **Prosedürel Web Audio API Ses Sentezleme Motoru (`game-sound.service.ts`)** geliştirilmiştir:
+
+* **Oyun Merkezi Mimarisi (`apps/user-interface/src/apps/games/`)**:
+  - **Uygulama Manifestosu (`gameHubManifest`)**: `id: 'game-hub'`, `iconName: 'Gamepad2'`, varsayılan pencere boyutu `760x560px`, minimum `440x380px`.
+  - **Merkezi Lobi & Başlatıcı (`GameHubApp.tsx`)**:
+    - Hero başlığı, aktif tema durumu rozeti, bağımsız ses denetimi (aç/kapa + ses seviyesi kaydırıcısı + ses efekti test butonu).
+    - Skor özeti paneli: Tüm oyunların (Snake, Breakout, Space Defender) en yüksek skorlarını anlık gösterir ve `localStorage` üzerinde kalıcı saklar.
+    - Oyun seçim kartları: Rozet, ikon, açıklama, kontrol şeması ve en iyi skor bilgisini içeren modern kart ızgarası.
+  - **3 Adet Temaya Duyarlı Klasik Arcade Oyunu**:
+    1. **Neon Snake (`SnakeGame.tsx`)**:
+       - 20x20 dinamik ızgara, hızlanma mekaniği, normal yem ve geri sayımlı altın elma bonus yemleri (+50 puan).
+       - Klavye (Ok tuşları / WASD) ve dokunmatik ekranlar/tabletler için sanal D-Pad kontrolleri.
+       - Temaya göre değişen görselleştirme: Cyberpunk'ta neon parlamalı kuyruk ve sibernetik imleç; Swiss'te mimari minimal kare bloklar ve emniyet turuncusu yem; Classic Mac'te Susan Kare 1-bit dither piksel blokları ve piksel elma; Spatial Glass'ta yumuşak parlayan cam küreler.
+    2. **Brick Breaker (`BreakoutGame.tsx`)**:
+       - Çok katmanlı tuğla ızgarası, palet vuruş açısı fiziği, tuğla kırılma kıvılcım parçacıkları, 3 can sistemi.
+       - Fare imleci, dokunmatik sürükleme veya Sol/Sağ butonları ile akıcı palet kontrolü.
+       - Temaya göre değişen görselleştirme: Cyberpunk neon lazer paleti ve parlama izi; Swiss monokrom tuğla ızgarası; Classic Mac 3D beveled pinstripe tuğlalar; Spatial Glass buzlu prizma taşları.
+    3. **Space Defender (`SpaceDefenderGame.tsx`)**:
+       - Klasik Space Invaders / Defender tarzı: Oyuncu uzay gemisi, yukarı doğru lazer atışları, yana doğru hareket eden ve aşağı inen uzaylı filoları.
+       - Dalga (wave) ilerleme sistemi, uzaylı bombaları, patlama kıvılcımları ve 3 can sistemi.
+       - Ok tuşları, dokunmatik Sol/Sağ butonları ve özel ATEŞ (Shoot) butonu.
+       - Temaya göre değişen görselleştirme: Cyberpunk fütüristik jet ve pembe neon plazma; Swiss teknik şevron gemi; Classic Mac 8-bit piksel istilacı sprite'ları; Spatial Glass zarif mavi ışıldayan yıldız gemisi.
+* **Prosedürel Web Audio API Oyun Sentezleyicisi (`game-sound.service.ts`)**:
+  - Sıfır dış ses dosyası, sıfır ağ gecikmesi: Tüm sesler saf `OscillatorNode` ve `GainNode` dalga boyları ile anlık sentezlenir.
+  - **4 Temaya Özel Ses Profilleri**:
+    - **Classic Mac**: 1984 8-bit chiptune kare dalgaları (`square`), arpejli nostaljik 8-bit bip/bop/crunch sesleri.
+    - **Cyberpunk Neon**: Agresif testere dişi dalgaları (`sawtooth`), hızlı frekans kaymalı lazer zıplamaları ve sibernetik distorsiyon.
+    - **Swiss Industrial**: Temiz, kuru üçgen dalgaları (`triangle`), akustik vuruş hissi veren mekanik tıkırtılar ve tok baslar.
+    - **Spatial Glass**: Saf sinüs dalgaları (`sine`), kristal berraklığında rezonanslı çanlar ve yumuşak sönümlenen uzamsal akorlar.
+  - Desteklenen Olay Sesleri: `snake-move`, `snake-eat`, `snake-bonus`, `snake-die`, `paddle-bounce`, `brick-hit`, `life-lost`, `level-clear`, `laser-shoot`, `alien-hit`, `alien-explode`, `player-hit`, `wave-clear`, `ui-click`, `game-start`, `game-over`, `high-score`, `pause-toggle`.
+* **Tema Simgeleri Bütünlüğü**:
+  - `spatial-glass`: Lucide `Gamepad2` simgesi.
+  - `swiss-industrial`: `AppLogos.tsx` içinde minimalist geometrik konsol ve turuncu butonlu `GameHubAppLogo`.
+  - `cyberpunk-neon`: `cyberpunk-neon.theme.tsx` içinde açılı HUD şasili ve neon pembe D-pad'li `CyberGameHubLogo`.
+  - `classic-mac`: `classic-mac.theme.tsx` içinde Susan Kare 1984 piksel beveled taşınabilir konsollu `MacGameHubLogo`.
+* **7 Dilde Yerelleştirme**:
+  - `appName_game_hub` ve `appDesc_game_hub` İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça ve Japonca dillerine eksiksiz eklenmiştir.
+
+
 
 
 

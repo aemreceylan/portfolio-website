@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Settings, FileText, Code2, BookOpen } from 'lucide-react';
+import { Terminal, Settings, FileText, Code2, BookOpen, Gamepad2 } from 'lucide-react';
 import { ThemeDefinition, ThemeIconProps } from './theme.types';
 
 const SpatialTerminalIcon: React.FC<ThemeIconProps> = ({ size = 24, className = '' }) => (
@@ -16,6 +16,10 @@ const SpatialMarkdownIcon: React.FC<ThemeIconProps> = ({ size = 24, className = 
 
 const SpatialJsIdeIcon: React.FC<ThemeIconProps> = ({ size = 24, className = '' }) => (
   <Code2 size={size} className={className} />
+);
+
+const SpatialGameHubIcon: React.FC<ThemeIconProps> = ({ size = 24, className = '' }) => (
+  <Gamepad2 size={size} className={className} />
 );
 
 const SpatialTxtFileIcon: React.FC<ThemeIconProps> = ({ size = 24, className = '' }) => (
@@ -55,6 +59,7 @@ export const spatialGlassTheme: ThemeDefinition = {
       'markdown-viewer': SpatialMarkdownIcon,
       'js-ide': SpatialJsIdeIcon,
       settings: SpatialSettingsIcon,
+      'game-hub': SpatialGameHubIcon,
     },
     fileIcons: {
       txt: SpatialTxtFileIcon,

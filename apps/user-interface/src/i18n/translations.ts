@@ -36,6 +36,8 @@ export interface Translations {
   appDesc_markdown: string;
   appName_ide: string;
   appDesc_ide: string;
+  appName_game_hub: string;
+  appDesc_game_hub: string;
 
   // Browser Tab Title & Meta
   browser_tab_title: string;
@@ -151,6 +153,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     appDesc_markdown: 'Rich Markdown and plain text editor with live preview',
     appName_ide: 'JavaScript IDE',
     appDesc_ide: 'Code studio with sandboxed execution and console output',
+    appName_game_hub: 'Game Hub',
+    appDesc_game_hub: 'Retro arcade gaming suite with theme-reactive visuals and Web Audio procedural SFX',
     window_close: 'Close Window',
     window_minimize: 'Minimize Window',
     window_maximize: 'Maximize Window',
@@ -244,6 +248,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     appDesc_markdown: 'Canlı önizlemeli zengin Markdown ve metin belgesi editörü',
     appName_ide: 'JavaScript IDE',
     appDesc_ide: 'İzole kod stüdyosu ve konsol ortamı',
+    appName_game_hub: 'Oyun Merkezi',
+    appDesc_game_hub: 'Temaya duyarlı görsel ve Web Audio ses sentezlemeli retro arcade oyunları',
     window_close: 'Pencereyi Kapat',
     window_minimize: 'Simge Durumuna Küçült',
     window_maximize: 'Ekranı Kapla',
@@ -337,6 +343,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     appDesc_markdown: 'Markdown- und Texteditor mit Live-Vorschau',
     appName_ide: 'JavaScript IDE',
     appDesc_ide: 'Code-Studio mit Sandbox-Ausführung',
+    appName_game_hub: 'Spiele-Hub',
+    appDesc_game_hub: 'Retro-Arcade-Spiele mit themenreaktivem Design und Web-Audio-Soundsynthese',
     window_close: 'Fenster schließen',
     window_minimize: 'Fenster minimieren',
     window_maximize: 'Fenster maximieren',
@@ -430,6 +438,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     appDesc_markdown: 'Éditeur Markdown et texte avec aperçu en direct',
     appName_ide: 'JavaScript IDE',
     appDesc_ide: 'Studio de code avec exécution sandbox',
+    appName_game_hub: 'Centre de Jeux',
+    appDesc_game_hub: 'Jeux d’arcade rétro et néon avec synthèse sonore Web Audio adaptative',
     window_close: 'Fermer la fenêtre',
     window_minimize: 'Réduire la fenêtre',
     window_maximize: 'Agrandir la fenêtre',
@@ -523,6 +533,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     appDesc_markdown: 'Editor de Markdown y texto con vista previa en vivo',
     appName_ide: 'JavaScript IDE',
     appDesc_ide: 'Estudio de código con ejecución aislada',
+    appName_game_hub: 'Centro de Juegos',
+    appDesc_game_hub: 'Juegos arcade retro con diseño adaptativo y síntesis de sonido Web Audio',
     window_close: 'Cerrar ventana',
     window_minimize: 'Minimizar ventana',
     window_maximize: 'Maximizar ventana',
@@ -616,6 +628,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     appDesc_markdown: 'Редактор Markdown и текста с живым предпросмотром',
     appName_ide: 'JavaScript IDE',
     appDesc_ide: 'Студия кода с песочницей и выводом консоли',
+    appName_game_hub: 'Игровой Центр',
+    appDesc_game_hub: 'Ретро-аркадные игры с адаптивным дизайном и процедурным звуком Web Audio',
     window_close: 'Закрыть окно',
     window_minimize: 'Свернуть окно',
     window_maximize: 'Развернуть окно',
@@ -709,6 +723,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     appDesc_markdown: 'ライブプレビュー付きMarkdownおよびテキストエディタ',
     appName_ide: 'JavaScript IDE',
     appDesc_ide: 'サンドボックス実行対応コードスタジオ',
+    appName_game_hub: 'ゲームハブ',
+    appDesc_game_hub: 'テーマ対応のビジュアルとWeb Audioサウンドを搭載したレトロアーケードゲーム',
     window_close: 'ウィンドウを閉じる',
     window_minimize: '最小化',
     window_maximize: '最大化',

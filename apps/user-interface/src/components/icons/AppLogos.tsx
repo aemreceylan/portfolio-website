@@ -357,3 +357,36 @@ export const JsFileLogo: React.FC<LogoProps> = ({ size = 32, className = '' }) =
     </svg>
   );
 };
+
+/**
+ * Game Hub Application Logo: Swiss Constructivist Arcade Controller.
+ * Minimalist geometric console with architectural D-pad and theme accent button.
+ */
+export const GameHubAppLogo: React.FC<LogoProps> = ({ size = 32, className = '' }) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-label="Game Hub Logo"
+    >
+      {/* Matte chassis base */}
+      <rect x="2" y="5" width="20" height="14" rx="3.5" fill="#15181f" stroke="#373e4d" strokeWidth="1.3" />
+      {/* Architectural D-Pad Cross */}
+      <path
+        d="M5.5 12H10.5M8 9.5V14.5"
+        stroke="#FFFFFF"
+        strokeWidth="2"
+        strokeLinecap="square"
+      />
+      {/* Secondary Action Button */}
+      <circle cx="14.8" cy="13.2" r="1.4" fill="#94a3b8" />
+      {/* Primary Action Button with Theme Accent */}
+      <circle cx="18.2" cy="10.8" r="1.6" fill="var(--color-accent, #ff5500)" />
+    </svg>
+  );
+};
+

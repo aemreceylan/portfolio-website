@@ -290,6 +290,42 @@ export const CyberJsFileLogo: React.FC<ThemeIconProps> = ({ size = 32, className
   </svg>
 );
 
+/**
+ * Cyberpunk Game Hub Logo: Cybernetic HUD Arcade Controller.
+ */
+export const CyberGameHubLogo: React.FC<ThemeIconProps> = ({ size = 32, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-label="Game Hub Logo"
+  >
+    {/* Angular Cyber Chassis */}
+    <path
+      d="M3 8L6 4H18L21 8V18L17 21H7L3 18V8Z"
+      fill="#090d16"
+      stroke="#06b6d4"
+      strokeWidth="1.4"
+      strokeLinejoin="round"
+    />
+    {/* Neon Pink D-Pad Cross */}
+    <path
+      d="M6 12.5H10.5M8.25 10.25V14.75"
+      stroke="#f43f5e"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+    />
+    {/* Yellow HUD Center Pip */}
+    <circle cx="12" cy="12.5" r="1.2" fill="#facc15" />
+    {/* Cyber Buttons */}
+    <circle cx="15.5" cy="13.5" r="1.4" fill="#06b6d4" />
+    <circle cx="18" cy="11.5" r="1.6" fill="#f43f5e" />
+  </svg>
+);
+
 export const cyberpunkNeonTheme: ThemeDefinition = {
   id: 'cyberpunk-neon',
   name: 'Cyberpunk Neon',
@@ -315,6 +351,7 @@ export const cyberpunkNeonTheme: ThemeDefinition = {
       'markdown-viewer': CyberMarkdownLogo,
       'js-ide': CyberJsIdeLogo,
       settings: CyberSettingsLogo,
+      'game-hub': CyberGameHubLogo,
     },
     fileIcons: {
       txt: CyberTextFileLogo,
