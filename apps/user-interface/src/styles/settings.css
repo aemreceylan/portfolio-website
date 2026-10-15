@@ -181,6 +181,13 @@
   background-size: 16px 16px;
 }
 
+.theme-preview-box.preview-cyberpunk-neon {
+  background-color: #030712;
+  background-image:
+    radial-gradient(ellipse at 15% 15%, rgba(244, 63, 94, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 85%, rgba(6, 182, 212, 0.28) 0%, transparent 60%);
+}
+
 .preview-decor-window {
   width: 140px;
   height: 64px;
@@ -198,6 +205,13 @@
   background: #14171d;
   border: 1px solid #282f3c;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+}
+
+.preview-cyberpunk-neon .preview-decor-window {
+  border-radius: 4px;
+  background: #090d16;
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.25);
 }
 
 .preview-decor-bar {
@@ -233,6 +247,30 @@
 
 .preview-swiss-industrial .preview-decor-accent {
   border-radius: 1px;
+}
+
+.preview-cyberpunk-neon .preview-decor-dot {
+  border-radius: 2px;
+}
+
+.preview-cyberpunk-neon .preview-decor-dot.close {
+  background: #f43f5e;
+  box-shadow: 0 0 4px #f43f5e;
+}
+
+.preview-cyberpunk-neon .preview-decor-dot.min {
+  background: #facc15;
+  box-shadow: 0 0 4px #facc15;
+}
+
+.preview-cyberpunk-neon .preview-decor-dot.max {
+  background: #06b6d4;
+  box-shadow: 0 0 4px #06b6d4;
+}
+
+.preview-cyberpunk-neon .preview-decor-accent {
+  border-radius: 2px;
+  box-shadow: 0 0 6px #f43f5e;
 }
 
 .preview-decor-body {

@@ -15,37 +15,37 @@ import {
 import { AppIconResolver } from '#components/icons/AppIconResolver';
 import { useThemeStore } from '#stores/theme.store';
 
-const CustomCyberpunkIcon: React.FC<ThemeIconProps> = ({ size = 20, className = '' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-label="Cyberpunk Terminal">
-    <circle cx="12" cy="12" r="10" stroke="#f43f5e" strokeWidth="2" />
+const CustomMatrixIcon: React.FC<ThemeIconProps> = ({ size = 20, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-label="Matrix Terminal">
+    <circle cx="12" cy="12" r="10" stroke="#22c55e" strokeWidth="2" />
   </svg>
 );
 
-const cyberpunkTheme: ThemeDefinition = {
-  id: 'cyberpunk-neon',
-  name: 'Cyberpunk Neon',
-  subtitle: 'Night City Syndicate',
-  description: 'High-tech, low-life high-voltage neon styling.',
+const matrixTheme: ThemeDefinition = {
+  id: 'matrix-green',
+  name: 'Matrix Green',
+  subtitle: 'Digital Rain Terminal',
+  description: 'Pure green phosphor phosphor CRT digital stream.',
   colors: {
-    accentColor: '#f43f5e',
-    accentRgb: '244, 63, 94',
-    wallpaperBackground: '#020617',
+    accentColor: '#22c55e',
+    accentRgb: '34, 197, 94',
+    wallpaperBackground: '#010b04',
     extraCssVariables: {
-      '--cyber-glow': '0 0 12px #f43f5e',
+      '--matrix-glow': '0 0 12px #22c55e',
     },
   },
   typography: {
-    fontSans: "'Oxanium', sans-serif",
-    fontMono: "'Share Tech Mono', monospace",
+    fontSans: "'JetBrains Mono', monospace",
+    fontMono: "'JetBrains Mono', monospace",
   },
   icons: {
     appIcons: {
-      terminal: CustomCyberpunkIcon,
+      terminal: CustomMatrixIcon,
     },
     fileIcons: {},
-    brandIcon: CustomCyberpunkIcon,
-    fallbackAppIcon: CustomCyberpunkIcon,
-    fallbackFileIcon: CustomCyberpunkIcon,
+    brandIcon: CustomMatrixIcon,
+    fallbackAppIcon: CustomMatrixIcon,
+    fallbackFileIcon: CustomMatrixIcon,
   },
 };
 
@@ -54,10 +54,11 @@ describe('ThemeRegistry Engine', () => {
     document.documentElement.removeAttribute('data-theme');
   });
 
-  it('initializes with default built-in themes: spatial-glass and swiss-industrial', () => {
+  it('initializes with default built-in themes: spatial-glass, swiss-industrial, and cyberpunk-neon', () => {
     expect(hasTheme('spatial-glass')).toBe(true);
     expect(hasTheme('swiss-industrial')).toBe(true);
-    expect(getAllThemes().length).toBeGreaterThanOrEqual(2);
+    expect(hasTheme('cyberpunk-neon')).toBe(true);
+    expect(getAllThemes().length).toBeGreaterThanOrEqual(3);
   });
 
   it('retrieves theme definitions correctly', () => {
@@ -68,6 +69,10 @@ describe('ThemeRegistry Engine', () => {
     const swiss = getTheme('swiss-industrial');
     expect(swiss.id).toBe('swiss-industrial');
     expect(swiss.colors.accentColor).toBe('#ff5500');
+
+    const cyber = getTheme('cyberpunk-neon');
+    expect(cyber.id).toBe('cyberpunk-neon');
+    expect(cyber.colors.accentColor).toBe('#f43f5e');
   });
 
   it('gracefully falls back to DEFAULT_THEME for non-existent theme IDs', () => {
@@ -76,35 +81,35 @@ describe('ThemeRegistry Engine', () => {
   });
 
   it('applies theme attributes and CSS variables onto document.documentElement', () => {
-    applyThemeToDom('swiss-industrial');
+    applyThemeToDom('cyberpunk-neon');
 
-    expect(document.documentElement.getAttribute('data-theme')).toBe('swiss-industrial');
-    expect(document.documentElement.style.getPropertyValue('--color-accent')).toBe('#ff5500');
-    expect(document.documentElement.style.getPropertyValue('--wallpaper-bg')).toBe('#0a0b0d');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('cyberpunk-neon');
+    expect(document.documentElement.style.getPropertyValue('--color-accent')).toBe('#f43f5e');
+    expect(document.documentElement.style.getPropertyValue('--color-accent-secondary')).toBe('#facc15');
   });
 
   it('allows registering a new custom theme without breaking existing system', () => {
-    registerTheme(cyberpunkTheme);
+    registerTheme(matrixTheme);
 
-    expect(hasTheme('cyberpunk-neon')).toBe(true);
-    const retrieved = getTheme('cyberpunk-neon');
-    expect(retrieved.name).toBe('Cyberpunk Neon');
+    expect(hasTheme('matrix-green')).toBe(true);
+    const retrieved = getTheme('matrix-green');
+    expect(retrieved.name).toBe('Matrix Green');
 
-    applyThemeToDom('cyberpunk-neon');
-    expect(document.documentElement.getAttribute('data-theme')).toBe('cyberpunk-neon');
-    expect(document.documentElement.style.getPropertyValue('--color-accent')).toBe('#f43f5e');
-    expect(document.documentElement.style.getPropertyValue('--cyber-glow')).toBe('0 0 12px #f43f5e');
+    applyThemeToDom('matrix-green');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('matrix-green');
+    expect(document.documentElement.style.getPropertyValue('--color-accent')).toBe('#22c55e');
+    expect(document.documentElement.style.getPropertyValue('--matrix-glow')).toBe('0 0 12px #22c55e');
   });
 
   it('renders custom theme icons dynamically via AppIconResolver without hardcoded conditionals', () => {
-    registerTheme(cyberpunkTheme);
-    useThemeStore.getState().setTheme('cyberpunk-neon');
+    registerTheme(matrixTheme);
+    useThemeStore.getState().setTheme('matrix-green');
 
     const { container } = render(<AppIconResolver appId="terminal" size={28} />);
     const svg = container.querySelector('svg');
 
     expect(svg).toBeInTheDocument();
-    expect(svg).toHaveAttribute('aria-label', 'Cyberpunk Terminal');
+    expect(svg).toHaveAttribute('aria-label', 'Matrix Terminal');
   });
 
   it('generates metadata list correctly for theme selectors', () => {
@@ -112,5 +117,6 @@ describe('ThemeRegistry Engine', () => {
     const ids = metaList.map((m) => m.id);
     expect(ids).toContain('spatial-glass');
     expect(ids).toContain('swiss-industrial');
+    expect(ids).toContain('cyberpunk-neon');
   });
 });

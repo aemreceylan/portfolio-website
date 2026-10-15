@@ -373,6 +373,18 @@ Kullanıcı arayüzünde tema ekleme ve tema değiştirme deneyimini endüstri s
   - **Pencere Çerçeve Barı Sadeleştirmesi**: Çerçeve üst barındaki küçük uygulama logosu kaldırılmış, sadece pencere başlığı metni bırakılmıştır.
   - **Swiss Kontrol Tuşları Renkleri**: Endüstriyel makine gösterge standartlarına uygun olarak küçültme/aşağı alma tuşu sarı/kehribar (`#eab308`), büyütme/ekranı kaplama tuşu yeşil (`#16a34a`), kapatma tuşu kırmızı (`#dc2626`) olarak güncellenmiştir.
   - **Sağ Üst Koordinatların Temizlenmesi**: Kullanıcı talebi doğrultusunda Swiss temasında sağ üstteki `SYS.LOC` telemetri metni kaldırılmıştır.
+  - **3. Yerleşik Tema: Cyberpunk Neon (`cyberpunk-neon`)**:
+    - **Tasarım Felsefesi**: Night City & Synthwave HUD estetiği. Koyu OLED siyah zemin (`#030712`), çift radyal neon gradyanı, CRT/HUD scanline ızgara dokusu.
+    - **Renk Paleti**: Neon Gül/Pembe (`#f43f5e`, `rgb(244, 63, 94)`), Yüksek Voltaj Sarı (`#facc15`), Sibernetik Camgöbeği (`#06b6d4`).
+    - **Pencere & Dock Geometrisi**: 4px fütüristik köşe radyanı, `rgba(244, 63, 94, 0.45)` neon kontur ışıltısı, renk kodlu pencere kontrol butonları (kapat `#f43f5e`, küçült `#facc15`, büyüt `#06b6d4`).
+    - **Özel Cyberpunk SVG Simgeleri (`cyberpunk-neon.theme.tsx`)**:
+      - `CyberBrandLogo`: Altıgen sibernetik HUD çekirdeği ve telemetri kılavuzları.
+      - `CyberTerminalLogo`: Neon pembe prompt chevron, yüksek voltaj sarı blok imleç ve HUD durum LED'leri.
+      - `CyberSettingsLogo`: Sibernetik devre/çip çekirdeği ve neon bağlantı pinleri.
+      - `CyberMarkdownLogo` & `CyberJsIdeLogo`: Neon çerçeveli, çift katmanlı fütüristik kod ve belge glifleri.
+      - Dosya Simgeleri (`txt`, `md`, `js`): Neon katlanır köşe, yüksek kontrastlı rozetler ve dosya tipi telemetrisi.
+    - **Sıfır Boyut Zıplaması**: Üst bar (40px), dock (58px), kart boyutları (88x92px) ve simge kapsayıcıları (50x50px) birebir korunmuştur.
+
 
 
 

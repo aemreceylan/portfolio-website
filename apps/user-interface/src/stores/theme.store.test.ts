@@ -25,6 +25,14 @@ describe('theme.store', () => {
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('swiss-industrial');
   });
 
+  it('should switch theme to cyberpunk-neon and persist in localStorage', () => {
+    useThemeStore.getState().setTheme('cyberpunk-neon');
+
+    expect(useThemeStore.getState().currentTheme).toBe('cyberpunk-neon');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('cyberpunk-neon');
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('cyberpunk-neon');
+  });
+
   it('should switch back to spatial-glass', () => {
     useThemeStore.getState().setTheme('swiss-industrial');
     expect(useThemeStore.getState().currentTheme).toBe('swiss-industrial');

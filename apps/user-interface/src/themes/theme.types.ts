@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ThemeId = 'spatial-glass' | 'swiss-industrial' | string;
+export type ThemeId = 'spatial-glass' | 'swiss-industrial' | 'cyberpunk-neon' | string;
 
 export interface ThemeIconProps {
   size?: number;

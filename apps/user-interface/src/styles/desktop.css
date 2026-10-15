@@ -490,3 +490,96 @@
   color: #f4f4f5;
 }
 
+/* --------------------------------------------------------------------------
+   Cyberpunk Neon Desktop Scoping (Night City & Synthwave HUD)
+   -------------------------------------------------------------------------- */
+[data-theme="cyberpunk-neon"] .spatial-statusbar {
+  background: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(244, 63, 94, 0.35);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.08);
+  font-family: var(--font-mono);
+  color: #cbd5e1;
+}
+
+[data-theme="cyberpunk-neon"] .os-brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #f8fafc;
+}
+
+[data-theme="cyberpunk-neon"] .os-brand-icon {
+  border-radius: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 10px #f43f5e;
+}
+
+[data-theme="cyberpunk-neon"] .desktop-app-card,
+[data-theme="cyberpunk-neon"] .desktop-file-card {
+  border-radius: 6px;
+}
+
+[data-theme="cyberpunk-neon"] .desktop-app-card:hover,
+[data-theme="cyberpunk-neon"] .desktop-file-card:hover {
+  background: rgba(244, 63, 94, 0.08);
+  box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.35);
+  transform: translateY(-2px);
+}
+
+[data-theme="cyberpunk-neon"] .desktop-app-icon,
+[data-theme="cyberpunk-neon"] .desktop-file-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  background: rgba(11, 17, 32, 0.9);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), 0 0 10px rgba(244, 63, 94, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="cyberpunk-neon"] .desktop-app-card:hover .desktop-app-icon,
+[data-theme="cyberpunk-neon"] .desktop-file-card:hover .desktop-file-icon {
+  transform: scale(1.08);
+  border-color: #f43f5e;
+  box-shadow: 0 0 18px rgba(244, 63, 94, 0.5), 0 8px 20px rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="cyberpunk-neon"] .desktop-app-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #f8fafc;
+  text-shadow: 0 0 6px rgba(244, 63, 94, 0.5);
+}
+
+[data-theme="cyberpunk-neon"] .desktop-file-name {
+  color: #cbd5e1;
+  text-shadow: 0 0 4px rgba(6, 182, 212, 0.4);
+}
+
+[data-theme="cyberpunk-neon"] .spatial-context-menu {
+  background: rgba(9, 13, 26, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  border-radius: 6px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 14px rgba(244, 63, 94, 0.2);
+}
+
+[data-theme="cyberpunk-neon"] .context-menu-item {
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="cyberpunk-neon"] .context-menu-item:hover {
+  background: rgba(244, 63, 94, 0.18);
+  color: #f8fafc;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.25);
+}
+

@@ -1,6 +1,7 @@
 import { ThemeDefinition, ThemeId, ThemeMeta } from './theme.types';
 import { spatialGlassTheme } from './spatial-glass.theme';
 import { swissIndustrialTheme } from './swiss-industrial.theme';
+import { cyberpunkNeonTheme } from './cyberpunk-neon.theme';
 
 export const DEFAULT_THEME: ThemeId = 'spatial-glass';
 
@@ -10,6 +11,7 @@ class ThemeRegistry {
   constructor() {
     this.registerTheme(spatialGlassTheme);
     this.registerTheme(swissIndustrialTheme);
+    this.registerTheme(cyberpunkNeonTheme);
   }
 
   /**

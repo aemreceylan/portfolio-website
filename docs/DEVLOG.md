@@ -383,6 +383,36 @@
   - ESLint / SonarJS: **0 hata, 0 uyarı** (Bilişsel karmaşıklık kurallarına tam uyum).
   - TypeScript Typecheck: 4 paketin tamamında (`shared`, `admin-interface`, `backend`, `user-interface`) **0 hata**.
 
+## [2026-10-15] - Cyberpunk Neon Teması & Bütünsel HUD Tasarım Sistemi
+
+### Yapılanlar
+- **3. Yerleşik Tema Entegrasyonu (`cyberpunk-neon.theme.tsx`)**:
+  - `ThemeDefinition` standardında `cyberpunk-neon` kimliğiyle tam kapsamlı tema nesnesi oluşturuldu.
+  - Vurgu rengi: Neon Gül/Pembe (`#f43f5e`, `rgb(244, 63, 94)`), ikincil voltaj sarısı (`#facc15`), üçüncül sibernetik camgöbeği (`#06b6d4`).
+  - Arka plan: Koyu OLED obsidian taban (`#030712`), çift radyal neon gradyanı ve CRT/HUD scanline ızgara dokusu.
+  - Tipografi: Monospace terminal font hiyerarşisi (`'JetBrains Mono'`, `'Fira Code'`).
+- **Özel Cyberpunk SVG Simgeleri**:
+  - `CyberBrandLogo`: Altıgen HUD sibernetik çekirdeği ve telemetri kılavuzları.
+  - `CyberTerminalLogo`: Neon pembe prompt chevron, yüksek voltaj sarı blok imleç ve HUD durum pencereleri.
+  - `CyberSettingsLogo`: Sibernetik entegre devre (IC) çipi ve neon bağlantı bus pinleri.
+  - `CyberMarkdownLogo` & `CyberJsIdeLogo`: Neon hatlı, fütüristik çift katmanlı doküman ve kod glifleri.
+  - `CyberTextFileLogo`, `CyberMdFileLogo`, `CyberJsFileLogo`: Neon katlanır köşe, yüksek kontrastlı rozetler ve dosya tipi telemetrisi.
+- **Kapsamlı Stil & Görsel Ayrıştırma**:
+  - `design-tokens.css`: `[data-theme="cyberpunk-neon"]` kök değişkenleri, neon glow gölgeleri, koyu OLED yüzeyler ve CRT scanline ızgara arka planı eklendi.
+  - `desktop.css`: Neon çerçeveli üst durum çubuğu, masaüstü kartları hover neon ışıltısı, bağlam menüsü sibernetik HUD kutuları.
+  - `window.css`: Neon kontur parıltılı pencere gövdesi, renk kodlu fütüristik kontrol butonları (kapat `#f43f5e`, küçült `#facc15`, büyüt `#06b6d4`).
+  - `dock.css`: Sibernetik konsol dock şasisi (`rgba(9, 13, 22, 0.92)`), neon pembe aktif gösterge LED'i (`#f43f5e`), neon HUD ipucu kutuları.
+  - `settings.css`: Ayarlar uygulamasında `.theme-preview-box.preview-cyberpunk-neon` çift radyal neon önizleme kutusu ve renkli kontrol LED'leri.
+- **Tema Motoru & Tip Güncellemeleri**:
+  - `theme.types.ts`: `ThemeId` tipi `'spatial-glass' | 'swiss-industrial' | 'cyberpunk-neon' | string` olarak güncellendi.
+  - `theme-registry.ts`: `cyberpunkNeonTheme` varsayılan yerleşik temalara eklendi.
+  - `theme-registry.test.tsx` & `theme.store.test.ts`: Cyberpunk Neon için birim testleri eklendi.
+- **Test ve Kalite Durumu**:
+  - Vitest: **18 test dosyasında 107 testin tamamı (%100) başarıyla geçti**.
+  - ESLint / SonarJS: **0 hata, 0 uyarı**.
+  - TypeScript: 4 paketin tamamında `tsc --noEmit` **0 hata**.
+
+
 
 
 
