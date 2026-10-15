@@ -36,10 +36,11 @@ export const MarkdownViewerApp: React.FC = () => {
     closeViewerTab,
     createFile,
     updateFile,
+    viewerMode,
+    setViewerMode,
   } = useFileSystemStore();
   const { t } = useTranslation();
 
-  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit');
   const [editContent, setEditContent] = useState<string>('');
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
   const [newDocName, setNewDocName] = useState<string>('belge.md');
@@ -70,12 +71,11 @@ export const MarkdownViewerApp: React.FC = () => {
     return openFiles[0] || null;
   }, [activeViewerFileId, openFiles]);
 
-  // Synchronize local edit content and set mode to edit when switching active document
+  // Synchronize local edit content when switching active document
   useEffect(() => {
     if (currentFile) {
       setEditContent(currentFile.content);
       setSaveSuccess(false);
-      setViewMode('edit');
     } else {
       setEditContent('');
     }
@@ -135,7 +135,7 @@ export const MarkdownViewerApp: React.FC = () => {
 
     const res = createFile(finalName, `# ${finalName.replace(/\.[^/.]+$/, '')}\n\n`);
     if (res.success && res.file) {
-      openInViewer(res.file.id);
+      openInViewer(res.file.id, 'edit');
       setShowNewModal(false);
       setNewDocName('belge.md');
     }
@@ -227,8 +227,8 @@ export const MarkdownViewerApp: React.FC = () => {
 
             <button
               type="button"
-              className={`md-mode-btn ${viewMode === 'edit' ? 'active' : ''}`}
-              onClick={() => setViewMode('edit')}
+              className={`md-mode-btn ${viewerMode === 'edit' ? 'active' : ''}`}
+              onClick={() => setViewerMode('edit')}
               aria-label={t('editor_mode_edit')}
             >
               <Code2 size={12} />
@@ -237,8 +237,8 @@ export const MarkdownViewerApp: React.FC = () => {
 
             <button
               type="button"
-              className={`md-mode-btn ${viewMode === 'split' ? 'active' : ''}`}
-              onClick={() => setViewMode('split')}
+              className={`md-mode-btn ${viewerMode === 'split' ? 'active' : ''}`}
+              onClick={() => setViewerMode('split')}
               aria-label={t('editor_mode_split')}
             >
               <Columns size={12} />
@@ -247,8 +247,8 @@ export const MarkdownViewerApp: React.FC = () => {
 
             <button
               type="button"
-              className={`md-mode-btn ${viewMode === 'preview' ? 'active' : ''}`}
-              onClick={() => setViewMode('preview')}
+              className={`md-mode-btn ${viewerMode === 'preview' ? 'active' : ''}`}
+              onClick={() => setViewerMode('preview')}
               aria-label={t('editor_mode_preview')}
             >
               <Eye size={12} />
@@ -291,7 +291,7 @@ export const MarkdownViewerApp: React.FC = () => {
                       key={f.id}
                       type="button"
                       className="md-quick-file-chip"
-                      onClick={() => openInViewer(f.id)}
+                      onClick={() => openInViewer(f.id, 'edit')}
                     >
                       <FolderOpen size={12} />
                       <span>{f.name}</span>
@@ -303,7 +303,7 @@ export const MarkdownViewerApp: React.FC = () => {
           </div>
         ) : (
           <>
-            {viewMode === 'edit' && (
+            {viewerMode === 'edit' && (
               <div className="md-edit-panel">
                 <div className="md-line-numbers" aria-hidden="true">
                   {Array.from({ length: lineCount }, (_, i) => (
@@ -323,7 +323,7 @@ export const MarkdownViewerApp: React.FC = () => {
               </div>
             )}
 
-            {viewMode === 'preview' && (
+            {viewerMode === 'preview' && (
               <div className="md-preview-panel">
                 <article
                   className="md-rendered-content"
@@ -333,7 +333,7 @@ export const MarkdownViewerApp: React.FC = () => {
               </div>
             )}
 
-            {viewMode === 'split' && (
+            {viewerMode === 'split' && (
               <div className="md-split-container">
                 <div className="md-edit-panel">
                   <div className="md-line-numbers" aria-hidden="true">

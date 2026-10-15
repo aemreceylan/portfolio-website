@@ -659,6 +659,22 @@
   - **179 testin tamamı %100 başarıyla geçti**.
   - Tüm monorepo genelinde `npm run typecheck` **0 hata** ile tamamlandı.
 
+## [2026-10-15] - Markdown Editörü Önizleme ve Düzenleme Açılış Modu Ayrımı
+
+### Yapılanlar
+- **Farklılaştırılmış Açılış Modu Mimarisi (`Desktop.tsx`, `filesystem.store.ts`, `MarkdownViewerApp.tsx`)**:
+  - `useFileSystemStore` içine `viewerMode: 'edit' | 'preview' | 'split'`, `setViewerMode` ve `openInViewer(fileId, initialMode?)` desteği eklendi.
+  - **Doğrudan Dosyaya Tıklama**: Masaüstündeki `.md` veya `.txt` dosyasına (veya sağ tık bağlam menüsünden "Aç" seçeneğine) tıklandığında `openInViewer(file.id, 'preview')` çağrılarak belge doğrudan **Önizleme (`preview`)** modunda açılır. Kullanıcı dosyayı açtığında biçimlendirilmiş markdown çıktısını hemen okuyabilir.
+  - **Doğrudan Editör Uygulamasına Tıklama**: Masaüstü uygulama simgelerinden "Markdown Düzenleyici" başlatıldığında `setViewerMode('edit')` çağrılarak pencere doğrudan **Düzenleme (`edit`)** modunda (satır numaraları ve kaynak metin alanı ile) açılır. Açık belge yoksa varsayılan ana belge düzenleme modunda getirilir.
+  - Editör içinden yeni belge oluşturulduğunda (`+`) veya boş durumdan dosya seçildiğinde de düzenleme amacıyla `'edit'` modu korunur.
+- **Test ve Kalite**:
+  - `filesystem.store.test.ts`: `openInViewer` fonksiyonunun `preview` ve `edit` modlarını doğru şekilde store'a kaydettiği doğrulandı.
+  - `MarkdownViewerApp.test.tsx`: `preview` modu ile açılışta zengin HTML görünümünün ekranda olduğu, ham editörün gizlendiği test edildi.
+  - `Desktop.test.tsx`: Masaüstü dosya kartına tıklamada `preview` modunun, masaüstü uygulama simgesine tıklamada `edit` modunun etkinleştiği test edildi.
+  - Vitest: **29 test dosyasında 182 testin tamamı %100 geçti**.
+  - Monorepo genelinde `npm run typecheck` **0 hata** ile doğrulandı.
+
+
 
 
 

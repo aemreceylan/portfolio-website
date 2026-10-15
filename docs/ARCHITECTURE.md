@@ -9,7 +9,7 @@ Bu proje, klasik statik portfolyo sitelerinin ötesine geçen, modern bir bilgis
 * **Aktif Uygulama Kapsamı**: Sistem 4 kararlı ve amaca odaklı çekirdek uygulama içerir:
   - **Terminal (`terminal`)**: Linux CLI (`ls`, `cat`, `touch`, `rm`, `su`, `exit`), VFS entegrasyonu ve tam ekran GNU nano editörü.
   - **Ayarlar (`settings`)**: Sistem tercihleri, 7 dilli yerelleştirme, 4 koyu spatial duvar kağıdı ve dinamik akıcı tema rengi motoru.
-  - **Markdown Okuyucu (`markdown-viewer`)**: `marked` motoru ile zengin HTML derleme, sekme yönetimi, canlı Önizleme ve Ham Kaynak Kodu modları.
+  - **Markdown Okuyucu & Düzenleyici (`markdown-viewer`)**: `marked` motoru ile zengin HTML derleme, sekme yönetimi, canlı Önizleme ve Ham Kaynak Kodu modları. Doğrudan masaüstündeki bir belgeye tıklandığında belge **Önizleme (`preview`)** modunda açılır; masaüstü uygulama simgesine basıldığında ise doğrudan **Düzenleme (`edit`)** modunda açılır.
   - **JavaScript IDE (`js-ide`)**: Satır numaralı kod stüdyosu, izole iframe sandbox çalıştırma ve gerçek zamanlı konsol günlüğü.
 * **Tipografi**: Arayüz metinleri için modern sans-serif (Inter / Geist Sans), kod ve sistem detayları için monospace (JetBrains Mono).
 * **Eğitici Geliştirme (Mentorship Approach)**: Tüm mimari kararlar, tasarım desenleri ve optimizasyonlar adım adım açıklanarak belgelenir.

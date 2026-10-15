@@ -5,10 +5,11 @@ import { useFileSystemStore } from '#stores/filesystem.store';
 
 describe('MarkdownViewerApp Component', () => {
   beforeEach(() => {
-    // Reset open tabs before each test
+    // Reset open tabs and mode before each test
     useFileSystemStore.setState({
       openViewerFileIds: [],
       activeViewerFileId: null,
+      viewerMode: 'edit',
     });
   });
 
@@ -31,6 +32,14 @@ describe('MarkdownViewerApp Component', () => {
     // Raw editor should display content in edit mode
     const rawEditor = screen.getByTestId('markdown-raw-view') as HTMLTextAreaElement;
     expect(rawEditor.value).toContain('Ahmet Emre Ceylan');
+  });
+
+  it('should open in preview mode when openInViewer is invoked with preview mode', () => {
+    useFileSystemStore.getState().openInViewer('sys-bio', 'preview');
+    render(<MarkdownViewerApp />);
+
+    expect(screen.getByTestId('markdown-rendered-view')).toBeInTheDocument();
+    expect(screen.queryByTestId('markdown-raw-view')).not.toBeInTheDocument();
   });
 
   it('should automatically open files in edit mode by default and switch between Edit, Preview, and Split modes', () => {

@@ -19,6 +19,7 @@ import {
   markdownViewerManifest,
   jsIdeManifest,
 } from '#apps/app-registry';
+import { AppManifest } from '@personal-os/shared';
 import { WindowFrame } from '#components/window/WindowFrame';
 import { SpatialSuspenseSkeleton } from '#components/window/SpatialSuspenseSkeleton';
 import { Dock } from '#components/dock/Dock';
@@ -132,6 +133,7 @@ export const Desktop: React.FC = () => {
     deleteFile,
     renameFile,
     openInViewer,
+    setViewerMode,
     openInIde,
     guiAlert,
     showGuiAlert,
@@ -470,16 +472,37 @@ export const Desktop: React.FC = () => {
   const activeWindow = activeWindowId ? windows[activeWindowId] : null;
 
   /**
-   * Opens the file in the appropriate application upon single-click
+   * Opens the file in the appropriate application upon single-click.
+   * Markdown and text documents automatically open in Preview mode when directly clicked.
    */
   const handleOpenFile = (file: VFSFile) => {
     if (file.extension === 'md' || file.extension === 'txt') {
-      openInViewer(file.id);
+      openInViewer(file.id, 'preview');
       openWindow(markdownViewerManifest);
     } else if (file.extension === 'js') {
       openInIde(file.id);
       openWindow(jsIdeManifest);
     }
+  };
+
+  /**
+   * Launches an application directly from desktop icon.
+   * When Markdown Editor is opened directly, it automatically defaults to Edit mode.
+   */
+  const handleLaunchApp = (manifest: AppManifest) => {
+    if (manifest.id === 'markdown-viewer') {
+      setViewerMode('edit');
+      const fsState = useFileSystemStore.getState();
+      if (fsState.openViewerFileIds.length === 0) {
+        const firstFile = Object.values(fsState.files).find(
+          (f) => f.extension === 'md' || f.extension === 'txt'
+        );
+        if (firstFile) {
+          openInViewer(firstFile.id, 'edit');
+        }
+      }
+    }
+    openWindow(manifest);
   };
 
   /**
@@ -709,14 +732,14 @@ export const Desktop: React.FC = () => {
               onPointerDown={(e) => handleIconPointerDown(e, itemId, pos)}
               onClick={() => {
                 if (justDraggedRef.current) return;
-                openWindow(manifest);
+                handleLaunchApp(manifest);
               }}
               data-testid={`desktop-app-${manifest.id}`}
               role="button"
               tabIndex={0}
               aria-label={appName}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') openWindow(manifest);
+                if (e.key === 'Enter') handleLaunchApp(manifest);
               }}
             >
               <div className="desktop-app-icon">

@@ -106,13 +106,17 @@ describe('FileSystem Store (VFS)', () => {
     expect(store.openViewerFileIds).toEqual([]);
     expect(store.activeViewerFileId).toBeNull();
 
-    store.openInViewer('sys-bio');
+    // Open in preview mode
+    store.openInViewer('sys-bio', 'preview');
     expect(useFileSystemStore.getState().openViewerFileIds).toContain('sys-bio');
     expect(useFileSystemStore.getState().activeViewerFileId).toBe('sys-bio');
+    expect(useFileSystemStore.getState().viewerMode).toBe('preview');
 
-    store.openInViewer('sys-skills');
+    // Open another file in edit mode
+    store.openInViewer('sys-skills', 'edit');
     expect(useFileSystemStore.getState().openViewerFileIds).toEqual(['sys-bio', 'sys-skills']);
     expect(useFileSystemStore.getState().activeViewerFileId).toBe('sys-skills');
+    expect(useFileSystemStore.getState().viewerMode).toBe('edit');
 
     // Close the active tab
     store.closeViewerTab('sys-skills');

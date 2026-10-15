@@ -199,6 +199,31 @@ describe('Desktop Component', () => {
     expect(cliFileIcon.getAttribute('style')).toContain('left: 24px');
     expect(cliFileIcon.getAttribute('style')).toContain('top: 62px');
   });
+
+  it('should open markdown file in preview mode when directly clicked from desktop', () => {
+    render(<Desktop />);
+
+    const bioFile = screen.getByTestId('desktop-file-bio.md');
+    fireEvent.click(bioFile);
+
+    expect(useFileSystemStore.getState().activeViewerFileId).toBe('sys-bio');
+    expect(useFileSystemStore.getState().viewerMode).toBe('preview');
+    expect(useWindowManager.getState().windows['markdown-viewer'].isOpen).toBe(true);
+  });
+
+  it('should open markdown editor in edit mode when directly clicked from desktop app icons', () => {
+    // Put viewer in preview mode first
+    useFileSystemStore.getState().setViewerMode('preview');
+
+    render(<Desktop />);
+
+    const mdAppIcon = screen.getByTestId('desktop-app-markdown-viewer');
+    fireEvent.click(mdAppIcon);
+
+    expect(useFileSystemStore.getState().viewerMode).toBe('edit');
+    expect(useWindowManager.getState().windows['markdown-viewer'].isOpen).toBe(true);
+  });
 });
+
 
 

@@ -46,6 +46,7 @@ interface FileSystemStoreState {
   openIdeFileIds: string[];
   activeViewerFileId: string | null;
   activeIdeFileId: string | null;
+  viewerMode: 'edit' | 'preview' | 'split';
   guiAlert: GuiAlertState | null;
 
   // Actions
@@ -56,7 +57,8 @@ interface FileSystemStoreState {
   getFile: (name: string) => VFSFile | undefined;
   setActiveViewerFileId: (id: string | null) => void;
   setActiveIdeFileId: (id: string | null) => void;
-  openInViewer: (fileId: string) => void;
+  setViewerMode: (mode: 'edit' | 'preview' | 'split') => void;
+  openInViewer: (fileId: string, initialMode?: 'edit' | 'preview' | 'split') => void;
   closeViewerTab: (fileId: string) => void;
   openInIde: (fileId: string) => void;
   closeIdeTab: (fileId: string) => void;
@@ -244,6 +246,7 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
   openIdeFileIds: [],
   activeViewerFileId: null,
   activeIdeFileId: null,
+  viewerMode: 'edit',
   guiAlert: null,
 
   createFile: (name, content = '') => {
@@ -402,12 +405,17 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
     set({ activeIdeFileId: id });
   },
 
-  openInViewer: (fileId) => {
+  setViewerMode: (mode) => {
+    set({ viewerMode: mode });
+  },
+
+  openInViewer: (fileId, initialMode) => {
     set((state) => {
       const alreadyOpen = state.openViewerFileIds.includes(fileId);
       return {
         openViewerFileIds: alreadyOpen ? state.openViewerFileIds : [...state.openViewerFileIds, fileId],
         activeViewerFileId: fileId,
+        viewerMode: initialMode !== undefined ? initialMode : state.viewerMode,
       };
     });
   },
@@ -471,6 +479,7 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
       openIdeFileIds: [],
       activeViewerFileId: null,
       activeIdeFileId: null,
+      viewerMode: 'edit',
       guiAlert: null,
     });
   },
