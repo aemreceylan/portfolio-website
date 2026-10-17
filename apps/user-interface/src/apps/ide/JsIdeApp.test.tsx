@@ -49,12 +49,14 @@ describe('JsIdeApp Component', () => {
     fireEvent.click(runBtn);
 
     // Sandbox iframe should be mounted
-    expect(screen.getByTestId('js-sandbox-iframe')).toBeInTheDocument();
+    const iframe = screen.getByTestId('js-sandbox-iframe') as HTMLIFrameElement;
+    expect(iframe).toBeInTheDocument();
 
-    // Emitting sandbox log event should render message in console
+    // Emitting sandbox log event from the valid iframe source should render message in console
     act(() => {
       window.dispatchEvent(
         new MessageEvent('message', {
+          source: iframe.contentWindow,
           data: {
             source: 'aec-js-sandbox',
             level: 'log',
@@ -65,6 +67,30 @@ describe('JsIdeApp Component', () => {
     });
 
     expect(screen.getByText(/Execution completed: 42/i)).toBeInTheDocument();
+  });
+
+  it('should ignore spoofed postMessages from external or mismatching sources', () => {
+    useFileSystemStore.getState().openInIde('user-demo-script');
+    render(<JsIdeApp />);
+
+    const runBtn = screen.getByRole('button', { name: /Execute Script in Sandbox/i });
+    fireEvent.click(runBtn);
+
+    // Dispatch message with fraudulent source (window instead of iframe.contentWindow)
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          source: window,
+          data: {
+            source: 'aec-js-sandbox',
+            level: 'log',
+            args: ['MALICIOUS_INJECTION'],
+          },
+        })
+      );
+    });
+
+    expect(screen.queryByText(/MALICIOUS_INJECTION/i)).not.toBeInTheDocument();
   });
 
   it('should save modified code to VFS store', () => {
@@ -121,6 +147,21 @@ describe('JsIdeApp Component', () => {
     fireEvent.click(runBtn);
 
     expect(screen.getAllByText(/Syntax Error/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('safely escapes </script> tags in code to prevent sandbox breakout', () => {
+    useFileSystemStore.getState().openInIde('user-demo-script');
+    render(<JsIdeApp />);
+
+    const editor = screen.getByPlaceholderText(/\/\/ Write JavaScript code here\.\.\./i);
+    fireEvent.change(editor, { target: { value: 'const x = "</script><script>alert(1)</script>";' } });
+
+    const runBtn = screen.getByRole('button', { name: /Execute Script in Sandbox/i });
+    fireEvent.click(runBtn);
+
+    const iframe = screen.getByTestId('js-sandbox-iframe') as HTMLIFrameElement;
+    expect(iframe.srcdoc).toContain('<\\/script>');
+    expect(iframe.srcdoc).not.toContain('</script><script>alert(1)</script>');
   });
 });
 

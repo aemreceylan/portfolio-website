@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useFileSystemStore, VFSFile } from '#stores/filesystem.store';
 import { useTranslation } from '#i18n/i18n.store';
+import { escapeScriptInterpolation } from '#services/sanitizer.service';
 import '#styles/js-ide.css';
 
 /**
@@ -126,11 +127,15 @@ export const JsIdeApp: React.FC = () => {
   // Handle postMessage logs coming from the sandbox iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (iframeRef.current?.contentWindow && event.source && event.source !== iframeRef.current.contentWindow) {
+      // Security: Strictly verify the event source matches our active sandboxed iframe
+      if (!iframeRef.current?.contentWindow || event.source !== iframeRef.current.contentWindow) {
         return;
       }
       if (event.data?.source === 'aec-js-sandbox') {
         const { level, args } = event.data;
+        if (typeof level !== 'string' || !Array.isArray(args)) {
+          return;
+        }
         const msg = (Array.isArray(args) ? args : [])
           .map((arg: unknown) => (typeof arg === 'object' && arg !== null ? JSON.stringify(arg) : String(arg)))
           .join(' ');
@@ -252,7 +257,7 @@ export const JsIdeApp: React.FC = () => {
         <body>
           <script>
             try {
-              ${code}
+              ${escapeScriptInterpolation(code)}
             } catch (err) {
               console.error('🚨 ' + (err.name || 'Error') + ': ' + (err.message || String(err)));
             }

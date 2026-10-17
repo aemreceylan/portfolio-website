@@ -116,13 +116,26 @@ PersonalWebSite/
 
 ## 8. Güvenlik, Zod & DevSecOps İzolasyonu
 
-* **JavaScript Sandboxed Runner Güvenliği**:
-  - `js-ide` içindeki kod çalıştırma mantığı, OWASP standartlarına uygun olarak `<iframe sandbox="allow-scripts" srcDoc={...} />` yapısı ile izole edilir.
+* **Merkezi İçerik & HTML Temizleme Servisi (`sanitizer.service.ts` & DOMPurify)**:
+  - **OWASP A03 XSS Koruması**: `MarkdownViewerApp` ve tüm HTML derleme noktaları `DOMPurify.sanitize` filtresinden geçirilir (`sanitizeHtml`). `<script>`, `<iframe>`, `<object>`, `<embed>`, `<form>` etiketleri ve `onerror`, `onload`, `onclick` gibi satır içi olay işleyicileri kesin olarak ayıklanır.
+  - **Düz Metin Kaçışı (`sanitizePlainText`)**: `.txt` dosyalarının görüntülenmesinde veya ham metin çıktılarında HTML etiketleri (`<`, `>`, `&`, `"`, `'`) entity biçimine dönüştürülerek DOM-based XSS açıkları kapatılır.
+  - **Tabnabbing ve Reverse-Tabnabbing Engeli**: Markdown belgelerindeki tüm dış bağlantılara otomatik olarak `target="_blank"` ve `rel="noopener noreferrer"` öznitelikleri eklenir; böylece açılan harici pencerelerin `window.opener` üzerinden ana uygulamaya erişmesi engellenir. `javascript:`, `vbscript:`, `data:` URI şemaları derhal bloke edilir.
+* **JavaScript Sandboxed Runner & Şablon Enjeksiyonu Güvenliği (`JsIdeApp.tsx`)**:
+  - `js-ide` kod çalıştırma motoru, OWASP standartlarında `<iframe sandbox="allow-scripts" srcDoc={...} />` yapısı ile izole edilir.
   - `allow-same-origin` kesinlikle **verilmez**. Bu sayede kullanıcı kodunun ana pencereye, çerezlere, `localStorage`'a veya DOM'a erişmesi imkansızdır.
-  - `window.parent.postMessage` köprüsü üzerinden sadece `console.log`, `warn`, `error` ve çalışma süreleri ana uygulamaya güvenli iletilir.
-* **Kriptografik Güvenli Rastgelelik Motoru (`apps/games/utils/random.ts`)**:
-  - Simülasyon, oyun fiziği ve parçacık efektlerinde `Math.random()` yerine Web Crypto API tabanlı `crypto.getRandomValues` kullanılır (`getRandomFloat`, `getRandomInt`, `getRandomSpread`, `getRandomSign`). Bu sayede SonarQube S2245 / OWASP A02 güvenlik standartları eksiksiz karşılanır.
-* **Çalışma Zamanı Güvenliği**: Terminal komutları, argümanları ve kullanıcı isimleri (`su <user>`) Zod şemaları ile doğrulanır.
+  - **Script Tag Breakout Savunması (`escapeScriptInterpolation`)**: Kullanıcı kodunda bulunabilecek `</script>` dizgileri `<\\/script>` olarak kaçırılarak, iframe HTML şablonunun erkenden kapatılıp dışarıya kontrolsüz markup sızdırılması engellenir.
+  - **Sıkı PostMessage Kaynak İzolasyonu**: `handleMessage` dinleyicisi `event.source !== iframeRef.current?.contentWindow` kontrolü uygulayarak sadece aktif sandbox iframe'inden gelen ve `source: 'aec-js-sandbox'` imzasını taşıyan mesajları kabul eder; harici pencereler veya eklentilerden gelen sahte konsol mesajları elenir.
+* **Sanal Dosya Sistemi Güvenliği & Prototip Koruması (`validateSafeFilename`)**:
+  - `createFile`, `renameFile` ve terminal dosya operasyonlarında sıkı doğrulama uygulanır:
+    - **Dizin Atlama Engeli (Path Traversal)**: Yol ayraçları (`/`, `\`) ve üst dizin referansları (`..`) kesinlikle reddedilir.
+    - **Prototip Kirliliği Savunması (Prototype Pollution)**: `__proto__`, `prototype`, `constructor` gibi JavaScript temel nesne anahtarları bloke edilir.
+    - **Karakter ve Boyut Sınırı**: Kontrol karakterleri (`\x00-\x1F\x7F`), null baytlar ve 64 karakteri aşan dosya adları engellenir; yalnızca `/^[a-zA-Z0-9_\-. ]+$/` desenine izin verilir.
+* **Hizmet Reddi (DoS) & Bellek Taşması Koruması**:
+  - **Masaüstü Dosya Yükleme Sınırı**: `Desktop.tsx` içindeki dosya yükleme (`handleFileUpload`) akışına `MAX_UPLOAD_FILE_SIZE_BYTES = 512 * 1024` (512 KB) sınırı entegre edilmiştir. Sınırı aşan dosyalar GUI uyarısıyla reddedilir; tarayıcı sekmesinin bellek tükenmesiyle kilitlenmesi önlenir.
+  - **ReDoS Koruması**: Spotlight komut paleti arama filtresi düzenli ifadeler (`RegExp`) yerine `String.includes` kullanarak ReDoS (Regular Expression Denial of Service) açıklarına karşı bağışık tutulmuştur.
+* **Kriptografik Güvenli Rastgelelik Motoru (`apps/games/utils/random.ts` & VFS ID)**:
+  - Simülasyon, oyun fiziği, parçacık efektleri ve dosya kimliklerinde (`generateSafeFileId`) `Math.random()` yerine Web Crypto API tabanlı `crypto.getRandomValues` ve `crypto.randomUUID` kullanılır. Bu sayede SonarQube S2245 / OWASP A02 güvenlik standartları eksiksiz karşılanır.
+* **Çalışma Zamanı Güvenliği**: Terminal komutları, argümanları ve kullanıcı isimleri (`su <user>`) Zod şemaları ile doğrulanır (komut uzunluğu 100 karakter ile sınırlıdır).
 * **DevSecOps & SonarQube Standardı**:
   - `eslint-plugin-sonarjs` ile bilişsel karmaşıklık üst sınırı 15 olarak zorunludur.
   - `npm audit` sıfır zafiyet garantisi ve `npm run lint` 0 hata/uyarı ile denetlenir.

@@ -151,4 +151,44 @@ describe('TerminalApp Component', () => {
 
     expect(screen.getByText(/Permission denied\. Try "sudo rm -rf \/"/i)).toBeInTheDocument();
   });
+
+  describe('Terminal Security & Input Validation (OWASP Compliance)', () => {
+    it('rejects commands exceeding 100 characters via Zod validation', () => {
+      render(<TerminalApp />);
+
+      const input = screen.getByPlaceholderText(/type a command/i);
+      const oversizedCommand = 'echo ' + 'a'.repeat(120);
+      fireEvent.change(input, { target: { value: oversizedCommand } });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+      expect(screen.getByText(/Invalid command input length/i)).toBeInTheDocument();
+    });
+
+    it('rejects usernames containing injection characters in su command', () => {
+      render(<TerminalApp />);
+
+      const input = screen.getByPlaceholderText(/type a command/i);
+      fireEvent.change(input, { target: { value: 'su user;rm -rf /' } });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+      expect(screen.getByText(/Please provide a valid username/i)).toBeInTheDocument();
+      expect(screen.getByText('guest@aec:~$')).toBeInTheDocument();
+    });
+
+    it('rejects path traversal attempts in touch and nano commands', () => {
+      render(<TerminalApp />);
+
+      const input = screen.getByPlaceholderText(/type a command/i);
+      fireEvent.change(input, { target: { value: 'touch ../../evil.txt' } });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+      expect(screen.getByText(/directory traversal/i)).toBeInTheDocument();
+
+      fireEvent.change(input, { target: { value: 'nano ../secret.md' } });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+      // Should not enter nano session, should display error
+      expect(screen.queryByText(/GNU nano 7.2/i)).not.toBeInTheDocument();
+    });
+  });
 });

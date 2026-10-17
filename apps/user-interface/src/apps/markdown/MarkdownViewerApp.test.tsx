@@ -117,5 +117,54 @@ describe('MarkdownViewerApp Component', () => {
     expect(screen.getByRole('tab', { name: /project-plan\.md/i })).toBeInTheDocument();
     expect(useFileSystemStore.getState().getFile('project-plan.md')).toBeDefined();
   });
+
+  describe('XSS & HTML Injection Sanitization (OWASP A03)', () => {
+    it('sanitizes <script> tags and malicious event handlers in preview mode', () => {
+      useFileSystemStore.getState().createFile(
+        'xss-test.md',
+        '# Header\n<script>alert("hacked")</script>\n<img src="x" onerror="alert(1)" />'
+      );
+      const file = useFileSystemStore.getState().getFile('xss-test.md')!;
+      useFileSystemStore.getState().openInViewer(file.id, 'preview');
+
+      render(<MarkdownViewerApp />);
+
+      const preview = screen.getByTestId('markdown-rendered-view');
+      expect(preview.innerHTML).not.toContain('<script>');
+      expect(preview.innerHTML).not.toContain('onerror');
+      expect(preview.innerHTML).toContain('<h1>Header</h1>');
+    });
+
+    it('sanitizes plain text files to prevent HTML rendering', () => {
+      useFileSystemStore.getState().createFile(
+        'plain-xss.txt',
+        'Hello <script>alert(1)</script> <img src=x onerror=alert(1)>'
+      );
+      const file = useFileSystemStore.getState().getFile('plain-xss.txt')!;
+      useFileSystemStore.getState().openInViewer(file.id, 'preview');
+
+      render(<MarkdownViewerApp />);
+
+      const preview = screen.getByTestId('markdown-rendered-view');
+      // For plain text, <script> must be escaped entities
+      expect(preview.innerHTML).not.toContain('<script>');
+      expect(preview.innerHTML).toContain('&lt;script&gt;');
+    });
+
+    it('enforces target="_blank" and rel="noopener noreferrer" on markdown links', () => {
+      useFileSystemStore.getState().createFile(
+        'link-test.md',
+        '[External Link](https://malicious-site.example)'
+      );
+      const file = useFileSystemStore.getState().getFile('link-test.md')!;
+      useFileSystemStore.getState().openInViewer(file.id, 'preview');
+
+      render(<MarkdownViewerApp />);
+
+      const link = screen.getByRole('link', { name: /External Link/i });
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    });
+  });
 });
 

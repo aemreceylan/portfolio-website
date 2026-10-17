@@ -867,3 +867,42 @@
     - Bileşen render, klavye ve minimalist footer testleri (`CommandPalette.test.tsx` - 12 test),
     - Masaüstü entegrasyon testi (`Desktop.test.tsx` - 21 test).
     - Toplam: **33 test dosyasında 244 testin tamamı (%100) başarıyla geçti**.
+
+## [2026-10-17] - DevSecOps Güvenlik Denetimi (OWASP Security Audit) & Kapsamlı Test Süiti
+
+### Yapılanlar & Güvenlik Bulguları
+
+- **DevSecOps Güvenlik Şapkası ile Kapsamlı Denetim (Security Audit)**:
+  - OWASP Top 10 ve CWE standartlarına göre kullanıcı arayüzü (`apps/user-interface`) uçtan uca incelendi.
+  - 5 kritik güvenlik alanı tespit edildi ve kurumsal düzeyde sertleştirildi:
+    1. **OWASP A03 (Cross-Site Scripting / XSS)**:
+       - `MarkdownViewerApp`: `marked.parse` ham HTML çıktısı doğrudan `dangerouslySetInnerHTML` üzerinden render ediliyordu. Kötü niyetli kullanıcıların veya yüklenen `.md` belgelerinin `<script>`, `<img onerror=...>`, `<svg onload=...>`, `<iframe src=...>` veya `javascript:` URI çalıştırması riski mevcuttu.
+       - **Çözüm**: `dompurify` entegrasyonu sağlandı (`sanitizer.service.ts`). `sanitizeHtml` fonksiyonu ile tüm tehlikeli HTML etiketleri ve nitelikleri filtrelendi; `target="_blank"` ve `rel="noopener noreferrer"` otomatik enjekte edilerek tabnabbing saldırıları engellendi. Düz metin (`.txt`) belgeleri için `sanitizePlainText` ile tam HTML entity kaçışı uygulandı.
+    2. **OWASP A04 (Sandbox Breakout & Insecure Template Interpolation)**:
+       - `JsIdeApp`: Kullanıcı kodundaki `</script>` dizgilerinin iframe srcdoc şablonundaki `<script>` etiketini erkenden kapatıp dışarıya markup/HTML sızdırması riski mevcuttu.
+       - **Çözüm**: `escapeScriptInterpolation` fonksiyonu geliştirilerek `</script>` ifadeleri `<\\/script>` olarak güvenli hale getirildi.
+       - **PostMessage Kaynak İzolasyonu**: `handleMessage` dinleyicisi sertleştirilerek yalnızca aktif sandboxed iframe penceresinden (`event.source === iframeRef.current?.contentWindow`) gelen ve `source: 'aec-js-sandbox'` imzası ile `level` ve `args` dizi şemasını doğrulayan mesajlar kabul edildi; sahte dış pencerelerden gelen mesajlar engellendi.
+    3. **OWASP A01 (Path Traversal & Prototype Pollution)**:
+       - `filesystem.store.ts`: Sanal dosya sisteminde dosya oluşturma (`createFile`), silme (`deleteFile`) ve yeniden adlandırma (`renameFile`) operasyonlarında yalnızca uzantı kontrolü yapılıyordu. `../../secret.txt`, `/root.txt`, `__proto__.txt`, `constructor.js` veya `\0` null bayt içeren isimlerin VFS ve JavaScript prototip zincirine müdahale riski mevcuttu.
+       - **Çözüm**: `validateSafeFilename` doğrulaması geliştirildi. Yol ayracı (`/`, `\`), dizin atlama (`..`), prototip anahtarları (`__proto__`, `prototype`, `constructor`), kontrol karakterleri (`\x00-\x1F\x7F`), 64 karakterden uzun isimler engellendi ve regex deseni (`/^[a-zA-Z0-9_\-. ]+$/`) zorunlu kılındı. Terminal `touch` ve `nano` komutları da bu doğrulamaya bağlandı.
+    4. **OWASP A05 (Denial of Service - DoS & Memory Exhaustion)**:
+       - `Desktop.tsx`: Masaüstü dosya yükleme (`handleFileUpload`) girdisinde dosya boyutu kontrolü bulunmuyordu. Çok büyük dosyaların (örneğin 100MB+) okunması tarayıcı sekmesini dondurabilirdi.
+       - **Çözüm**: `MAX_UPLOAD_FILE_SIZE_BYTES = 512 * 1024` (512 KB) sınırı getirildi; aşan dosyalar GUI Alert modalı ile güvenle reddedildi.
+    5. **ReDoS & Terminal Tampon Bellek Koruması**:
+       - Spotlight arama algoritması `RegExp` yerine güvenli `String.includes` ile çalışmaktadır.
+       - Terminal girdi komutları Zod şeması (`max(100)`) ve kullanıcı isimleri `/^[a-zA-Z0-9_-]+$/` ile sınırlandırıldı.
+
+- **Kapsamlı Test Süiti Planlama & Uygulama (35 Test Dosyası / 292 Test)**:
+  - **Yeni `sanitizer.service.test.ts`**: XSS temizleme, tabnabbing önleme, düz metin kaçırma, dosya adı ve uzantı güvenlik doğrulamalarını kapsayan 20 birim testi eklendi.
+  - **Yeni `security-audit.test.tsx`**: OWASP standartlarında XSS atak vektörleri, sandbox izinleri (`allow-scripts` sans `allow-same-origin`), iframe mesaj doğrulama, DoS dosya boyutu ve kriptografik güvenli rastgelelik motorunu doğrulayan 14 entegrasyon testi eklendi.
+  - **Genişletilen `MarkdownViewerApp.test.tsx`**: XSS engelleme, entity kaçışı ve dış link nitelikleri testleri (+3 test).
+  - **Genişletilen `JsIdeApp.test.tsx`**: Script tag breakout önleme ve sahte postMessage reddetme testleri (+2 test).
+  - **Genişletilen `Desktop.test.tsx`**: 512 KB dosya yükleme DoS önleme testi (+1 test).
+  - **Genişletilen `TerminalApp.test.tsx`**: Zod 100 karakter sınır, su komut enjeksiyonu ve path traversal testleri (+3 test).
+  - **Genişletilen `filesystem.store.test.ts`**: Dizin atlama ve prototype pollution testleri (+5 test).
+
+- **Doğrulama ve Metrikler**:
+  - `npm test`: **Monorepo genelinde 39 test dosyasında 306 testin tamamı (%100) başarıyla geçti** (User-interface: 35 dosyada 292 test).
+  - `npm run typecheck`: 4 pakette (`shared`, `admin-interface`, `backend`, `user-interface`) **0 hata**.
+  - `npm run lint`: ESLint & SonarJS statik analizlerinde **0 hata, 0 uyarı** (Bilişsel karmaşıklık kurallarına tam uyum).
+  - `npm audit`: **0 vulnerabilities** (Sıfır bağımlılık zafiyeti).

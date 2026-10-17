@@ -377,6 +377,20 @@ describe('Desktop Component', () => {
 
       expect(screen.getByRole('dialog', { name: /Spotlight Command Palette/i })).toBeInTheDocument();
     });
+
+    it('rejects oversized file uploads (>512 KB) with a GUI warning (DoS prevention)', async () => {
+      render(<Desktop />);
+
+      const fileInput = screen.getByTestId('file-upload-input');
+      // Create a mock File exceeding 512 KB
+      const bigContent = 'x'.repeat(600 * 1024);
+      const bigFile = new File([bigContent], 'huge-file.txt', { type: 'text/plain' });
+
+      fireEvent.change(fileInput, { target: { files: [bigFile] } });
+
+      expect(screen.getByText(/Dosya Boyutu Sınırı Aşıldı/i)).toBeInTheDocument();
+      expect(useFileSystemStore.getState().getFile('huge-file.txt')).toBeUndefined();
+    });
   });
 });
 

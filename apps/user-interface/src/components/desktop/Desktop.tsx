@@ -29,6 +29,7 @@ import { SoundControl } from '#components/desktop/SoundControl';
 import { useTranslation } from '#i18n/i18n.store';
 import { useViewport } from '#stores/viewport.store';
 import { useFileSystemStore, VFSFile, parseAllowedExtension } from '#stores/filesystem.store';
+import { MAX_UPLOAD_FILE_SIZE_BYTES } from '#services/sanitizer.service';
 import { CommandPalette } from '#components/command-palette/CommandPalette';
 import { getSpotlightShortcutLabel } from '#components/command-palette/command-palette.utils';
 import { useCommandPaletteStore } from '#stores/command-palette.store';
@@ -792,6 +793,15 @@ export const Desktop: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_UPLOAD_FILE_SIZE_BYTES) {
+      showGuiAlert(
+        'Dosya Boyutu Sınırı Aşıldı',
+        `"${file.name}" dosyası 512 KB sınırını aşıyor (${(file.size / 1024).toFixed(1)} KB). Bellek güvenliği için lütfen daha küçük bir dosya seçin.`
+      );
+      e.target.value = '';
+      return;
+    }
 
     const ext = parseAllowedExtension(file.name);
     if (!ext) {

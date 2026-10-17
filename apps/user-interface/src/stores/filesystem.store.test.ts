@@ -143,5 +143,65 @@ describe('FileSystem Store (VFS)', () => {
     expect(useFileSystemStore.getState().openIdeFileIds).toEqual([]);
     expect(useFileSystemStore.getState().activeIdeFileId).toBeNull();
   });
+
+  describe('DevSecOps & Security Hardening (OWASP Compliance)', () => {
+    it('blocks path traversal attempts in createFile', () => {
+      const store = useFileSystemStore.getState();
+      const res1 = store.createFile('../../etc/passwd.txt');
+      expect(res1.success).toBe(false);
+      expect(res1.error).toContain('directory traversal');
+
+      const res2 = store.createFile('folder/file.md');
+      expect(res2.success).toBe(false);
+      expect(res2.error).toContain('path separators');
+
+      const res3 = store.createFile('folder\\file.js');
+      expect(res3.success).toBe(false);
+      expect(res3.error).toContain('path separators');
+    });
+
+    it('blocks prototype pollution attack keys in createFile', () => {
+      const store = useFileSystemStore.getState();
+      const p1 = store.createFile('__proto__.txt');
+      expect(p1.success).toBe(false);
+      expect(p1.error).toContain('reserved by the system');
+
+      const p2 = store.createFile('constructor.md');
+      expect(p2.success).toBe(false);
+      expect(p2.error).toContain('reserved by the system');
+
+      const p3 = store.createFile('prototype.js');
+      expect(p3.success).toBe(false);
+      expect(p3.error).toContain('reserved by the system');
+    });
+
+    it('blocks filenames exceeding 64 characters', () => {
+      const store = useFileSystemStore.getState();
+      const longName = 'a'.repeat(61) + '.txt';
+      const res = store.createFile(longName);
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('cannot exceed 64 characters');
+    });
+
+    it('blocks control characters and null bytes in createFile', () => {
+      const store = useFileSystemStore.getState();
+      const res = store.createFile('file\0exploit.txt');
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('forbidden control characters');
+    });
+
+    it('blocks path traversal and prototype pollution in renameFile', () => {
+      const store = useFileSystemStore.getState();
+      store.createFile('normal.txt', 'hello');
+
+      const renameTraverse = store.renameFile('normal.txt', '../../malicious.txt');
+      expect(renameTraverse.success).toBe(false);
+      expect(renameTraverse.error).toContain('directory traversal');
+
+      const renameProto = store.renameFile('normal.txt', '__proto__.txt');
+      expect(renameProto.success).toBe(false);
+      expect(renameProto.error).toContain('reserved by the system');
+    });
+  });
 });
 

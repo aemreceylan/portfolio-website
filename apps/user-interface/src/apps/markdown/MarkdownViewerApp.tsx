@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useFileSystemStore, VFSFile } from '#stores/filesystem.store';
 import { useTranslation } from '#i18n/i18n.store';
+import { sanitizeHtml, sanitizePlainText } from '#services/sanitizer.service';
 import '#styles/markdown-viewer.css';
 
 /**
@@ -141,17 +142,19 @@ export const MarkdownViewerApp: React.FC = () => {
     }
   };
 
-  // Render markdown to HTML when in preview or split mode
+  // Render markdown to HTML when in preview or split mode safely sanitized against XSS
   const renderedHtml = useMemo(() => {
     if (!currentFile) return '';
     const contentToRender = editContent;
     if (currentFile.extension === 'txt') {
-      return `<pre style="font-family: inherit; white-space: pre-wrap;">${contentToRender}</pre>`;
+      const safeEscaped = sanitizePlainText(contentToRender);
+      return `<pre style="font-family: inherit; white-space: pre-wrap;">${safeEscaped}</pre>`;
     }
     try {
-      return marked.parse(contentToRender, { async: false }) as string;
+      const rawHtml = marked.parse(contentToRender, { async: false }) as string;
+      return sanitizeHtml(rawHtml);
     } catch {
-      return `<p>${contentToRender}</p>`;
+      return `<p>${sanitizePlainText(contentToRender)}</p>`;
     }
   }, [currentFile, editContent]);
 

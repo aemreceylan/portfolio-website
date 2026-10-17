@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { z } from 'zod';
 import { useTranslation } from '#i18n/i18n.store';
-import { useFileSystemStore, parseAllowedExtension } from '#stores/filesystem.store';
+import { useFileSystemStore, validateSafeFilename } from '#stores/filesystem.store';
 import { performSystemReset } from '#services/system-reset';
 import '#styles/terminal.css';
 
@@ -72,13 +72,13 @@ function buildTouchLines(cmdArg: string, fs: ReturnType<typeof useFileSystemStor
     ];
   }
 
-  const ext = parseAllowedExtension(cmdArg);
-  if (!ext) {
+  const valResult = validateSafeFilename(cmdArg);
+  if (!valResult.isValid) {
     return [
       {
         id: `out-${Date.now()}-err`,
         type: 'error',
-        text: `touch: cannot touch '${cmdArg}': Only .txt, .md, .js supported.`,
+        text: `touch: cannot touch '${cmdArg}': ${valResult.error}`,
       },
     ];
   }
@@ -318,13 +318,13 @@ function handleNanoCommand(
     };
   }
 
-  const ext = parseAllowedExtension(cmdArg);
-  if (!ext) {
+  const valResult = validateSafeFilename(cmdArg);
+  if (!valResult.isValid) {
     return {
       errorLine: {
         id: `out-${Date.now()}-err`,
         type: 'error',
-        text: `nano: invalid extension for '${cmdArg}'. Only .txt, .md, .js supported.`,
+        text: `nano: ${valResult.error}`,
       },
     };
   }

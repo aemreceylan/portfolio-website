@@ -86,6 +86,65 @@ export function parseAllowedExtension(filename: string): AllowedExtension | null
 }
 
 /**
+ * Forbidden prototype names that could lead to Prototype Pollution vulnerabilities.
+ */
+const FORBIDDEN_OBJECT_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
+/**
+ * Regex matching safe filenames: alphanumeric characters, underscores, dashes, dots, and single spaces.
+ */
+const SAFE_FILENAME_REGEX = /^[a-zA-Z0-9_\-. ]+$/;
+
+/**
+ * Validates whether a given filename is safe against path traversal, prototype pollution,
+ * control characters, excessive length, and unsupported extensions.
+ */
+export function validateSafeFilename(filename: string): {
+  isValid: boolean;
+  error?: string;
+  extension?: AllowedExtension;
+} {
+  const trimmed = filename.trim();
+
+  if (!trimmed) {
+    return { isValid: false, error: 'File name cannot be empty.' };
+  }
+
+  if (trimmed.length > 64) {
+    return { isValid: false, error: 'File name cannot exceed 64 characters.' };
+  }
+
+  // Check for path traversal characters
+  if (trimmed.includes('/') || trimmed.includes('\\') || trimmed.includes('..')) {
+    return { isValid: false, error: 'File name cannot contain path separators (/ or \\) or directory traversal (..).' };
+  }
+
+  // Check for null bytes or control characters
+  if (/[\x00-\x1F\x7F]/.test(trimmed)) {
+    return { isValid: false, error: 'File name contains forbidden control characters.' };
+  }
+
+  // Check for prototype pollution attack keys
+  const baseName = trimmed.split('.')[0]?.toLowerCase() ?? '';
+  if (FORBIDDEN_OBJECT_KEYS.has(baseName) || FORBIDDEN_OBJECT_KEYS.has(trimmed.toLowerCase())) {
+    return { isValid: false, error: `File name '${trimmed}' is reserved by the system.` };
+  }
+
+  // Check safe characters regex
+  if (!SAFE_FILENAME_REGEX.test(trimmed)) {
+    return { isValid: false, error: 'File name contains invalid characters. Use only letters, numbers, dashes, underscores, and dots.' };
+  }
+
+  // Check allowed extension
+  const ext = parseAllowedExtension(trimmed);
+  if (!ext) {
+    return { isValid: false, error: `Invalid file extension for '${trimmed}'. Only .txt, .md, and .js are supported.` };
+  }
+
+  return { isValid: true, extension: ext };
+}
+
+/**
  * Default system files populated on initial OS boot.
  * Marked as isSystem: true to strictly prevent deletion or tampering.
  */
@@ -252,18 +311,13 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
   guiAlert: null,
 
   createFile: (name, content = '') => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      return { success: false, error: 'File name cannot be empty.' };
+    const valResult = validateSafeFilename(name);
+    if (!valResult.isValid || !valResult.extension) {
+      return { success: false, error: valResult.error || 'Invalid file name.' };
     }
 
-    const ext = parseAllowedExtension(trimmed);
-    if (!ext) {
-      return {
-        success: false,
-        error: `Invalid file extension for '${trimmed}'. Only .txt, .md, and .js are supported.`,
-      };
-    }
+    const trimmed = name.trim();
+    const ext = valResult.extension;
 
     const existing = get().files[trimmed];
     if (existing) {
@@ -403,13 +457,11 @@ export const useFileSystemStore = create<FileSystemStoreState>((set, get) => ({
       return { success: false, error: `Cannot rename protected system file '${file.name}'.` };
     }
 
-    const newExt = parseAllowedExtension(newTrimmed);
-    if (!newExt) {
-      return {
-        success: false,
-        error: `Invalid extension for '${newTrimmed}'. Only .txt, .md, and .js are allowed.`,
-      };
+    const valResult = validateSafeFilename(newTrimmed);
+    if (!valResult.isValid || !valResult.extension) {
+      return { success: false, error: valResult.error || 'Invalid file name.' };
     }
+    const newExt = valResult.extension;
 
     if (get().files[newTrimmed] && oldKey !== newTrimmed) {
       return { success: false, error: `A file named '${newTrimmed}' already exists.` };
