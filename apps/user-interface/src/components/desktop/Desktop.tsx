@@ -39,6 +39,7 @@ interface ContextMenuState {
   rawX: number;
   rawY: number;
   file: VFSFile | null;
+  app: AppManifest | null;
 }
 
 interface PromptModalState {
@@ -152,6 +153,7 @@ export const Desktop: React.FC = () => {
     rawX: 0,
     rawY: 0,
     file: null,
+    app: null,
   });
 
   const [promptModal, setPromptModal] = useState<PromptModalState>({
@@ -214,6 +216,32 @@ export const Desktop: React.FC = () => {
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const justLongPressedRef = useRef<boolean>(false);
+  const isLongPressActiveRef = useRef<boolean>(false);
+
+  /**
+   * Clears any active long-press timer
+   */
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressStartPosRef.current = null;
+  };
+
+  /**
+   * Clears long-press timer and resets touch states when pointer lifts or cancels
+   */
+  const handleDesktopPointerUp = () => {
+    clearLongPressTimer();
+    if (isLongPressActiveRef.current) {
+      isLongPressActiveRef.current = false;
+      justLongPressedRef.current = true;
+      setTimeout(() => {
+        justLongPressedRef.current = false;
+      }, 350);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -461,7 +489,7 @@ export const Desktop: React.FC = () => {
   // Close context menu on global click or Escape key
   useEffect(() => {
     const handleGlobalClick = () => {
-      if (justLongPressedRef.current) return;
+      if (justLongPressedRef.current || isLongPressActiveRef.current) return;
       if (contextMenu.isOpen) {
         setContextMenu((prev) => ({ ...prev, isOpen: false }));
       }
@@ -480,10 +508,14 @@ export const Desktop: React.FC = () => {
 
     window.addEventListener('click', handleGlobalClick);
     window.addEventListener('pointerdown', handleGlobalClick);
+    window.addEventListener('pointerup', handleDesktopPointerUp);
+    window.addEventListener('pointercancel', handleDesktopPointerUp);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('click', handleGlobalClick);
       window.removeEventListener('pointerdown', handleGlobalClick);
+      window.removeEventListener('pointerup', handleDesktopPointerUp);
+      window.removeEventListener('pointercancel', handleDesktopPointerUp);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [contextMenu.isOpen, promptModal.isOpen]);
@@ -524,16 +556,7 @@ export const Desktop: React.FC = () => {
     openWindow(manifest);
   };
 
-  /**
-   * Clears any active long-press timer
-   */
-  const clearLongPressTimer = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-    longPressStartPosRef.current = null;
-  };
+
 
   /**
    * Triggers subtle haptic feedback for touch gestures if supported by device
@@ -552,7 +575,7 @@ export const Desktop: React.FC = () => {
    * Initiates long-press timer on mobile desktop background
    */
   const handleDesktopPointerDown = (e: React.PointerEvent<HTMLElement>) => {
-    if (!isMobile) return;
+    if (!isMobile || contextMenu.isOpen) return;
     const target = e.target as HTMLElement | null;
     if (
       target &&
@@ -572,6 +595,7 @@ export const Desktop: React.FC = () => {
     longPressStartPosRef.current = { x: e.clientX, y: e.clientY };
 
     longPressTimerRef.current = setTimeout(() => {
+      isLongPressActiveRef.current = true;
       justLongPressedRef.current = true;
       triggerHapticFeedback();
       setContextMenu({
@@ -581,11 +605,8 @@ export const Desktop: React.FC = () => {
         rawX: e.clientX,
         rawY: e.clientY,
         file: null,
+        app: null,
       });
-
-      setTimeout(() => {
-        justLongPressedRef.current = false;
-      }, 400);
     }, 500);
   };
 
@@ -593,11 +614,13 @@ export const Desktop: React.FC = () => {
    * Initiates long-press timer on mobile desktop file card
    */
   const handleFilePointerDown = (e: React.PointerEvent, file: VFSFile) => {
-    if (!isMobile) return;
+    e.stopPropagation();
+    if (!isMobile || contextMenu.isOpen) return;
     clearLongPressTimer();
     longPressStartPosRef.current = { x: e.clientX, y: e.clientY };
 
     longPressTimerRef.current = setTimeout(() => {
+      isLongPressActiveRef.current = true;
       justLongPressedRef.current = true;
       triggerHapticFeedback();
       setContextMenu({
@@ -607,11 +630,33 @@ export const Desktop: React.FC = () => {
         rawX: e.clientX,
         rawY: e.clientY,
         file,
+        app: null,
       });
+    }, 500);
+  };
 
-      setTimeout(() => {
-        justLongPressedRef.current = false;
-      }, 400);
+  /**
+   * Initiates long-press timer on mobile desktop application shortcut
+   */
+  const handleAppPointerDown = (e: React.PointerEvent, app: AppManifest) => {
+    e.stopPropagation();
+    if (!isMobile || contextMenu.isOpen) return;
+    clearLongPressTimer();
+    longPressStartPosRef.current = { x: e.clientX, y: e.clientY };
+
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressActiveRef.current = true;
+      justLongPressedRef.current = true;
+      triggerHapticFeedback();
+      setContextMenu({
+        isOpen: true,
+        x: Math.min(e.clientX, window.innerWidth - 220),
+        y: Math.min(e.clientY, window.innerHeight - 140),
+        rawX: e.clientX,
+        rawY: e.clientY,
+        file: null,
+        app,
+      });
     }, 500);
   };
 
@@ -629,29 +674,36 @@ export const Desktop: React.FC = () => {
     }
   };
 
-  /**
-   * Clears long-press timer when pointer lifts or cancels
-   */
-  const handleDesktopPointerUp = () => {
-    clearLongPressTimer();
-  };
+
 
   /**
    * Handles right click on empty desktop area.
-   * Strictly ignores right clicks originating inside any window, statusbar or dock.
+   * Strictly ignores right clicks originating inside any window, statusbar, dock, app, or file.
    */
   const handleDesktopContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Prevent overwriting an already open context menu (e.g. from mobile long-press)
+    if (contextMenu.isOpen) {
+      return;
+    }
+
     const target = e.target as HTMLElement | null;
     if (
       target &&
       (target.closest('.window-container') ||
         target.closest('.desktop-statusbar') ||
-        target.closest('.dock-container'))
+        target.closest('.dock-container') ||
+        target.closest('.desktop-app-card') ||
+        target.closest('.desktop-file-card') ||
+        target.closest('.spatial-context-menu') ||
+        target.closest('.spatial-prompt-modal') ||
+        target.closest('.spatial-alert-dialog'))
     ) {
       return;
     }
 
-    e.preventDefault();
     setContextMenu({
       isOpen: true,
       x: Math.min(e.clientX, window.innerWidth - 230),
@@ -659,6 +711,7 @@ export const Desktop: React.FC = () => {
       rawX: e.clientX,
       rawY: e.clientY,
       file: null,
+      app: null,
     });
   };
 
@@ -668,6 +721,9 @@ export const Desktop: React.FC = () => {
   const handleFileContextMenu = (e: React.MouseEvent, file: VFSFile) => {
     e.preventDefault();
     e.stopPropagation();
+    if (contextMenu.isOpen && contextMenu.file?.id === file.id) {
+      return;
+    }
     setContextMenu({
       isOpen: true,
       x: Math.min(e.clientX, window.innerWidth - 230),
@@ -675,6 +731,27 @@ export const Desktop: React.FC = () => {
       rawX: e.clientX,
       rawY: e.clientY,
       file,
+      app: null,
+    });
+  };
+
+  /**
+   * Handles right click on a desktop application shortcut card
+   */
+  const handleAppContextMenu = (e: React.MouseEvent, app: AppManifest) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (contextMenu.isOpen && contextMenu.app?.id === app.id) {
+      return;
+    }
+    setContextMenu({
+      isOpen: true,
+      x: Math.min(e.clientX, window.innerWidth - 230),
+      y: Math.min(e.clientY, window.innerHeight - 140),
+      rawX: e.clientX,
+      rawY: e.clientY,
+      file: null,
+      app,
     });
   };
 
@@ -795,6 +872,160 @@ export const Desktop: React.FC = () => {
     }
   };
 
+  /**
+   * Renders context menu action items avoiding nested conditionals in JSX
+   */
+  const renderContextMenuContent = () => {
+    if (contextMenu.app) {
+      return (
+        <button
+          type="button"
+          className="spatial-context-item"
+          role="menuitem"
+          onClick={() => {
+            handleLaunchApp(contextMenu.app!);
+            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+          }}
+        >
+          <ExternalLink size={14} />
+          <span>{t('ctx_open')}</span>
+        </button>
+      );
+    }
+
+    if (contextMenu.file) {
+      return (
+        <>
+          <button
+            type="button"
+            className="spatial-context-item"
+            role="menuitem"
+            onClick={() => {
+              handleOpenFile(contextMenu.file!);
+              setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            }}
+          >
+            <ExternalLink size={14} />
+            <span>{t('ctx_open')}</span>
+          </button>
+          <button
+            type="button"
+            className="spatial-context-item"
+            role="menuitem"
+            onClick={() => {
+              const f = contextMenu.file!;
+              setContextMenu((prev) => ({ ...prev, isOpen: false }));
+              setPromptModal({
+                isOpen: true,
+                title: `${f.name} - ${t('ctx_rename')}`,
+                filename: f.name,
+                mode: 'rename',
+                file: f,
+              });
+            }}
+          >
+            <Edit3 size={14} />
+            <span>{t('ctx_rename')}</span>
+          </button>
+          <div className="spatial-context-separator" />
+          <button
+            type="button"
+            className="spatial-context-item danger"
+            role="menuitem"
+            onClick={() => handleDeleteFile(contextMenu.file!)}
+          >
+            <Trash2 size={14} />
+            <span>{t('ctx_delete')}</span>
+          </button>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <button
+          type="button"
+          className="spatial-context-item"
+          role="menuitem"
+          onClick={() => {
+            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            setPromptModal({
+              isOpen: true,
+              title: t('ctx_new_txt'),
+              filename: 'not.txt',
+              mode: 'new-txt',
+              targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
+            });
+          }}
+        >
+          <FileText size={14} />
+          <span>{t('ctx_new_txt')}</span>
+        </button>
+        <button
+          type="button"
+          className="spatial-context-item"
+          role="menuitem"
+          onClick={() => {
+            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            setPromptModal({
+              isOpen: true,
+              title: t('ctx_new_md'),
+              filename: 'belge.md',
+              mode: 'new-md',
+              targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
+            });
+          }}
+        >
+          <FolderPlus size={14} />
+          <span>{t('ctx_new_md')}</span>
+        </button>
+        <button
+          type="button"
+          className="spatial-context-item"
+          role="menuitem"
+          onClick={() => {
+            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            setPromptModal({
+              isOpen: true,
+              title: t('ctx_new_js'),
+              filename: 'script.js',
+              mode: 'new-js',
+              targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
+            });
+          }}
+        >
+          <FileCode size={14} />
+          <span>{t('ctx_new_js')}</span>
+        </button>
+        <div className="spatial-context-separator" />
+        <button
+          type="button"
+          className="spatial-context-item"
+          role="menuitem"
+          onClick={() => {
+            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            openWindow(terminalManifest);
+          }}
+        >
+          <Terminal size={14} />
+          <span>{t('ctx_open_terminal')}</span>
+        </button>
+        <button
+          type="button"
+          className="spatial-context-item"
+          role="menuitem"
+          onClick={() => {
+            setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            openWindow(settingsManifest);
+          }}
+        >
+          <Settings size={14} />
+          <span>{t('ctx_open_settings')}</span>
+        </button>
+      </>
+    );
+  };
+
   return (
     <main
       className={`desktop-viewport ${isMobile ? 'is-mobile' : ''}`}
@@ -874,9 +1105,17 @@ export const Desktop: React.FC = () => {
                       zIndex: isDragging ? 1000 : 2,
                     }
               }
-              onPointerDown={(e) => !isMobile && handleIconPointerDown(e, itemId, pos)}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                if (isMobile) {
+                  handleAppPointerDown(e, manifest);
+                } else {
+                  handleIconPointerDown(e, itemId, pos);
+                }
+              }}
+              onContextMenu={(e) => handleAppContextMenu(e, manifest)}
               onClick={() => {
-                if (justDraggedRef.current) return;
+                if (justDraggedRef.current || justLongPressedRef.current || isLongPressActiveRef.current) return;
                 handleLaunchApp(manifest);
               }}
               data-testid={`desktop-app-${manifest.id}`}
@@ -921,6 +1160,7 @@ export const Desktop: React.FC = () => {
                     }
               }
               onPointerDown={(e) => {
+                e.stopPropagation();
                 if (isMobile) {
                   handleFilePointerDown(e, file);
                 } else {
@@ -928,7 +1168,7 @@ export const Desktop: React.FC = () => {
                 }
               }}
               onClick={() => {
-                if (justDraggedRef.current || justLongPressedRef.current) return;
+                if (justDraggedRef.current || justLongPressedRef.current || isLongPressActiveRef.current) return;
                 handleOpenFile(file);
               }}
               onContextMenu={(e) => handleFileContextMenu(e, file)}
@@ -958,135 +1198,7 @@ export const Desktop: React.FC = () => {
             if (e.key === 'Escape') setContextMenu((prev) => ({ ...prev, isOpen: false }));
           }}
         >
-          {contextMenu.file ? (
-            /* Context Menu for specific file */
-            <>
-              <button
-                type="button"
-                className="spatial-context-item"
-                role="menuitem"
-                onClick={() => {
-                  handleOpenFile(contextMenu.file!);
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                }}
-              >
-                <ExternalLink size={14} />
-                <span>{t('ctx_open')}</span>
-              </button>
-              <button
-                type="button"
-                className="spatial-context-item"
-                role="menuitem"
-                onClick={() => {
-                  const f = contextMenu.file!;
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                  setPromptModal({
-                    isOpen: true,
-                    title: `${f.name} - ${t('ctx_rename')}`,
-                    filename: f.name,
-                    mode: 'rename',
-                    file: f,
-                  });
-                }}
-              >
-                <Edit3 size={14} />
-                <span>{t('ctx_rename')}</span>
-              </button>
-              <div className="spatial-context-separator" />
-              <button
-                type="button"
-                className="spatial-context-item danger"
-                role="menuitem"
-                onClick={() => handleDeleteFile(contextMenu.file!)}
-              >
-                <Trash2 size={14} />
-                <span>{t('ctx_delete')}</span>
-              </button>
-            </>
-          ) : (
-            /* Context Menu for empty desktop workspace */
-            <>
-              <button
-                type="button"
-                className="spatial-context-item"
-                role="menuitem"
-                onClick={() => {
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                  setPromptModal({
-                    isOpen: true,
-                    title: t('ctx_new_txt'),
-                    filename: 'not.txt',
-                    mode: 'new-txt',
-                    targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
-                  });
-                }}
-              >
-                <FileText size={14} />
-                <span>{t('ctx_new_txt')}</span>
-              </button>
-              <button
-                type="button"
-                className="spatial-context-item"
-                role="menuitem"
-                onClick={() => {
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                  setPromptModal({
-                    isOpen: true,
-                    title: t('ctx_new_md'),
-                    filename: 'belge.md',
-                    mode: 'new-md',
-                    targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
-                  });
-                }}
-              >
-                <FolderPlus size={14} />
-                <span>{t('ctx_new_md')}</span>
-              </button>
-              <button
-                type="button"
-                className="spatial-context-item"
-                role="menuitem"
-                onClick={() => {
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                  setPromptModal({
-                    isOpen: true,
-                    title: t('ctx_new_js'),
-                    filename: 'script.js',
-                    mode: 'new-js',
-                    targetCoords: { x: contextMenu.rawX, y: contextMenu.rawY },
-                  });
-                }}
-              >
-                <FileCode size={14} />
-                <span>{t('ctx_new_js')}</span>
-              </button>
-              <div className="spatial-context-separator" />
-              <button
-                type="button"
-                className="spatial-context-item"
-                role="menuitem"
-                onClick={() => {
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                  openWindow(terminalManifest);
-                }}
-              >
-                <Terminal size={14} />
-                <span>{t('ctx_open_terminal')}</span>
-              </button>
-              <button
-                type="button"
-                className="spatial-context-item"
-                role="menuitem"
-                onClick={() => {
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                  openWindow(settingsManifest);
-                }}
-              >
-                <Settings size={14} />
-                <span>{t('ctx_open_settings')}</span>
-              </button>
-            </>
-          )}
+          {renderContextMenuContent()}
         </div>
       )}
 

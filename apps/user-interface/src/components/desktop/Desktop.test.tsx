@@ -292,7 +292,7 @@ describe('Desktop Component', () => {
       vi.useRealTimers();
     });
 
-    it('should open file context menu on mobile file card long-press', () => {
+    it('should open file context menu on mobile file card long-press and not switch to desktop menu on extended hold', () => {
       vi.useFakeTimers();
       useViewportStore.getState().setDimensions(375, 667);
 
@@ -309,6 +309,58 @@ describe('Desktop Component', () => {
       expect(screen.getByText('Open')).toBeInTheDocument();
       expect(screen.getByText('Rename')).toBeInTheDocument();
       expect(screen.getByText('Delete')).toBeInTheDocument();
+      expect(screen.queryByText('New Text Document (.txt)')).not.toBeInTheDocument();
+
+      // Extended hold with synthetic contextmenu from browser
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      fireEvent.contextMenu(fileCard);
+
+      // Verify file menu is still intact and did NOT switch to desktop context menu
+      expect(screen.getByText('Rename')).toBeInTheDocument();
+      expect(screen.getByText('Delete')).toBeInTheDocument();
+      expect(screen.queryByText('New Text Document (.txt)')).not.toBeInTheDocument();
+
+      // Lifting finger should not trigger open window
+      fireEvent.pointerUp(fileCard);
+      fireEvent.click(fileCard);
+
+      expect(useWindowManager.getState().windows['markdown-viewer']).toBeUndefined();
+      vi.useRealTimers();
+    });
+
+    it('should open app context menu on mobile app card long-press and retain it on extended hold', () => {
+      vi.useFakeTimers();
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(<Desktop />);
+
+      const appCard = screen.getByTestId('desktop-app-terminal');
+      fireEvent.pointerDown(appCard, { clientX: 100, clientY: 100 });
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(screen.getByLabelText('Desktop Context Menu')).toBeInTheDocument();
+      expect(screen.getByText('Open')).toBeInTheDocument();
+      expect(screen.queryByText('New Text Document (.txt)')).not.toBeInTheDocument();
+
+      // Extended hold with synthetic contextmenu from browser
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      fireEvent.contextMenu(appCard);
+
+      expect(screen.getByText('Open')).toBeInTheDocument();
+      expect(screen.queryByText('New Text Document (.txt)')).not.toBeInTheDocument();
+
+      // Lifting finger should not launch app
+      fireEvent.pointerUp(appCard);
+      fireEvent.click(appCard);
+
+      expect(useWindowManager.getState().windows['terminal']).toBeUndefined();
       vi.useRealTimers();
     });
   });

@@ -597,7 +597,11 @@ Desktop pencereli işletim sistemi paradigmasını telefon ekranlarına (360px -
     - Destekleyen mobil cihazlarda 40ms haptik titreşim (`navigator.vibrate(40)`) geri bildirimi verilir.
     - Kullanıcı parmağını 10px'den fazla kaydırdığında (scroll jesti) uzun basma zamanlayıcısı otomatik temizlenir.
     - Masaüstü dosya kartlarına uzun basıldığında dosya bağlam menüsü (Aç, Yeniden Adlandır, Sil) açılır.
-    - Uzun basma jestinden hemen sonra tetiklenen `click` olayının menüyü anında kapatmasını önlemek için `justLongPressedRef` koruması entegre edilmiştir.
+    - **Uygulama Kartları Desteği**: Masaüstü uygulama kartlarında da (`.desktop-app-card`) uzun basma ve sağ tık ile "Aç" bağlam menüsü desteği sunulmuştur.
+    - **Uzatılmış Tutuş ve Olay İzolasyonu (`isLongPressActiveRef` & `stopPropagation`)**:
+      - Kullanıcı parmağını 500ms'den çok daha uzun süre ekranda tuttuğunda mobil tarayıcının ~800-1000ms sonra tetiklediği sentetik `contextmenu` olayının masaüstüne sızması (`bubble`), kart seviyesindeki `e.stopPropagation()` ve `e.preventDefault()` çağrılarıyla tamamen engellenmiştir.
+      - Masaüstü dinleyicisinde (`handleDesktopContextMenu`) halihazırda bir menü açıksa (`contextMenu.isOpen`) veya hedef bir kart öğesiyse işlem derhal iptal edilir.
+      - `isLongPressActiveRef` parmak kaldırılana kadar aktif kalarak, uzatılmış tutuşların ardından parmak kaldırıldığında kartların istenmeyen şekilde açılmasını veya menünün anında kapanmasını engelleyen 350ms'lik bir soğuma penceresi (`justLongPressedRef`) yönetir.
 
 
 

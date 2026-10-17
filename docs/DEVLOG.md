@@ -819,12 +819,21 @@
   - Kullanıcı parmağını 10px'den fazla kaydırdığında (scroll jesti) uzun basma zamanlayıcısı otomatik iptal edilir.
   - Masaüstü dosya kartlarına uzun basıldığında dosya bağlam menüsü (Aç, Yeniden Adlandır, Sil) açılır.
   - Uzun basma jesti sonrası parmak kaldırıldığında menünün hemen kapanmasını önleyen `justLongPressedRef` koruması entegre edildi.
+- **4. Mobil Uzun Dokunma Çakışması ve Doğal Bağlam Menüsü Sızıntı Çözümü (`Desktop.tsx`, `Desktop.test.tsx`)**:
+  - **Sorun Tespiti**: Bir uygulamaya veya dosyaya 500ms basıldığında ilgili öğenin menüsü açılıyor, ancak parmak basılı tutulmaya devam edildiğinde (~800-1000ms) mobil tarayıcının ürettiği sentetik yerel `contextmenu` olayı `<main>` masaüstü konteynerine sızarak (`bubble`) mevcut açık menüyü eziyor ve masaüstü sağ tık menüsünü açıyordu. Ayrıca parmak çok uzun süre basılı tutulduğunda sabit zaman aşımına dayalı `justLongPressedRef` bayrağı parmak henüz ekrandayken sıfırlandığı için parmak kaldırıldığında istenmeyen tıklama olayları oluşabiliyordu.
+  - **Uygulanan Çözümler**:
+    - **Jest Yaşam Döngüsü (`isLongPressActiveRef`)**: Uzun basma durumu parmak ekranda kaldığı tüm süre boyunca `true` kalır; parmak kaldırıldığında (`pointerup` / `pointercancel`) 350ms'lik bir soğuma penceresi başlatılarak hem tıklama olayları hem de küresel menü kapatma dinleyicileri kusursuzca filtrelenir.
+    - **Olay Yayılımının Durdurulması (`stopPropagation` & `preventDefault`)**: Hem dosya kartlarında (`.desktop-file-card`) hem de uygulama kartlarında (`.desktop-app-card`) `onPointerDown` ve `onContextMenu` olaylarında `e.stopPropagation()` ve `e.preventDefault()` çalıştırılarak tarayıcının sentetik menüsü ve masaüstü kapsayıcısına sızma tamamen engellendi.
+    - **Masaüstü Menü Koruması**: Masaüstü sağ tık dinleyicisinde (`handleDesktopContextMenu`) eğer halihazırda bir menü açıksa (`contextMenu.isOpen`) veya hedef bir uygulama/dosya kartıysa işlem derhal sonlandırılır.
+    - **Uygulama Kısayolları İçin Bağlam Menüsü**: Masaüstü uygulamaları için de mobil uzun basma ve sağ tık bağlam menüsü desteği ("Aç") eklendi.
+    - **SonarJS Kod Kalitesi**: İç içe üçlü koşul yapıları (`sonarjs/no-nested-conditional`) ve yinelenen fonksiyonlar (`sonarjs/no-identical-functions`) engellendi; `renderContextMenuContent()` ve paylaşımlı `handleDesktopPointerUp` yardımcıları oluşturuldu.
 - **Test ve Kalite Durumu**:
   - `WindowFrame.test.tsx`: Swipe-down eşik aşımı küçültme ve eşik altı snap-back davranışlarını test eden 2 yeni test eklendi (toplam 16 test).
-  - `Desktop.test.tsx`: Mobil arka plan uzun basma, hareket halinde iptal olma ve dosya kartı uzun basma senaryolarını test eden 3 yeni test eklendi (toplam 19 test).
-  - Vitest: **30 test dosyasında 207 testin tamamı (%100) başarıyla geçti**.
+  - `Desktop.test.tsx`: Mobil arka plan uzun basma, dosya/uygulama kartı uzun basma, uzatılmış tutuşta doğal menü sızıntısı engelleme senaryolarını test eden testler eklendi (toplam 20 test).
+  - Vitest: **30 test dosyasında 208 testin tamamı (%100) başarıyla geçti**.
   - TypeScript: `tsc --noEmit` **0 hata**.
   - ESLint & SonarJS: Bilişsel karmaşıklık $\le$ 15, **0 hata, 0 uyarı**.
+
 
 
 
