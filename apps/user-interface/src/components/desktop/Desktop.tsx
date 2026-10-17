@@ -9,6 +9,7 @@ import {
   FileCode,
   Terminal,
   Settings,
+  Search,
 } from 'lucide-react';
 import { useWindowManager } from '#stores/window-manager.store';
 import { AppIconResolver } from '#components/icons/AppIconResolver';
@@ -28,6 +29,9 @@ import { SoundControl } from '#components/desktop/SoundControl';
 import { useTranslation } from '#i18n/i18n.store';
 import { useViewport } from '#stores/viewport.store';
 import { useFileSystemStore, VFSFile, parseAllowedExtension } from '#stores/filesystem.store';
+import { CommandPalette } from '#components/command-palette/CommandPalette';
+import { getSpotlightShortcutLabel } from '#components/command-palette/command-palette.utils';
+import { useCommandPaletteStore } from '#stores/command-palette.store';
 import '#styles/design-tokens.css';
 import '#styles/window.css';
 import '#styles/desktop.css';
@@ -130,6 +134,8 @@ export const Desktop: React.FC = () => {
   const { windows, activeWindowId, openWindow } = useWindowManager();
   const { t, currentLanguage } = useTranslation();
   const { isMobile } = useViewport();
+  const { open: openCommandPalette } = useCommandPaletteStore();
+  const spotlightShortcut = useMemo(() => getSpotlightShortcutLabel(), []);
   const {
     files,
     createFile,
@@ -1066,6 +1072,17 @@ export const Desktop: React.FC = () => {
         </div>
 
         <div className="statusbar-right">
+          <button
+            type="button"
+            className="statusbar-spotlight-btn"
+            onClick={openCommandPalette}
+            aria-label={`Spotlight Search (${spotlightShortcut})`}
+            title={`Spotlight Search (${spotlightShortcut})`}
+            data-testid="statusbar-spotlight-btn"
+          >
+            <Search size={13} aria-hidden="true" />
+            {!isMobile && <kbd className="spotlight-kbd-chip">{spotlightShortcut}</kbd>}
+          </button>
           <MusicPlayer />
           <SoundControl />
           <time>{timeString}</time>
@@ -1299,6 +1316,9 @@ export const Desktop: React.FC = () => {
 
       {/* Bottom Spatial Dock (Shows open applications only) */}
       <Dock />
+
+      {/* Spotlight Command Palette (Cmd+K / Ctrl+K) */}
+      <CommandPalette />
     </main>
   );
 };

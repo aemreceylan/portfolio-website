@@ -834,6 +834,36 @@
   - TypeScript: `tsc --noEmit` **0 hata**.
   - ESLint & SonarJS: Bilişsel karmaşıklık $\le$ 15, **0 hata, 0 uyarı**.
 
+## [2026-10-17] - Spotlight Komut Paleti (Command Palette) ve 4 Temalı Görsel Uyarlama (Priority 2)
 
-
-
+### Yapılanlar
+- **`Cmd+K` / `Ctrl+K` Spotlight Komut Paleti Mimarisi (`CommandPalette.tsx`, `command-palette.store.ts`, `command-palette.css`)**:
+  - Global kısayol dinleyicisi (`useCommandPaletteShortcuts` / `useEffect`) ile `Cmd+K`, `Ctrl+K` ve `Escape` tuşlarına tam tepki veren, durum çubuğunda (`.statusbar-spotlight-btn`) işletim sistemine duyarlı kısayol rozetli arama butonu ile entegre Spotlight arayüzü geliştirildi.
+  - **İşletim Sistemine Duyarlı Dinamik Kısayol Tespiti (`isApplePlatform` & `getSpotlightShortcutLabel`)**:
+    - Kullanıcının işletim sistemi tespit edilerek macOS ve iOS istemcilerinde `⌘K`, Windows, Linux ve diğer istemcilerde `Ctrl+K` rozeti ve erişilebilirlik etiketleri otomatik render edilir.
+  - **Minimalist Simgesel Alt Bilgi (Symbolic Keyboard Bar)**:
+    - Palet altındaki uzun yazılı açıklama metni kaldırıldı; yalnızca sağa hizalı, temaya entegre ve sade simgesel tuş rozetleri (`↑↓`, `↵`, `esc`) bırakıldı.
+  - **4 Kategori ve Çok Boyutlu Filtreleme**:
+    - **Uygulamalar (Apps)**: Terminal, Ayarlar, Markdown Okuyucu, JS IDE, Müzik Çalar (Pencereyi ön plana getirme / açma).
+    - **VFS Dosyaları (Files)**: `bio.md`, `skills.md`, `welcome.txt` ve kullanıcının dinamik oluşturduğu tüm VFS dosyaları (dosya türü sağ tarafta yalın bir rozet olarak tutulup açıklamadaki parantez içi uzantı yinelemesi temizlendi; Markdown Okuyucu / JS IDE ile doğrudan açma).
+    - **Sistem Temaları (Themes)**: `spatial-glass`, `swiss-industrial`, `cyberpunk-neon`, `classic-mac` (anında tek tuşla tema geçişi).
+    - **Sistem Eylemleri (Actions)**: Sesi Kapat/Aç, Müzik Çal/Durdur, Tüm Pencereleri Küçült.
+  - **Klavye Odak ve Gezinme Motoru (`command-palette.utils.ts`)**:
+    - Dairesel döngülü (circular wrap-around) `ArrowDown` ve `ArrowUp` klavye gezinmesi (`getNextSelectedIndex`).
+    - `Enter` ile seçili eylemi tetikleme ve paleti otomatik kapatma.
+    - Filtrelenmiş liste değişimlerinde güvenli otomatik `scrollIntoView({ block: 'nearest' })`.
+  - **4 Temaya Özel Geometrik & Estetik Tasarım (`command-palette.css`)**:
+    - `spatial-glass`: 32px frosted glass, yarı saydam cyan parlama, VisionOS cam hap kbd rozetleri.
+    - `swiss-industrial`: Masif mat `#131519`, sıfır blur, 1px `#2c313c` net grid hatları, Braun güvenlik turuncusu (`#ff5500`) aksan rengi.
+    - `cyberpunk-neon`: OLED `#090d1a`, elektrik pembe (`#f43f5e`) ve siber sarı (`#facc15`), CRT hafif yatay tarama çizgileri, keskin köşe hissi.
+    - `classic-mac`: Susan Kare 1984 System 7 beveled `#dcdfe5` pencere çerçevesi, 1px siyah kenarlık, retro Chicago/Geneva sistem tipografisi, lacivert (`#000080`) seçili satır çubuğu.
+  - **7 Dilli Tam Yerelleştirme (i18n)**:
+    - 10 yeni çeviri anahtarı (`command_palette_placeholder`, `command_palette_category_apps`, `command_palette_category_files`, `command_palette_category_themes`, `command_palette_category_actions`, `command_palette_no_results`, `action_toggle_sound`, `action_toggle_music`, `action_minimize_all`, `theme_name_*`) 7 dilin tamamına (`en`, `tr`, `de`, `fr`, `es`, `ru`, `ja`) eklendi.
+  - **SonarJS & Bilişsel Karmaşıklık**:
+    - `command-palette.utils.ts` içinde filtreleme, indeks hesaplama ve platform algılama mantığı saf fonksiyonlar olarak ayrıştırıldı, `sonarjs/prefer-immediate-return` ve `sonarjs/parameterized-tests` standartlarına tam uyum sağlandı.
+  - **Kapsamlı Test Kapsamı**:
+    - Store testleri (`command-palette.store.test.ts` - 6 test),
+    - Yardımcı fonksiyon ve platform testleri (`command-palette.utils.test.ts` - 17 test),
+    - Bileşen render, klavye ve minimalist footer testleri (`CommandPalette.test.tsx` - 12 test),
+    - Masaüstü entegrasyon testi (`Desktop.test.tsx` - 21 test).
+    - Toplam: **33 test dosyasında 244 testin tamamı (%100) başarıyla geçti**.

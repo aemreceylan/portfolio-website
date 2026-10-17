@@ -1,0 +1,396 @@
+/* ==========================================================================
+   AEC Portfolio WebOS — Spotlight Command Palette Styles
+   Full Theme Adaptation: spatial-glass, swiss-industrial, cyberpunk-neon, classic-mac
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Backdrop & Shell Layout
+   -------------------------------------------------------------------------- */
+.command-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80px 16px 24px;
+  background: rgba(6, 7, 9, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: paletteFadeIn 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes paletteFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.command-palette-modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.7);
+  animation: paletteSlideDown 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes paletteSlideDown {
+  from {
+    transform: translateY(-16px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Search Header & Input
+   -------------------------------------------------------------------------- */
+.command-palette-search-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.command-palette-search-icon {
+  flex-shrink: 0;
+  color: var(--color-accent);
+  opacity: 0.85;
+}
+
+.command-palette-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+.command-palette-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.command-palette-esc-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --------------------------------------------------------------------------
+   Results List & Grouping
+   -------------------------------------------------------------------------- */
+.command-palette-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.command-palette-empty {
+  padding: 36px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.command-palette-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-control);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  color: var(--text-primary);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.command-palette-item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-accent);
+}
+
+.command-palette-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.command-palette-item-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.command-palette-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-palette-item-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.command-palette-item-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --------------------------------------------------------------------------
+   Footer Toolbar
+   -------------------------------------------------------------------------- */
+.command-palette-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.command-palette-footer-keys {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.command-palette-footer-key {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.command-palette-footer-key kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 10px;
+}
+
+/* ==========================================================================
+   THEME ADAPTATION
+   ========================================================================== */
+
+/* 1. Spatial Dark Glass Theme */
+[data-theme="spatial-glass"] .command-palette-modal {
+  background: rgba(16, 20, 28, 0.82);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.75), 0 0 24px rgba(56, 189, 248, 0.18);
+}
+
+[data-theme="spatial-glass"] .command-palette-item.is-selected {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+[data-theme="spatial-glass"] .command-palette-item.is-selected .command-palette-item-icon {
+  background: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+/* 2. Swiss Industrial Theme */
+[data-theme="swiss-industrial"] .command-palette-backdrop {
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme="swiss-industrial"] .command-palette-modal {
+  background: #131519;
+  border: 1px solid #2c313c;
+  border-radius: 4px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.95);
+}
+
+[data-theme="swiss-industrial"] .command-palette-search-box {
+  border-bottom: 1px solid #22262f;
+}
+
+[data-theme="swiss-industrial"] .command-palette-item {
+  border-radius: 2px;
+}
+
+[data-theme="swiss-industrial"] .command-palette-item.is-selected {
+  background: #1e2128;
+  border-left: 3px solid #ff5500;
+  border-color: transparent transparent transparent #ff5500;
+}
+
+[data-theme="swiss-industrial"] .command-palette-item.is-selected .command-palette-item-icon {
+  background: #282c35;
+  color: #ff5500;
+}
+
+[data-theme="swiss-industrial"] .command-palette-footer {
+  border-top: 1px solid #22262f;
+}
+
+/* 3. Cyberpunk Neon Theme */
+[data-theme="cyberpunk-neon"] .command-palette-backdrop {
+  background: rgba(3, 7, 18, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+[data-theme="cyberpunk-neon"] .command-palette-modal {
+  background: rgba(9, 13, 26, 0.95);
+  border: 1px solid rgba(244, 63, 94, 0.55);
+  border-radius: 6px;
+  box-shadow: 0 0 35px rgba(244, 63, 94, 0.35), inset 0 0 16px rgba(250, 204, 21, 0.08);
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+[data-theme="cyberpunk-neon"] .command-palette-search-box {
+  border-bottom: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+[data-theme="cyberpunk-neon"] .command-palette-item.is-selected {
+  background: rgba(244, 63, 94, 0.22);
+  border-color: rgba(244, 63, 94, 0.6);
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
+}
+
+[data-theme="cyberpunk-neon"] .command-palette-item.is-selected .command-palette-item-title {
+  color: #f8fafc;
+  text-shadow: 0 0 8px rgba(244, 63, 94, 0.8);
+}
+
+[data-theme="cyberpunk-neon"] .command-palette-item.is-selected .command-palette-item-icon {
+  background: rgba(244, 63, 94, 0.35);
+  color: #facc15;
+}
+
+/* 4. Classic Macintosh Theme */
+[data-theme="classic-mac"] .command-palette-backdrop {
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme="classic-mac"] .command-palette-modal {
+  background: #dcdfe5;
+  border: 1px solid #111111;
+  border-radius: 2px;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5), inset 1px 1px 0px #ffffff, inset -1px -1px 0px #555555;
+  color: #111111;
+}
+
+[data-theme="classic-mac"] .command-palette-search-box {
+  border-bottom: 1px solid #111111;
+  background: #e4e7ed;
+}
+
+[data-theme="classic-mac"] .command-palette-input {
+  color: #111111;
+}
+
+[data-theme="classic-mac"] .command-palette-item {
+  border-radius: 0;
+  color: #111111;
+}
+
+[data-theme="classic-mac"] .command-palette-item.is-selected {
+  background: #000080;
+  color: #ffffff;
+}
+
+[data-theme="classic-mac"] .command-palette-item.is-selected .command-palette-item-desc,
+[data-theme="classic-mac"] .command-palette-item.is-selected .command-palette-item-badge {
+  color: #dcdfe5;
+}
+
+[data-theme="classic-mac"] .command-palette-item.is-selected .command-palette-item-icon {
+  background: #ffffff;
+  color: #000080;
+}
+
+[data-theme="classic-mac"] .command-palette-footer {
+  border-top: 1px solid #111111;
+  background: #dcdfe5;
+  color: #333333;
+}
+
+[data-theme="classic-mac"] .command-palette-footer-key kbd {
+  background: #ffffff;
+  border: 1px solid #111111;
+  color: #111111;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Viewport Ergonomics
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .command-palette-backdrop {
+    padding: 50px 12px 16px;
+    align-items: flex-start;
+  }
+
+  .command-palette-modal {
+    max-height: 85vh;
+  }
+
+  .command-palette-item {
+    padding: 12px 10px;
+  }
+
+  .command-palette-footer {
+    display: none;
+  }
+}

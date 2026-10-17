@@ -363,6 +363,20 @@ describe('Desktop Component', () => {
       expect(useWindowManager.getState().windows['terminal']).toBeUndefined();
       vi.useRealTimers();
     });
+
+    it('opens Spotlight Command Palette when clicking the statusbar spotlight button', () => {
+      render(<Desktop />);
+
+      expect(screen.queryByRole('dialog', { name: /Spotlight Command Palette/i })).not.toBeInTheDocument();
+
+      const spotlightBtn = screen.getByTestId('statusbar-spotlight-btn');
+      expect(spotlightBtn).toBeInTheDocument();
+      expect(spotlightBtn.querySelector('.spotlight-kbd-chip')).toBeInTheDocument();
+
+      fireEvent.click(spotlightBtn);
+
+      expect(screen.getByRole('dialog', { name: /Spotlight Command Palette/i })).toBeInTheDocument();
+    });
   });
 });
 

@@ -142,6 +142,18 @@ export interface Translations {
   // Desktop Springboard
   desktop_section_apps: string;
   desktop_section_files: string;
+
+  // Spotlight / Command Palette
+  spotlight_search_placeholder: string;
+  spotlight_no_results: string;
+  spotlight_category_apps: string;
+  spotlight_category_files: string;
+  spotlight_category_themes: string;
+  spotlight_category_actions: string;
+  spotlight_action_toggle_music: string;
+  spotlight_action_toggle_sound: string;
+  spotlight_action_minimize_all: string;
+  spotlight_hint: string;
 }
 
 export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
@@ -241,6 +253,16 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_runtime_error: 'Runtime Error',
     desktop_section_apps: 'Applications',
     desktop_section_files: 'Files',
+    spotlight_search_placeholder: 'Type a command or search...',
+    spotlight_no_results: 'No matching commands or files found',
+    spotlight_category_apps: 'Applications',
+    spotlight_category_files: 'Files & Documents',
+    spotlight_category_themes: 'Themes',
+    spotlight_category_actions: 'System Actions',
+    spotlight_action_toggle_music: 'Toggle Background Music',
+    spotlight_action_toggle_sound: 'Toggle Sound Effects',
+    spotlight_action_minimize_all: 'Minimize All Windows',
+    spotlight_hint: 'Navigate with ↑↓, select with Enter, Esc to close',
   },
   tr: {
     browser_tab_title: 'AEC — Uygulama Portfolyosu',
@@ -338,6 +360,16 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_runtime_error: 'Çalışma Zamanı Hatası',
     desktop_section_apps: 'Uygulamalar',
     desktop_section_files: 'Dosyalar',
+    spotlight_search_placeholder: 'Bir komut yazın veya arayın...',
+    spotlight_no_results: 'Eşleşen komut veya dosya bulunamadı',
+    spotlight_category_apps: 'Uygulamalar',
+    spotlight_category_files: 'Dosyalar ve Belgeler',
+    spotlight_category_themes: 'Temalar',
+    spotlight_category_actions: 'Sistem Eylemleri',
+    spotlight_action_toggle_music: 'Müziği Çal / Durdur',
+    spotlight_action_toggle_sound: 'Sesi Aç / Kapat',
+    spotlight_action_minimize_all: 'Tüm Pencereleri Küçült',
+    spotlight_hint: 'Gezinmek için ↑↓, seçmek için Enter, kapatmak için Esc',
   },
   de: {
     browser_tab_title: 'AEC — Anwendungsportfolio',
@@ -435,6 +467,16 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_runtime_error: 'Laufzeitfehler',
     desktop_section_apps: 'Anwendungen',
     desktop_section_files: 'Dateien',
+    spotlight_search_placeholder: 'Befehl eingeben oder suchen...',
+    spotlight_no_results: 'Keine passenden Befehle oder Dateien gefunden',
+    spotlight_category_apps: 'Anwendungen',
+    spotlight_category_files: 'Dateien & Dokumente',
+    spotlight_category_themes: 'Themen',
+    spotlight_category_actions: 'Systemaktionen',
+    spotlight_action_toggle_music: 'Musik abspielen / pausieren',
+    spotlight_action_toggle_sound: 'Ton ein- / ausschalten',
+    spotlight_action_minimize_all: 'Alle Fenster minimieren',
+    spotlight_hint: 'Navigieren mit ↑↓, Auswählen mit Enter, Schließen mit Esc',
   },
   fr: {
     browser_tab_title: "AEC — Portfolio d'Applications",
@@ -532,6 +574,16 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_runtime_error: 'Erreur d\'exécution',
     desktop_section_apps: 'Applications',
     desktop_section_files: 'Fichiers',
+    spotlight_search_placeholder: 'Tapez une commande ou recherchez...',
+    spotlight_no_results: 'Aucune commande ou fichier correspondant trouvé',
+    spotlight_category_apps: 'Applications',
+    spotlight_category_files: 'Fichiers & Documents',
+    spotlight_category_themes: 'Thèmes',
+    spotlight_category_actions: 'Actions Système',
+    spotlight_action_toggle_music: 'Activer / suspendre la musique',
+    spotlight_action_toggle_sound: 'Activer / désactiver le son',
+    spotlight_action_minimize_all: 'Minimiser toutes les fenêtres',
+    spotlight_hint: 'Naviguer avec ↑↓, valider avec Entrée, fermer avec Échap',
   },
   es: {
     browser_tab_title: 'AEC — Portafolio de Aplicaciones',
@@ -629,6 +681,16 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_runtime_error: 'Error de ejecución',
     desktop_section_apps: 'Aplicaciones',
     desktop_section_files: 'Archivos',
+    spotlight_search_placeholder: 'Escriba un comando o busque...',
+    spotlight_no_results: 'No se encontraron comandos o archivos coincidentes',
+    spotlight_category_apps: 'Aplicaciones',
+    spotlight_category_files: 'Archivos y Documentos',
+    spotlight_category_themes: 'Temas',
+    spotlight_category_actions: 'Acciones del Sistema',
+    spotlight_action_toggle_music: 'Reproducir / pausar música',
+    spotlight_action_toggle_sound: 'Activar / desactivar sonido',
+    spotlight_action_minimize_all: 'Minimizar todas las ventanas',
+    spotlight_hint: 'Navegar con ↑↓, seleccionar con Enter, cerrar con Esc',
   },
   ru: {
     browser_tab_title: 'AEC — Портфолио Приложений',
@@ -726,6 +788,16 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_runtime_error: 'Ошибка выполнения',
     desktop_section_apps: 'Приложения',
     desktop_section_files: 'Файлы',
+    spotlight_search_placeholder: 'Введите команду или поисковый запрос...',
+    spotlight_no_results: 'Команды или файлы не найдены',
+    spotlight_category_apps: 'Приложения',
+    spotlight_category_files: 'Файлы и документы',
+    spotlight_category_themes: 'Темы',
+    spotlight_category_actions: 'Системные действия',
+    spotlight_action_toggle_music: 'Включить / приостановить музыку',
+    spotlight_action_toggle_sound: 'Включить / отключить звук',
+    spotlight_action_minimize_all: 'Свернуть все окна',
+    spotlight_hint: 'Навигация ↑↓, выбор Enter, закрыть Esc',
   },
   ja: {
     browser_tab_title: 'AEC — アプリケーションポートフォリオ',
@@ -823,5 +895,15 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_runtime_error: '実行時エラー',
     desktop_section_apps: 'アプリケーション',
     desktop_section_files: 'ファイル',
+    spotlight_search_placeholder: 'コマンドを入力または検索...',
+    spotlight_no_results: '一致するコマンドまたはファイルが見つかりません',
+    spotlight_category_apps: 'アプリケーション',
+    spotlight_category_files: 'ファイルとドキュメント',
+    spotlight_category_themes: 'テーマ',
+    spotlight_category_actions: 'システムアクション',
+    spotlight_action_toggle_music: '音楽の再生 / 一時停止',
+    spotlight_action_toggle_sound: 'サウンドのオン / オフ',
+    spotlight_action_minimize_all: 'すべてのウィンドウを最小化',
+    spotlight_hint: '↑↓で移動、Enterで決定、Escで閉じる',
   },
 };

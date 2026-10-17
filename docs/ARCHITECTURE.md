@@ -603,17 +603,38 @@ Desktop pencereli işletim sistemi paradigmasını telefon ekranlarına (360px -
       - Masaüstü dinleyicisinde (`handleDesktopContextMenu`) halihazırda bir menü açıksa (`contextMenu.isOpen`) veya hedef bir kart öğesiyse işlem derhal iptal edilir.
       - `isLongPressActiveRef` parmak kaldırılana kadar aktif kalarak, uzatılmış tutuşların ardından parmak kaldırıldığında kartların istenmeyen şekilde açılmasını veya menünün anında kapanmasını engelleyen 350ms'lik bir soğuma penceresi (`justLongPressedRef`) yönetir.
 
+---
 
+## 22. Spotlight Komut Paleti & Tema Adaptasyonu (Spotlight Command Palette Architecture)
 
+WebOS deneyimini masaüstü standartlarına ulaştıran, klavye ve dokunmatik odaklı **Spotlight Komut Paleti** mimarisi geliştirilmiştir:
 
-
-
-
-
-
-
-
-
-
-
-
+* **Tetikleme & Kısayol Mimarisi**:
+  - **Küresel Klavye Kısayolu**: `Cmd + K` (macOS / iOS) ve `Ctrl + K` (Windows / Linux) tuş kombinasyonları `window.addEventListener('keydown')` üzerinden dinlenir ve varsayılan tarayıcı arama davranışını engelleyerek (`preventDefault`) paleti açar/kapatır (`toggle()`).
+  - **İşletim Sistemine Duyarlı Rozet (OS Detection)**: Üst durum çubuğunda (`.statusbar-spotlight-btn`) istemcinin işletim sistemi tespit edilir (`isApplePlatform`); macOS/iOS cihazlarda `⌘K`, Windows ve Linux cihazlarda ise `Ctrl+K` rozeti dinamik olarak basılır.
+  - **Kapanma Güvenliği**: `Escape` tuşu ve karartılmış arka plan tıklaması (`backdrop click`) ile anında kapanır.
+* **Klavye ile Gezinme & Arama Motoru**:
+  - `command-palette.utils.ts`: Başlık, açıklama ve kategori bazında küçük/büyük harf duyarsız filtreleme (`filterCommandPaletteItems`).
+  - `ArrowDown` ve `ArrowUp` tuşları dairesel sarma (`getNextSelectedIndex`) ile sonuçlar arasında kayar; seçili öğe `scrollIntoView({ block: 'nearest' })` ile görünür tutulur.
+  - `Enter` tuşuna basıldığında o an seçili olan eylem derhal yürütülür ve palet otomatik kapanır.
+  - **Sade Simgesel Alt Bilgi (Symbolic Keyboard Bar)**: Sol taraftaki uzun açıklama metni kaldırılarak yalnızca sağa hizalı, temaya uyumlu minimalist tuş simgeleri (`↑↓`, `↵`, `esc`) yerleştirilmiştir.
+* **4 Temaya Özel Görsel & Geometrik Adaptasyon (`command-palette.css`)**:
+  - **`spatial-glass`**:
+    - `rgba(16, 20, 28, 0.82)` yarı saydam cam, `backdrop-filter: blur(32px)`, 16px yuvarlatılmış köşe radyanı.
+    - `0 0 24px rgba(56, 189, 248, 0.18)` cyan parlama aurası, şık `kbd` cam hapları.
+  - **`swiss-industrial`**:
+    - Solid mat `#131519` şasi, sıfır blur (`backdrop-filter: none`), 1px keskin `#2c313c` yapısal sınırları.
+    - Braun emniyet turuncusu (`#ff5500`) aktif seçim kenarlığı, 4px minimal endüstriyel köşe.
+  - **`cyberpunk-neon`**:
+    - Derin OLED `#090d1a` zemin, neon pembe (`#f43f5e`) ve neon sarı (`#facc15`) çerçeveler.
+    - CRT tarama çizgisi (scanline) arka plan deseni, neon metin gölgesi (`text-shadow: 0 0 8px rgba(244, 63, 94, 0.8)`).
+  - **`classic-mac`**:
+    - 1984 System 7 beveled açık gri (`#dcdfe5`) şasi, 1px katı siyah çerçeve (`inset 1px 1px #fff, inset -1px -1px #555`).
+    - Klasik lacivert (`#000080`) aktif seçim çubuğu ve ters çevrilmiş beyaz metin, Susan Kare piksel estetiği.
+* **Dinamik Kategori Kapsamı (`useCommandPaletteItems.tsx`)**:
+  - **Uygulamalar**: Terminal CLI, Ayarlar, Markdown Editörü, JavaScript IDE, Oyun Merkezi.
+  - **Dosyalar & Belgeler**: Sanal Dosya Sistemi'ndeki tüm belgeler (`bio.md`, `skills.md`, `demo.js` vb.). Dosya türü sağ tarafta yalın bir rozet (`MD`, `JS`, `TXT`) olarak gösterilir; açıklama satırında gereksiz parantez içi uzantı yinelemeleri engellenmiştir.
+  - **Temalar**: 4 yerleşik tema arasında anında geçiş.
+  - **Sistem Eylemleri**: Müziği Çal/Durdur, Sesi Aç/Kapat, Tüm Pencereleri Simge Durumuna Küçült.
+* **7 Dilde Yerelleştirme**:
+  - Tüm arama yer tutucuları, kategori başlıkları ve boş durum mesajları İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça ve Japonca dillerine eklenmiştir.
