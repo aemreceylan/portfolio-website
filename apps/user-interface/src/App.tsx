@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Desktop } from '#components/desktop/Desktop';
 import { useWindowManager } from '#stores/window-manager.store';
+import { useViewportStore } from '#stores/viewport.store';
 import { terminalManifest } from '#apps/app-registry';
 import { useTranslation } from '#i18n/i18n.store';
 import { SupportedLanguage } from '#i18n/translations';
@@ -44,16 +45,25 @@ const updateDocumentMetadata = (language: SupportedLanguage, title: string, desc
 
 /**
  * Root Application entry shell mounting the AEC Desktop Workspace.
- * Automatically spawns the Terminal window on initial boot for an interactive welcoming feel.
+ * Automatically spawns the Terminal window on initial desktop boot for an interactive welcoming feel.
  * Synchronizes the browser document.title, document.documentElement.lang, and meta tags with active language.
  */
 export const App: React.FC = () => {
   const { openWindow } = useWindowManager();
   const { t, currentLanguage } = useTranslation();
+  const { isMobile, initialize } = useViewportStore();
 
   useEffect(() => {
-    openWindow(terminalManifest);
-  }, [openWindow]);
+    const unbind = initialize();
+    return () => unbind();
+  }, [initialize]);
+
+  useEffect(() => {
+    // Only auto-open terminal on desktop viewports to preserve clean mobile home screen launcher
+    if (!isMobile) {
+      openWindow(terminalManifest);
+    }
+  }, [openWindow, isMobile]);
 
   useEffect(() => {
     const title = t('browser_tab_title');

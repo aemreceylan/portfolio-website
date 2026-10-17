@@ -26,6 +26,7 @@ import { Dock } from '#components/dock/Dock';
 import { MusicPlayer } from '#components/desktop/MusicPlayer';
 import { SoundControl } from '#components/desktop/SoundControl';
 import { useTranslation } from '#i18n/i18n.store';
+import { useViewport } from '#stores/viewport.store';
 import { useFileSystemStore, VFSFile, parseAllowedExtension } from '#stores/filesystem.store';
 import '#styles/design-tokens.css';
 import '#styles/window.css';
@@ -127,6 +128,7 @@ const resolveCollisionFreeCoordinates = (
 export const Desktop: React.FC = () => {
   const { windows, activeWindowId, openWindow } = useWindowManager();
   const { t, currentLanguage } = useTranslation();
+  const { isMobile } = useViewport();
   const {
     files,
     createFile,
@@ -207,6 +209,19 @@ export const Desktop: React.FC = () => {
 
   // Suppresses onClick / onDoubleClick triggers immediately after a drag-and-drop gesture
   const justDraggedRef = useRef<boolean>(false);
+
+  // Mobile long-press timer and tracking refs for touch context menu
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const justLongPressedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
 
   const [draggingItemState, setDraggingItemState] = useState<{ id: string; x: number; y: number } | null>(null);
 
@@ -446,6 +461,7 @@ export const Desktop: React.FC = () => {
   // Close context menu on global click or Escape key
   useEffect(() => {
     const handleGlobalClick = () => {
+      if (justLongPressedRef.current) return;
       if (contextMenu.isOpen) {
         setContextMenu((prev) => ({ ...prev, isOpen: false }));
       }
@@ -463,9 +479,11 @@ export const Desktop: React.FC = () => {
     };
 
     window.addEventListener('click', handleGlobalClick);
+    window.addEventListener('pointerdown', handleGlobalClick);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('click', handleGlobalClick);
+      window.removeEventListener('pointerdown', handleGlobalClick);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [contextMenu.isOpen, promptModal.isOpen]);
@@ -504,6 +522,118 @@ export const Desktop: React.FC = () => {
       }
     }
     openWindow(manifest);
+  };
+
+  /**
+   * Clears any active long-press timer
+   */
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressStartPosRef.current = null;
+  };
+
+  /**
+   * Triggers subtle haptic feedback for touch gestures if supported by device
+   */
+  const triggerHapticFeedback = () => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(40);
+      } catch {
+        // Safe fallback in sandboxed iframe or restricted environments
+      }
+    }
+  };
+
+  /**
+   * Initiates long-press timer on mobile desktop background
+   */
+  const handleDesktopPointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    if (!isMobile) return;
+    const target = e.target as HTMLElement | null;
+    if (
+      target &&
+      (target.closest('.window-container') ||
+        target.closest('.spatial-statusbar') ||
+        target.closest('.dock-container') ||
+        target.closest('.spatial-context-menu') ||
+        target.closest('.spatial-prompt-modal') ||
+        target.closest('.spatial-alert-dialog') ||
+        target.closest('.desktop-app-card') ||
+        target.closest('.desktop-file-card'))
+    ) {
+      return;
+    }
+
+    clearLongPressTimer();
+    longPressStartPosRef.current = { x: e.clientX, y: e.clientY };
+
+    longPressTimerRef.current = setTimeout(() => {
+      justLongPressedRef.current = true;
+      triggerHapticFeedback();
+      setContextMenu({
+        isOpen: true,
+        x: Math.min(e.clientX, window.innerWidth - 220),
+        y: Math.min(e.clientY, window.innerHeight - 300),
+        rawX: e.clientX,
+        rawY: e.clientY,
+        file: null,
+      });
+
+      setTimeout(() => {
+        justLongPressedRef.current = false;
+      }, 400);
+    }, 500);
+  };
+
+  /**
+   * Initiates long-press timer on mobile desktop file card
+   */
+  const handleFilePointerDown = (e: React.PointerEvent, file: VFSFile) => {
+    if (!isMobile) return;
+    clearLongPressTimer();
+    longPressStartPosRef.current = { x: e.clientX, y: e.clientY };
+
+    longPressTimerRef.current = setTimeout(() => {
+      justLongPressedRef.current = true;
+      triggerHapticFeedback();
+      setContextMenu({
+        isOpen: true,
+        x: Math.min(e.clientX, window.innerWidth - 220),
+        y: Math.min(e.clientY, window.innerHeight - 200),
+        rawX: e.clientX,
+        rawY: e.clientY,
+        file,
+      });
+
+      setTimeout(() => {
+        justLongPressedRef.current = false;
+      }, 400);
+    }, 500);
+  };
+
+  /**
+   * Clears long-press timer if pointer moves beyond tolerance threshold (10px)
+   */
+  const handleDesktopPointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    if (!longPressStartPosRef.current) return;
+    const dist = Math.hypot(
+      e.clientX - longPressStartPosRef.current.x,
+      e.clientY - longPressStartPosRef.current.y
+    );
+    if (dist > 10) {
+      clearLongPressTimer();
+    }
+  };
+
+  /**
+   * Clears long-press timer when pointer lifts or cancels
+   */
+  const handleDesktopPointerUp = () => {
+    clearLongPressTimer();
   };
 
   /**
@@ -667,8 +797,12 @@ export const Desktop: React.FC = () => {
 
   return (
     <main
-      className="desktop-viewport"
+      className={`desktop-viewport ${isMobile ? 'is-mobile' : ''}`}
       onContextMenu={handleDesktopContextMenu}
+      onPointerDown={handleDesktopPointerDown}
+      onPointerMove={isMobile ? handleDesktopPointerMove : undefined}
+      onPointerUp={isMobile ? handleDesktopPointerUp : undefined}
+      onPointerCancel={isMobile ? handleDesktopPointerUp : undefined}
       data-testid="desktop-viewport"
     >
       {/* Hidden file input for file upload */}
@@ -693,7 +827,7 @@ export const Desktop: React.FC = () => {
             <AppIconResolver variant="brand" size={18} className="os-brand-logo" />
             <span>AEC</span>
           </button>
-          {activeWindow && (
+          {!isMobile && activeWindow && (
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               / {activeWindow.title}
             </span>
@@ -708,6 +842,11 @@ export const Desktop: React.FC = () => {
       </header>
 
       {/* Desktop App Shortcuts (Terminal, Settings, Markdown Viewer, JS IDE) */}
+      {isMobile && (
+        <div className="desktop-mobile-section-header" data-testid="mobile-section-apps">
+          <span>{t('desktop_section_apps')}</span>
+        </div>
+      )}
       <section className="desktop-apps-grid" aria-label="Desktop Applications">
         {Object.values(APP_REGISTRY).map(({ manifest }, appIdx) => {
           let appName = manifest.name;
@@ -725,13 +864,17 @@ export const Desktop: React.FC = () => {
               key={manifest.id}
               type="button"
               className={`desktop-app-card ${isDragging ? 'dragging' : ''}`}
-              style={{
-                position: 'absolute',
-                left: `${pos.x}px`,
-                top: `${pos.y}px`,
-                zIndex: isDragging ? 1000 : 2,
-              }}
-              onPointerDown={(e) => handleIconPointerDown(e, itemId, pos)}
+              style={
+                isMobile
+                  ? undefined
+                  : {
+                      position: 'absolute',
+                      left: `${pos.x}px`,
+                      top: `${pos.y}px`,
+                      zIndex: isDragging ? 1000 : 2,
+                    }
+              }
+              onPointerDown={(e) => !isMobile && handleIconPointerDown(e, itemId, pos)}
               onClick={() => {
                 if (justDraggedRef.current) return;
                 handleLaunchApp(manifest);
@@ -749,6 +892,11 @@ export const Desktop: React.FC = () => {
       </section>
 
       {/* Desktop Virtual Files (Single-click to open in viewer or IDE) */}
+      {isMobile && Object.keys(files).length > 0 && (
+        <div className="desktop-mobile-section-header" data-testid="mobile-section-files">
+          <span>{t('desktop_section_files')}</span>
+        </div>
+      )}
       <section className="desktop-files-grid" aria-label="Desktop Files">
         {Object.values(files).map((file, fileIdx) => {
           const isJs = file.extension === 'js';
@@ -762,15 +910,25 @@ export const Desktop: React.FC = () => {
               key={file.id}
               type="button"
               className={`desktop-file-card ${isJs ? 'js-file' : ''} ${isDragging ? 'dragging' : ''}`}
-              style={{
-                position: 'absolute',
-                left: `${pos.x}px`,
-                top: `${pos.y}px`,
-                zIndex: isDragging ? 1000 : 2,
+              style={
+                isMobile
+                  ? undefined
+                  : {
+                      position: 'absolute',
+                      left: `${pos.x}px`,
+                      top: `${pos.y}px`,
+                      zIndex: isDragging ? 1000 : 2,
+                    }
+              }
+              onPointerDown={(e) => {
+                if (isMobile) {
+                  handleFilePointerDown(e, file);
+                } else {
+                  handleIconPointerDown(e, itemId, pos);
+                }
               }}
-              onPointerDown={(e) => handleIconPointerDown(e, itemId, pos)}
               onClick={() => {
-                if (justDraggedRef.current) return;
+                if (justDraggedRef.current || justLongPressedRef.current) return;
                 handleOpenFile(file);
               }}
               onContextMenu={(e) => handleFileContextMenu(e, file)}
@@ -795,6 +953,7 @@ export const Desktop: React.FC = () => {
           style={{ top: contextMenu.y, left: contextMenu.x }}
           aria-label="Desktop Context Menu"
           onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
           onKeyDown={(e) => {
             if (e.key === 'Escape') setContextMenu((prev) => ({ ...prev, isOpen: false }));
           }}

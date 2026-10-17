@@ -922,3 +922,36 @@
   background: #000080;
   color: #ffffff;
 }
+
+/* Mobile Responsive Adaptations (<768px) */
+@media (max-width: 767px) {
+  .game-canvas-wrapper {
+    width: min(88vw, 340px);
+    height: min(88vw, 340px);
+  }
+
+  .arcade-game-container {
+    max-width: 100%;
+  }
+
+  .game-lobby {
+    padding: 12px;
+    gap: 14px;
+  }
+
+  .lobby-hero {
+    padding: 14px;
+  }
+
+  .games-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-hub-topbar {
+    padding: 8px 12px;
+  }
+
+  .game-volume-slider {
+    display: none;
+  }
+}

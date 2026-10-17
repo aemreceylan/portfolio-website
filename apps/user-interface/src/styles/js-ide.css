@@ -359,3 +359,39 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+/* Mobile Responsive Adaptations (<768px) */
+@media (max-width: 767px) {
+  .js-ide-toolbar {
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .js-ide-file-tabs {
+    max-width: 100%;
+    width: 100%;
+    order: 2;
+  }
+
+  .js-ide-actions {
+    width: 100%;
+    justify-content: flex-end;
+    order: 1;
+  }
+
+  .js-line-numbers {
+    width: 32px;
+    font-size: 11px;
+    padding: 10px 4px;
+  }
+
+  .js-code-textarea {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .js-console-panel {
+    height: 120px;
+  }
+}
+

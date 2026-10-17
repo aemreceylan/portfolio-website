@@ -4,11 +4,49 @@ import { X, Minus, Maximize2, Minimize2 } from 'lucide-react';
 import { WindowState } from '@personal-os/shared';
 import { useWindowManager } from '#stores/window-manager.store';
 import { useTranslation } from '#i18n/i18n.store';
+import { useViewport } from '#stores/viewport.store';
 
 interface WindowFrameProps {
   window: WindowState;
   children: React.ReactNode;
 }
+
+interface SheetSwipeListenerOptions {
+  startY: number;
+  onMove: (deltaY: number) => void;
+  onEnd: (deltaY: number) => void;
+}
+
+/**
+ * Attaches pointer move and up listeners for mobile bottom sheet swipe gesture
+ */
+const setupSheetSwipeListener = (options: SheetSwipeListenerOptions) => {
+  let latestDeltaY = 0;
+  const onPointerMove = (moveEvent: PointerEvent) => {
+    latestDeltaY = Math.max(0, moveEvent.clientY - options.startY);
+    options.onMove(latestDeltaY);
+  };
+
+  const onPointerUp = () => {
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    document.removeEventListener('pointercancel', onPointerUp);
+    options.onEnd(latestDeltaY);
+  };
+
+  document.addEventListener('pointermove', onPointerMove);
+  document.addEventListener('pointerup', onPointerUp);
+  document.addEventListener('pointercancel', onPointerUp);
+};
+
+/**
+ * Computes opacity for mobile bottom sheet based on swipe offset
+ */
+const getMobileSheetOpacity = (isMinimized: boolean, sheetOffsetY: number): number => {
+  if (isMinimized) return 0;
+  if (sheetOffsetY > 0) return Math.max(0.4, 1 - sheetOffsetY / 500);
+  return 1;
+};
 
 /**
  * Spatial Glass Window Frame component providing:
@@ -25,6 +63,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
   const { activeWindowId, focusWindow, closeWindow, minimizeWindow, maximizeWindow, updateBounds } =
     useWindowManager();
   const { t } = useTranslation();
+  const { isMobile } = useViewport();
 
   const isActive = activeWindowId === win.id;
   const isMinimized = win.isMinimized;
@@ -112,6 +151,10 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
     null
   );
 
+  // Mobile sheet swipe down state
+  const [sheetOffsetY, setSheetOffsetY] = useState<number>(0);
+  const [isSheetSwiping, setIsSheetSwiping] = useState<boolean>(false);
+
   // Track initial dimensions, position and direction during resize
   const resizeStartRef = useRef<{
     direction: string;
@@ -133,12 +176,55 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
   };
 
   /**
+   * Handles touch/pointer swipe-down gesture on mobile bottom sheet titlebar
+   */
+  const handleMobileSheetPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('.window-controls')) return;
+
+    focusWindow(win.id);
+    setIsSheetSwiping(true);
+
+    const target = e.currentTarget;
+    if (typeof target.setPointerCapture === 'function') {
+      try {
+        target.setPointerCapture(e.pointerId);
+      } catch {
+        // Safe fallback in non-standard test environments
+      }
+    }
+
+    setupSheetSwipeListener({
+      startY: e.clientY,
+      onMove: (deltaY) => setSheetOffsetY(deltaY),
+      onEnd: (deltaY) => {
+        if (typeof target.releasePointerCapture === 'function') {
+          try {
+            target.releasePointerCapture(e.pointerId);
+          } catch {
+            // Safe fallback
+          }
+        }
+        setIsSheetSwiping(false);
+        if (deltaY > 110) {
+          minimizeWindow(win.id);
+        }
+        setSheetOffsetY(0);
+      },
+    });
+  };
+
+  /**
    * Initiates window dragging across the desktop viewport
    */
   const handleTitlebarPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     // Middle-click (scroll wheel): prevent default browser autoscroll / panning behavior
     if (e.button === 1) {
       e.preventDefault();
+      return;
+    }
+
+    if (isMobile) {
+      handleMobileSheetPointerDown(e);
       return;
     }
 
@@ -272,12 +358,18 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
     return null;
   }
 
-  const containerStyle: React.CSSProperties = {
-    zIndex: win.zIndex,
-    transform: `translate3d(${win.bounds.x}px, ${win.bounds.y}px, 0)`,
-    width: `${win.bounds.width}px`,
-    height: `${win.bounds.height}px`,
-  };
+  const containerStyle: React.CSSProperties = isMobile
+    ? {
+        zIndex: win.zIndex,
+        ['--sheet-translate-y' as string]: `${sheetOffsetY}px`,
+        opacity: getMobileSheetOpacity(isMinimized, sheetOffsetY),
+      }
+    : {
+        zIndex: win.zIndex,
+        transform: `translate3d(${win.bounds.x}px, ${win.bounds.y}px, 0)`,
+        width: `${win.bounds.width}px`,
+        height: `${win.bounds.height}px`,
+      };
 
   const closeLabel = t('window_close');
   const minimizeLabel = t('window_minimize');
@@ -287,7 +379,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
     <section
       className={`window-container ${isActive ? 'active' : ''} ${isMinimized ? 'minimized' : ''} ${
         isMaximized ? 'maximized' : ''
-      }`}
+      } ${isMobile ? 'is-mobile' : ''} ${isSheetSwiping ? 'is-swiping' : ''}`}
       style={containerStyle}
       onPointerDown={handleWindowPointerDown}
       onContextMenu={handleWindowContextMenu}
@@ -308,9 +400,10 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
           }
         }}
         onAuxClick={handleTitlebarAuxClick}
-        onDoubleClick={() => maximizeWindow(win.id)}
+        onDoubleClick={() => !isMobile && maximizeWindow(win.id)}
         onContextMenu={handleWindowContextMenu}
       >
+        {isMobile && <div className="window-mobile-indicator-bar" aria-hidden="true" />}
         <div className="window-controls">
           <button
             type="button"
@@ -415,7 +508,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
       </div>
 
       {/* 8-Directional Resize Handles */}
-      {win.resizable && !isMaximized && (
+      {win.resizable && !isMaximized && !isMobile && (
         <>
           <div className="resize-handle n" onPointerDown={handleResizePointerDown('n')} />
           <div className="resize-handle s" onPointerDown={handleResizePointerDown('s')} />

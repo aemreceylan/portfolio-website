@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { WindowFrame } from './WindowFrame';
 import { useWindowManager } from '#stores/window-manager.store';
 import { useI18nStore } from '#i18n/i18n.store';
+import { useViewportStore } from '#stores/viewport.store';
 import { WindowState } from '@personal-os/shared';
 
 const mockWindowState: WindowState = {
@@ -20,6 +21,7 @@ const mockWindowState: WindowState = {
 
 describe('WindowFrame Component', () => {
   beforeEach(() => {
+    useViewportStore.getState().setDimensions(1200, 800);
     useI18nStore.getState().setLanguage('en');
     useWindowManager.getState().reset();
     useWindowManager.setState({
@@ -223,6 +225,94 @@ describe('WindowFrame Component', () => {
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByTestId('window-context-menu')).not.toBeInTheDocument();
+  });
+
+  describe('Mobile Sheet Mode Adaptations', () => {
+    it('should adapt to mobile sheet mode when isMobile is true', () => {
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(
+        <WindowFrame window={mockWindowState}>
+          <div>Mobile Sheet Content</div>
+        </WindowFrame>
+      );
+
+      const windowContainer = screen.getByTestId('window-test-app');
+      expect(windowContainer).toHaveClass('is-mobile');
+
+      // Resize handles should not be rendered in mobile sheet mode
+      expect(document.querySelector('.resize-handle')).not.toBeInTheDocument();
+
+      // Mobile indicator bar should be present
+      expect(document.querySelector('.window-mobile-indicator-bar')).toBeInTheDocument();
+    });
+
+    it('should suppress desktop pointer dragging on mobile viewports', () => {
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(
+        <WindowFrame window={mockWindowState}>
+          <div>Mobile Sheet Content</div>
+        </WindowFrame>
+      );
+
+      const titlebar = screen.getByLabelText('Test Application Titlebar');
+      fireEvent.pointerDown(titlebar, { button: 0, clientX: 50, clientY: 50 });
+
+      // Move pointer
+      fireEvent.pointerMove(document, { clientX: 100, clientY: 100 });
+      fireEvent.pointerUp(document);
+
+      // Coordinates should remain untouched because dragging is suppressed on mobile
+      expect(useWindowManager.getState().windows['test-app'].bounds.x).toBe(100);
+      expect(useWindowManager.getState().windows['test-app'].bounds.y).toBe(100);
+    });
+
+    it('should minimize window when swiping down past threshold on mobile titlebar', () => {
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(
+        <WindowFrame window={mockWindowState}>
+          <div>Mobile Sheet Content</div>
+        </WindowFrame>
+      );
+
+      const titlebar = screen.getByLabelText('Test Application Titlebar');
+      const windowContainer = screen.getByTestId('window-test-app');
+
+      // Pointer down on titlebar
+      fireEvent.pointerDown(titlebar, { button: 0, clientY: 50 });
+      expect(windowContainer).toHaveClass('is-swiping');
+
+      // Swipe down past threshold (deltaY = 130 > 110)
+      fireEvent.pointerMove(document, { clientY: 180 });
+      fireEvent.pointerUp(document);
+
+      expect(useWindowManager.getState().windows['test-app'].isMinimized).toBe(true);
+    });
+
+    it('should snap back and not minimize when swipe down is below threshold', () => {
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(
+        <WindowFrame window={mockWindowState}>
+          <div>Mobile Sheet Content</div>
+        </WindowFrame>
+      );
+
+      const titlebar = screen.getByLabelText('Test Application Titlebar');
+      const windowContainer = screen.getByTestId('window-test-app');
+
+      fireEvent.pointerDown(titlebar, { button: 0, clientY: 50 });
+      expect(windowContainer).toHaveClass('is-swiping');
+
+      // Minor drag (deltaY = 40 <= 110)
+      fireEvent.pointerMove(document, { clientY: 90 });
+      fireEvent.pointerUp(document);
+
+      expect(windowContainer).not.toHaveClass('is-swiping');
+      expect(useWindowManager.getState().windows['test-app'].isMinimized).toBe(false);
+    });
   });
 });
 

@@ -471,3 +471,60 @@
 .md-modal-btn.confirm:hover {
   opacity: 0.9;
 }
+
+/* Mobile Responsive Adaptations (<768px) */
+@media (max-width: 767px) {
+  .md-viewer-toolbar {
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .md-viewer-file-picker {
+    max-width: 100%;
+    width: 100%;
+    order: 2;
+    overflow-x: auto;
+  }
+
+  .md-viewer-actions {
+    width: 100%;
+    justify-content: space-between;
+    order: 1;
+  }
+
+  .md-split-container {
+    flex-direction: column;
+  }
+
+  .md-split-container .md-edit-panel {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    height: 50%;
+  }
+
+  .md-split-container .md-preview-panel {
+    height: 50%;
+    padding: 14px 16px;
+  }
+
+  .md-preview-panel {
+    padding: 16px 18px;
+  }
+
+  .md-editor-textarea {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+
+  .md-line-numbers {
+    width: 32px;
+    font-size: 11px;
+    padding: 12px 0;
+  }
+
+  .md-modal-card {
+    width: 90%;
+    max-width: 320px;
+  }
+}

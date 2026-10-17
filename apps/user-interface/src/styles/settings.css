@@ -750,3 +750,46 @@
   color: #065f46;
 }
 
+/* Mobile Responsive Adaptation (<768px) */
+@media (max-width: 767px) {
+  .settings-container {
+    padding: 14px 12px;
+    gap: 16px;
+  }
+
+  .settings-header {
+    padding-bottom: 12px;
+  }
+
+  .language-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+
+  .language-card {
+    padding: 8px 10px;
+  }
+
+  .language-info {
+    gap: 8px;
+  }
+
+  .language-native {
+    font-size: 12px;
+  }
+
+  .theme-selector-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .theme-preview-box {
+    height: 72px;
+  }
+
+  .preview-decor-window {
+    width: 120px;
+    height: 52px;
+  }
+}
+

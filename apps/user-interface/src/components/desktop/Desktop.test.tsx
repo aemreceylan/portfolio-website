@@ -1,13 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { Desktop } from './Desktop';
 import { useWindowManager } from '#stores/window-manager.store';
 import { useI18nStore } from '#i18n/i18n.store';
 import { useFileSystemStore } from '#stores/filesystem.store';
+import { useViewportStore } from '#stores/viewport.store';
 
 describe('Desktop Component', () => {
   beforeEach(() => {
     localStorage.clear();
+    useViewportStore.getState().setDimensions(1200, 800);
     useI18nStore.getState().setLanguage('en');
     useWindowManager.getState().reset();
     useFileSystemStore.getState().reset();
@@ -222,6 +224,93 @@ describe('Desktop Component', () => {
 
     expect(useFileSystemStore.getState().viewerMode).toBe('edit');
     expect(useWindowManager.getState().windows['markdown-viewer'].isOpen).toBe(true);
+  });
+
+  describe('Mobile Springboard Mode', () => {
+    it('should render mobile springboard section headers and is-mobile viewport class', () => {
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(<Desktop />);
+
+      const viewport = screen.getByTestId('desktop-viewport');
+      expect(viewport).toHaveClass('is-mobile');
+
+      expect(screen.getByTestId('mobile-section-apps')).toBeInTheDocument();
+      expect(screen.getByText('Applications')).toBeInTheDocument();
+      expect(screen.getByTestId('mobile-section-files')).toBeInTheDocument();
+      expect(screen.getByText('Files')).toBeInTheDocument();
+    });
+
+    it('should launch application from mobile springboard when tapped', () => {
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(<Desktop />);
+
+      const terminalBtn = screen.getByTestId('desktop-app-terminal');
+      fireEvent.click(terminalBtn);
+
+      expect(useWindowManager.getState().windows['terminal']).toBeDefined();
+      expect(useWindowManager.getState().windows['terminal'].isOpen).toBe(true);
+    });
+
+    it('should open desktop context menu on mobile long-press (500ms)', () => {
+      vi.useFakeTimers();
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(<Desktop />);
+
+      const desktopViewport = screen.getByTestId('desktop-viewport');
+      expect(screen.queryByLabelText('Desktop Context Menu')).not.toBeInTheDocument();
+
+      fireEvent.pointerDown(desktopViewport, { clientX: 100, clientY: 200 });
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(screen.getByLabelText('Desktop Context Menu')).toBeInTheDocument();
+      vi.useRealTimers();
+    });
+
+    it('should cancel long-press if pointer moves beyond tolerance threshold', () => {
+      vi.useFakeTimers();
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(<Desktop />);
+
+      const desktopViewport = screen.getByTestId('desktop-viewport');
+
+      fireEvent.pointerDown(desktopViewport, { clientX: 100, clientY: 200 });
+      // Move 20px (beyond 10px tolerance)
+      fireEvent.pointerMove(desktopViewport, { clientX: 120, clientY: 200 });
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(screen.queryByLabelText('Desktop Context Menu')).not.toBeInTheDocument();
+      vi.useRealTimers();
+    });
+
+    it('should open file context menu on mobile file card long-press', () => {
+      vi.useFakeTimers();
+      useViewportStore.getState().setDimensions(375, 667);
+
+      render(<Desktop />);
+
+      const fileCard = screen.getByTestId('desktop-file-bio.md');
+      fireEvent.pointerDown(fileCard, { clientX: 100, clientY: 250 });
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(screen.getByLabelText('Desktop Context Menu')).toBeInTheDocument();
+      expect(screen.getByText('Open')).toBeInTheDocument();
+      expect(screen.getByText('Rename')).toBeInTheDocument();
+      expect(screen.getByText('Delete')).toBeInTheDocument();
+      vi.useRealTimers();
+    });
   });
 });
 

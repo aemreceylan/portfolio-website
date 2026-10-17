@@ -138,6 +138,10 @@ export interface Translations {
   ide_new_script: string;
   ide_syntax_error: string;
   ide_runtime_error: string;
+
+  // Desktop Springboard
+  desktop_section_apps: string;
+  desktop_section_files: string;
 }
 
 export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
@@ -235,6 +239,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_new_script: 'New Script',
     ide_syntax_error: 'Syntax Error',
     ide_runtime_error: 'Runtime Error',
+    desktop_section_apps: 'Applications',
+    desktop_section_files: 'Files',
   },
   tr: {
     browser_tab_title: 'AEC — Uygulama Portfolyosu',
@@ -330,6 +336,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_new_script: 'Yeni Script',
     ide_syntax_error: 'Sözdizimi Hatası',
     ide_runtime_error: 'Çalışma Zamanı Hatası',
+    desktop_section_apps: 'Uygulamalar',
+    desktop_section_files: 'Dosyalar',
   },
   de: {
     browser_tab_title: 'AEC — Anwendungsportfolio',
@@ -425,6 +433,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_new_script: 'Neues Skript',
     ide_syntax_error: 'Syntaxfehler',
     ide_runtime_error: 'Laufzeitfehler',
+    desktop_section_apps: 'Anwendungen',
+    desktop_section_files: 'Dateien',
   },
   fr: {
     browser_tab_title: "AEC — Portfolio d'Applications",
@@ -520,6 +530,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_new_script: 'Nouveau script',
     ide_syntax_error: 'Erreur de syntaxe',
     ide_runtime_error: 'Erreur d\'exécution',
+    desktop_section_apps: 'Applications',
+    desktop_section_files: 'Fichiers',
   },
   es: {
     browser_tab_title: 'AEC — Portafolio de Aplicaciones',
@@ -615,6 +627,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_new_script: 'Nuevo script',
     ide_syntax_error: 'Error de sintaxis',
     ide_runtime_error: 'Error de ejecución',
+    desktop_section_apps: 'Aplicaciones',
+    desktop_section_files: 'Archivos',
   },
   ru: {
     browser_tab_title: 'AEC — Портфолио Приложений',
@@ -710,6 +724,8 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_new_script: 'Новый скрипт',
     ide_syntax_error: 'Синтаксическая ошибка',
     ide_runtime_error: 'Ошибка выполнения',
+    desktop_section_apps: 'Приложения',
+    desktop_section_files: 'Файлы',
   },
   ja: {
     browser_tab_title: 'AEC — アプリケーションポートフォリオ',
@@ -805,5 +821,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     ide_new_script: '新規スクリプト',
     ide_syntax_error: '構文エラー',
     ide_runtime_error: '実行時エラー',
+    desktop_section_apps: 'アプリケーション',
+    desktop_section_files: 'ファイル',
   },
 };

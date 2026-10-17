@@ -6,6 +6,7 @@ import { useSoundStore } from '#stores/sound.store';
 import { useTranslation } from '#i18n/i18n.store';
 import type { Translations } from '#i18n/translations';
 import { AppIconResolver } from '#components/icons/AppIconResolver';
+import { useViewport } from '#stores/viewport.store';
 import '#styles/dock.css';
 
 interface DockMenuState {
@@ -35,11 +36,13 @@ const getLocalizedTitle = (
  * Dynamic Dock component that functions strictly as an Active Taskbar.
  * Displays only currently open or minimized applications. When all windows are closed,
  * the dock automatically stays hidden to maintain a clutter-free desktop.
+ * On mobile viewports, docks safely on the home screen when windows are minimized.
  * Provides a context menu on right-click to close or minimize/restore open applications.
  */
 export const Dock: React.FC = () => {
   const { windows, activeWindowId, minimizeWindow, focusWindow, closeWindow } = useWindowManager();
   const { t } = useTranslation();
+  const { isMobile } = useViewport();
   const [dockMenu, setDockMenu] = useState<DockMenuState>({
     isOpen: false,
     appId: null,
@@ -92,8 +95,13 @@ export const Dock: React.FC = () => {
     };
   }, [dockMenu.isOpen]);
 
-  // Return null if no windows are open, keeping the desktop interface pristine
-  if (openWindows.length === 0) {
+  // On mobile viewports, when a window is currently active and open in full-screen sheet mode,
+  // tuck the dock away to maximize mobile touch work area. Reappears on mobile home screen when minimized.
+  const isMobileWindowActive =
+    isMobile && activeWindowId && windows[activeWindowId]?.isOpen && !windows[activeWindowId]?.isMinimized;
+
+  // Return null if no windows are open, or if an active mobile full-screen app is running
+  if (openWindows.length === 0 || isMobileWindowActive) {
     return null;
   }
 

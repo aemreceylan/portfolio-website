@@ -293,6 +293,149 @@
   transform: scale(1.25);
 }
 
+/* ==========================================================================
+   Mobile Spatial Vertical Volume Popover Capsule
+   ========================================================================== */
+.sound-popover-capsule {
+  position: fixed;
+  top: calc(var(--statusbar-height, 42px) + 8px);
+  right: 12px;
+  width: 108px;
+  padding: 12px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  background: rgba(15, 20, 28, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.2);
+  z-index: 1200;
+  animation: soundPopoverEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+@keyframes soundPopoverEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.sound-popover-header {
+  height: 18px;
+  min-height: 18px;
+  line-height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-primary, #ffffff);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sound-popover-track {
+  position: relative;
+  width: 44px;
+  height: 136px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  outline: none;
+  transition: border-color var(--transition-fast, 150ms ease), box-shadow var(--transition-fast, 150ms ease);
+}
+
+.sound-popover-track:focus-visible {
+  border-color: var(--color-accent, #38bdf8);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
+}
+
+.sound-popover-fill {
+  width: 100%;
+  background: linear-gradient(to top, var(--color-accent, #38bdf8), rgba(56, 189, 248, 0.75));
+  border-radius: 0 0 22px 22px;
+  transition: height 0.05s ease-out;
+  position: relative;
+}
+
+.sound-popover-icon-wrapper {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+}
+
+.sound-popover-mute-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  height: 30px;
+  min-height: 30px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: var(--text-primary, #ffffff);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sound-popover-mute-btn svg {
+  flex-shrink: 0;
+}
+
+.sound-popover-mute-btn span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sound-popover-mute-btn:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sound-popover-mute-btn.muted {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
 /* Accessible hidden utility */
 .sr-only {
   position: absolute;
@@ -832,6 +975,30 @@
   box-shadow: none;
 }
 
+[data-theme="swiss-industrial"] .sound-popover-capsule {
+  background: #181b20;
+  border: 1px solid var(--border-structural, #2c313c);
+  border-radius: 6px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="swiss-industrial"] .sound-popover-track {
+  border-radius: 4px;
+  background: #111317;
+  border: 1px solid #2c313c;
+}
+
+[data-theme="swiss-industrial"] .sound-popover-fill {
+  border-radius: 0;
+  background: var(--color-accent, #ff5722);
+}
+
+[data-theme="swiss-industrial"] .sound-popover-mute-btn {
+  border-radius: 4px;
+  background: #20242b;
+  border: 1px solid #2c313c;
+}
+
 /* --------------------------------------------------------------------------
    Cyberpunk Neon Desktop Scoping (Night City & Synthwave HUD)
    -------------------------------------------------------------------------- */
@@ -1004,6 +1171,37 @@
   background: #f43f5e;
   box-shadow: 0 0 8px #f43f5e;
   border-radius: 2px;
+}
+
+[data-theme="cyberpunk-neon"] .sound-popover-capsule {
+  background: rgba(11, 17, 32, 0.96);
+  border: 1px solid #f43f5e;
+  border-radius: 6px;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.4), 0 16px 36px rgba(0, 0, 0, 0.95);
+}
+
+[data-theme="cyberpunk-neon"] .sound-popover-track {
+  border-radius: 3px;
+  background: #090d1a;
+  border: 1px solid rgba(6, 182, 212, 0.45);
+}
+
+[data-theme="cyberpunk-neon"] .sound-popover-fill {
+  border-radius: 0;
+  background: linear-gradient(to top, #06b6d4, #f43f5e);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+}
+
+[data-theme="cyberpunk-neon"] .sound-popover-header {
+  color: #f43f5e;
+  text-shadow: 0 0 6px rgba(244, 63, 94, 0.6);
+}
+
+[data-theme="cyberpunk-neon"] .sound-popover-mute-btn {
+  border-radius: 3px;
+  background: #0d1424;
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  color: #f8fafc;
 }
 
 /* --------------------------------------------------------------------------
@@ -1217,5 +1415,185 @@
   border: 1px solid #111111;
   box-shadow: inset 1px 1px 0px #ffffff, inset -1px -1px 0px #777777;
 }
+
+[data-theme="classic-mac"] .sound-popover-capsule {
+  background: #dcdfe5;
+  border: 1px solid #111111;
+  border-radius: 2px;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5), inset 1px 1px 0px #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme="classic-mac"] .sound-popover-track {
+  border-radius: 2px;
+  background: #ffffff;
+  border: 1px solid #111111;
+}
+
+[data-theme="classic-mac"] .sound-popover-fill {
+  border-radius: 0;
+  background: #111111;
+}
+
+[data-theme="classic-mac"] .sound-popover-header {
+  color: #111111;
+  font-family: var(--font-mono, monospace);
+}
+
+[data-theme="classic-mac"] .sound-popover-mute-btn {
+  border-radius: 2px;
+  background: #ffffff;
+  border: 1px solid #111111;
+  color: #111111;
+  box-shadow: 1px 1px 0px #111111;
+}
+
+/* ==========================================================================
+   Mobile Metamorphic Springboard & Responsive Statusbar
+   ========================================================================== */
+
+/* Mobile Section Headers */
+.desktop-mobile-section-header {
+  display: none;
+}
+
+.desktop-viewport.is-mobile {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  padding-top: calc(var(--statusbar-height, 42px) + 8px);
+  padding-bottom: 96px;
+}
+
+.desktop-viewport.is-mobile .desktop-mobile-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.desktop-viewport.is-mobile .desktop-apps-grid,
+.desktop-viewport.is-mobile .desktop-files-grid {
+  position: static !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 16px 6px !important;
+  padding: 10px 16px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  pointer-events: auto !important;
+}
+
+.desktop-viewport.is-mobile .desktop-apps-grid {
+  margin-top: 0;
+}
+
+.desktop-viewport.is-mobile .desktop-app-card,
+.desktop-viewport.is-mobile .desktop-file-card {
+  position: static !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 82px !important;
+  max-height: none !important;
+  padding: 6px 4px !important;
+  cursor: pointer !important;
+  border-radius: 14px;
+}
+
+.desktop-viewport.is-mobile .desktop-app-card:active,
+.desktop-viewport.is-mobile .desktop-file-card:active {
+  transform: scale(0.96) !important;
+}
+
+.desktop-viewport.is-mobile .desktop-app-icon,
+.desktop-viewport.is-mobile .desktop-file-icon {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 14px !important;
+}
+
+.desktop-viewport.is-mobile .desktop-app-label,
+.desktop-viewport.is-mobile .desktop-file-name {
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  margin-top: 4px !important;
+  max-width: 74px;
+  text-align: center;
+}
+
+/* Responsive Status Bar & Media Queries */
+@media (max-width: 767px) {
+  .spatial-statusbar {
+    padding: 0 12px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+  }
+
+  .statusbar-left {
+    gap: 8px !important;
+  }
+
+  .statusbar-right {
+    gap: 8px !important;
+  }
+
+  .statusbar-music-player .music-player-title {
+    display: none !important;
+  }
+
+  .statusbar-music-player .next-track-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 22px !important;
+    height: 22px !important;
+    padding: 0 !important;
+    border-radius: 6px !important;
+    opacity: 0.8;
+  }
+
+  .statusbar-music-player .next-track-btn:active {
+    transform: scale(0.92);
+    opacity: 1;
+  }
+
+  .statusbar-music-player {
+    padding: 2px 6px !important;
+    height: 26px !important;
+    gap: 4px !important;
+  }
+
+  .statusbar-sound-control {
+    padding: 2px 4px !important;
+  }
+
+  .statusbar-sound-control .sound-slider-wrapper {
+    display: none !important;
+  }
+
+  .spatial-alert-dialog {
+    width: calc(100vw - 32px) !important;
+    max-width: 360px !important;
+    padding: 18px !important;
+  }
+
+  .spatial-context-menu {
+    max-width: 220px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .desktop-viewport.is-mobile .desktop-apps-grid,
+  .desktop-viewport.is-mobile .desktop-files-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
 
 

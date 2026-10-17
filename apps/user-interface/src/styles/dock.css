@@ -319,4 +319,30 @@
   border-bottom: 1px solid #111111;
 }
 
+/* ==========================================================================
+   Mobile Responsive Dock & Taskbar
+   ========================================================================== */
+@media (max-width: 767px) {
+  .spatial-dock-container {
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    height: 48px !important;
+    padding: 0 12px !important;
+    gap: 8px !important;
+    border-radius: 9999px !important;
+    max-width: calc(100vw - 32px) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  }
+
+  .dock-item {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
+
+  .dock-tooltip {
+    display: none !important;
+  }
+}
+
+
 

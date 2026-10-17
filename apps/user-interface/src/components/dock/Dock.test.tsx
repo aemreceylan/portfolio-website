@@ -4,9 +4,11 @@ import { Dock } from './Dock';
 import { useWindowManager } from '#stores/window-manager.store';
 import { terminalManifest } from '#apps/app-registry';
 import { useI18nStore } from '#i18n/i18n.store';
+import { useViewportStore } from '#stores/viewport.store';
 
 describe('Dock Component', () => {
   beforeEach(() => {
+    useViewportStore.getState().setDimensions(1200, 800);
     useI18nStore.getState().setLanguage('en');
     useWindowManager.getState().reset();
   });
@@ -108,6 +110,23 @@ describe('Dock Component', () => {
 
     fireEvent.click(document.body);
     expect(screen.queryByTestId('dock-context-menu')).not.toBeInTheDocument();
+  });
+
+  it('should tuck dock away on mobile when a window is active', () => {
+    useViewportStore.getState().setDimensions(375, 667);
+    useWindowManager.getState().openWindow(terminalManifest);
+
+    const { container } = render(<Dock />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('should render dock on mobile home screen when all open windows are minimized', () => {
+    useViewportStore.getState().setDimensions(375, 667);
+    useWindowManager.getState().openWindow(terminalManifest);
+    useWindowManager.getState().minimizeWindow('terminal');
+
+    render(<Dock />);
+    expect(screen.getByTestId('dock-item-terminal')).toBeInTheDocument();
   });
 });
 

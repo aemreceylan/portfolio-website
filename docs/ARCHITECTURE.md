@@ -543,6 +543,64 @@ Kullanıcı etkileşimini ve işletim sistemi deneyimini zenginleştirmek amacı
 * **7 Dilde Yerelleştirme**:
   - `appName_game_hub` ve `appDesc_game_hub` İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça ve Japonca dillerine eksiksiz eklenmiştir.
 
+---
+
+## 21. Metamorfik Mobil Arayüz Dönüşümü (Metamorphic Mobile UI Architecture)
+
+Desktop pencereli işletim sistemi paradigmasını telefon ekranlarına (360px - 430px) basit bir medya sorgusuyla küçültmek yerine, cihaz türüne göre form değiştiren **Metamorfik Mobil Arayüz Mimarisi** hayata geçirilmiştir:
+
+* **Reaktif Viewport & Breakpoint Durum Yönetimi (`viewport.store.ts`)**:
+  - `MOBILE_BREAKPOINT = 768px`, `TABLET_BREAKPOINT = 1024px` standartlarında merkezi reaktif durum deposu kurulmuştur.
+  - SSR dostu başlangıç hesaplaması (`getInitialViewport`) ve passive resize listener dinleyicisi ile bellek sızıntıları önlenir.
+  - `useViewport()` hook'u ile bileşenler doğrudan `isMobile`, `isTablet`, `isDesktop` ve `deviceType` değişkenlerine O(1) maliyetle erişir.
+* **Metamorfik Pencere Çerçevesi & Mobil Tam Ekran Sheet Modeli (`WindowFrame.tsx`)**:
+  - Mobil ekranlarda masaüstünün serbest sürükleme (`handleTitlebarPointerDown`), 8 yönlü yeniden boyutlandırma tutamaçları (`resize-handles`) ve rastgele piksel koordinatları otomatik olarak bypass edilir.
+  - Açık uygulamalar mobilde akıcı slide-up animasyonu ile modern **Full-screen Bottom Sheet** (`height: calc(100dvh - 42px)`, `border-radius: 18px 18px 0 0`) formuna metamorfoz geçirir.
+  - Başlık çubuğunun üzerine mobil dokunmatik işletim sistemi standardında 36px genişliğinde zarif bir sürükleme göstergesi (`.window-mobile-indicator-bar`) yerleştirilir.
+  - 4 yerleşik temanın tamamı (`spatial-glass`, `swiss-industrial`, `cyberpunk-neon`, `classic-mac`) mobil sheet başlık çubuğu ve köşe radyanlarına göre optimize edilmiştir.
+* **Mobil Springboard Uygulama Izgarası & Dosya Bölümü (`Desktop.tsx`)**:
+  - Masaüstündeki serbest sürükle-bırak koordinat sistemi mobilde devre dışı bırakılarak modern 4 sütunlu dokunmatik Springboard uygulama ızgarasına dönüştürülür.
+  - 52px boyutunda dokunmatik dostu simge kapsayıcıları ve 11px iki satırlı etiketler uygulanır.
+  - Mobil ana ekranda 7 dilde yerelleştirilmiş bölüm başlıkları sunulur: "Uygulamalar" (`desktop_section_apps`) ve "Dosyalar" (`desktop_section_files`).
+  - Mobil çalışma alanı tepe noktasına durum çubuğu güvenli alanı (`padding-top: calc(var(--statusbar-height, 42px) + 8px)`) uygulanarak bölüm başlıklarının durum çubuğu altında kırpılması önlenir.
+  - Üst durum çubuğu mobilde kompakt moda geçirilir: Müzik şarkı adı ve bir sonraki şarkı butonu ile ses kaydırıcısı gizlenerek saat, oynat/durdur ve ses aç/kapat butonları için ferah alan açılır.
+* **Mobil Dock Otomatik Saklanma Mimarisi (Dock Auto-Tuck - `Dock.tsx`)**:
+  - Mobil ekranda bir uygulama açıkken dock otomatik olarak gizlenir (`isMobile && activeWindowId && !minimized`), böylece telefon ekranının %100'ü açık olan uygulamaya ayrılır.
+  - Pencere simge durumuna küçültüldüğünde veya kapatıldığında dock, mobil ana ekranda (`bottom: 12px`, `height: 52px`) dokunmatik kontrol paneli olarak yeniden belirir.
+* **Uygulamaların Dar Mobil Ekranlara (<380px) Adaptasyonu**:
+  - `terminal.css`: Mobilde optimize padding (10px), 12px yazı boyutu, nano editör 28px dokunmatik butonları.
+  - `markdown-viewer.css`: Araç çubuğu flex-wrap düzeni, tek sütun dikey split modu (%50 editör / %50 önizleme), 90% mobil modal genişliği.
+  - `settings.css`: Mobilde ferah tek sütun tema seçim kartları, 2 sütunlu kompakt dil kartları (`minmax(130px, 1fr)`).
+  - `js-ide.css`: Mobilde konsol yüksekliğinin 120px'e çekilerek editöre daha fazla dikey alan tanınması.
+  - `game-hub.css`: Arcade canvas'ının `min(88vw, 340px)` ile taşma yapmadan küçük ekranlara sığması, mobil dokunmatik D-pad ve yatay kontrol butonlarının akıcı ölçeklenmesi.
+* **Mobil Spatial Dikey Ses Kapsülü Mimarisi (`SoundControl.tsx`, `desktop.css`)**:
+  - Dar mobil ekranlarda durum çubuğunun 42px yüksekliği içinde yatay slider sıkışmasını önlemek amacıyla **Spatial Dikey Ses Kapsülü** (`.sound-popover-capsule`) geliştirilmiştir.
+  - Durum çubuğundaki hoparlör butonuna dokunulduğunda simgenin hemen altında 108×232px boyutunda yarı saydam buzlu cam kapsül açılır.
+  - 44×136px boyutunda dikey dokunmatik ray üzerinde Pointer Events API (`onPointerDown`, `onPointerMove`, `onPointerUp`) ve `setPointerCapture` ile başparmak dikey kaydırma desteği sunulur.
+  - **Sıfır Düzen Kayması (CLS = 0) Güvencesi**:
+    - Tepe yüzde göstergesi (`.sound-popover-header`) sessize alındığında veya ses sıfıra çekildiğinde metinsel kelimeye dönüşmeyip daima sabit `0%` gösterir; 18px sabit yükseklik (`height: 18px; min-height: 18px; line-height: 18px; white-space: nowrap`) ile dikey zıplama önlenir.
+    - Kapsül genişliği 108px olarak belirlenmiş olup, alt kısımdaki eylem butonu (`.sound-popover-mute-btn`) 30px sabit yükseklik ve `white-space: nowrap` kuralları ile korunarak dikey taşma ve UX titremeleri engellenmiştir.
+  - Kapsül içerisinde sıvı mavi dolgu çubuğu, anlık ses ikonu ve alt kısımda anında sessize alma ("Sessize Al / Sesi Aç") butonu yer alır.
+  - Dışarı tıklama (`pointerdown` outside click listener) ve `Escape` tuşu ile otomatik kapanma, 4 yerleşik tema (`spatial-glass`, `swiss-industrial`, `cyberpunk-neon`, `classic-mac`) ile tam uyum sağlanmıştır.
+* **Mobil Dokunmatik Etkileşim ve Jest Mimarisi (Mobile Gestures & Touch UX)**:
+  - **Aşağı Kaydırarak Kapatma / Küçültme (Swipe-Down to Dismiss Sheet - `WindowFrame.tsx`, `window.css`)**:
+    - Mobil tam ekran bottom sheet başlık çubuğuna (`.window-titlebar` / `.window-mobile-indicator-bar`) dokunmatik kaydırma dinleyicisi entegre edilmiştir.
+    - Kullanıcı parmağını aşağı doğru çektiğinde, sheet `--sheet-translate-y` CSS değişkeni üzerinden parmağı 1:1 orantıyla takip eder (`is-swiping` modunda `transition: none`, dinamik opaklık solması).
+    - 110px eşik değeri aşıldığında pencere `minimizeWindow()` eylemiyle alt barda simge durumuna küçülür; eşik aşılmazsa `0.28s cubic-bezier(0.32, 0.72, 0, 1)` yay animasyonu ile başlangıç konumuna geri döner (snap-back).
+    - Kapatma ve küçültme butonlarına basıldığında jest çakışması `closest('.window-controls')` denetimiyle engellenir.
+  - **Mobilde Doğrudan Müzik Parçası Değiştirme (`MusicPlayer.tsx`, `desktop.css`)**:
+    - Kompakt mobil durum çubuğunda şarkı adı gizli tutulurken, "Sonraki Şarkı" butonu (`.next-track-btn`) 22×22px dokunmatik buton olarak görünür kılındı (`display: flex !important`).
+    - Mobil kullanıcılar durum çubuğu üzerinden sonraki parçaya kesintisiz geçebilir.
+    - Masaüstü ve mobilde durum çubuğuna şarkı adı ve BPM bilgisi (`title`) erişilebilirliği sağlandı.
+  - **Masaüstü ve Dosya Kartlarında Uzun Basma Bağlam Menüsü (Mobile Long-Press Context Menu - `Desktop.tsx`)**:
+    - Mobilde boş masaüstü alanına 500ms basılı tutulduğunda (long-press), masaüstü bağlam menüsü (Yeni Not, Yeni Belge, Yeni Script, Dosya Yükle, Düzeni Sıfırla) dokunulan koordinatlarda açılır.
+    - Destekleyen mobil cihazlarda 40ms haptik titreşim (`navigator.vibrate(40)`) geri bildirimi verilir.
+    - Kullanıcı parmağını 10px'den fazla kaydırdığında (scroll jesti) uzun basma zamanlayıcısı otomatik temizlenir.
+    - Masaüstü dosya kartlarına uzun basıldığında dosya bağlam menüsü (Aç, Yeniden Adlandır, Sil) açılır.
+    - Uzun basma jestinden hemen sonra tetiklenen `click` olayının menüyü anında kapatmasını önlemek için `justLongPressedRef` koruması entegre edilmiştir.
+
+
+
 
 
 

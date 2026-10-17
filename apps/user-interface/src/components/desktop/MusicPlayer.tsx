@@ -38,6 +38,7 @@ export const MusicPlayer: React.FC = () => {
       data-testid="statusbar-music-player"
       role="region"
       aria-label="Music Player"
+      title={`${currentTrack.title} (${currentTrack.bpm} BPM)`}
     >
       <button
         type="button"

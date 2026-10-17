@@ -699,3 +699,132 @@
   - `npm run lint`: **0 hata, 0 uyarı** (Monorepo genelinde SonarJS kuralları %100 temiz).
   - `npm run typecheck`: **0 hata** (Tüm paketlerde tam tip güvenliği).
   - `npm test`: **29 test dosyasında 182 testin tamamı %100 başarıyla geçti**.
+
+## [2026-10-15] - Metamorfik Mobil Arayüz Dönüşümü (Metamorphic Mobile UI Transformation)
+
+### Yapılanlar
+- **Reaktif Viewport & Breakpoint Store (`viewport.store.ts`, `viewport.store.test.ts`)**:
+  - `MOBILE_BREAKPOINT = 768px`, `TABLET_BREAKPOINT = 1024px` standartlarında merkezi reaktif viewport dinleyicisi kuruldu (`useViewportStore`, `useViewport`).
+  - `calculateDeviceType` saf fonksiyonu ile `isMobile`, `isTablet`, `isDesktop`, `deviceType` ('mobile' | 'tablet' | 'desktop') hesaplamaları sağlandı.
+  - SSR dostu başlangıç boyutlandırması, passive resize listener yönetimi ve bellek sızıntısı önleme sağlandı.
+  - SonarJS kurallarına (bilişsel karmaşıklık <= 15, sıfır iç içe geçmiş ternary operatör) tam uyum sağlandı.
+- **Metamorfik Pencere Çerçevesi & Mobil Tam Ekran Sheet Modeli (`WindowFrame.tsx`, `window.css`, `WindowFrame.test.tsx`)**:
+  - Mobil ekranlarda (<768px) masaüstü serbest sürükleme (`handleTitlebarPointerDown`), 8 yönlü boyutlandırma tutamaçları (`resize-handles`) ve rastgele piksel koordinatları otomatik olarak devre dışı bırakıldı.
+  - Açık uygulamalar mobilde akıcı slide-up animasyonu ile modern **Full-screen Bottom Sheet** (`height: calc(100dvh - 42px)`, `border-radius: 18px 18px 0 0`) formuna dönüştürüldü.
+  - Başlık çubuğunun üzerine mobil dokunmatik işletim sistemi standardında 36px genişliğinde ince sürükleme göstergesi barı (`.window-mobile-indicator-bar`) yerleştirildi.
+  - 4 yerleşik temanın tamamı (`spatial-glass`, `swiss-industrial`, `cyberpunk-neon`, `classic-mac`) mobil sheet başlık çubuğu ve köşe radyanlarına göre uyarlandı.
+- **Mobil Springboard Uygulama Izgarası & Dosya Bölümü (`Desktop.tsx`, `desktop.css`, `translations.ts`, `Desktop.test.tsx`)**:
+  - Masaüstündeki karmaşık serbest sürükle-bırak koordinat sistemi mobilde devre dışı bırakılarak modern 4 sütunlu dokunmatik Springboard uygulama ızgarasına dönüştürüldü.
+  - 52px boyutunda dokunmatik dostu simge kapsayıcıları ve 11px iki satırlı etiketler uygulandı.
+  - Mobil ana ekranda 7 dilde yerelleştirilmiş bölüm başlıkları eklendi: "Uygulamalar" (`desktop_section_apps`) ve "Dosyalar" (`desktop_section_files`).
+  - Üst durum çubuğu mobilde kompakt moda geçirildi: Müzik şarkı adı ve bir sonraki şarkı butonu ile ses kaydırıcısı gizlenerek saat, oynat/durdur ve ses aç/kapat butonları için ferah alan açıldı.
+- **Mobil Dock Otomatik Saklanma Mimarisi (Dock Auto-Tuck - `Dock.tsx`, `dock.css`, `Dock.test.tsx`)**:
+  - Mobil ekranda bir uygulama açıkken dock otomatik olarak gizlenir (`isMobile && activeWindowId && !minimized`), böylece telefon ekranının %100'ü açık olan uygulamaya ayrılır.
+  - Pencere simge durumuna küçültüldüğünde veya kapatıldığında dock, mobil ana ekranda (`bottom: 12px`, `height: 52px`) dokunmatik kontrol paneli olarak yeniden belirir.
+- **Uygulamaların Dar Mobil Ekranlara (<380px) Adaptasyonu**:
+  - `terminal.css`: Mobilde optimize padding (10px), 12px yazı boyutu, nano editör 28px dokunmatik butonları.
+  - `markdown-viewer.css`: Araç çubuğu flex-wrap düzeni, tek sütun dikey split modu (%50 editör / %50 önizleme), 90% mobil modal genişliği.
+  - `settings.css`: Mobilde ferah tek sütun tema seçim kartları, 2 sütunlu kompakt dil kartları (`minmax(130px, 1fr)`).
+  - `js-ide.css`: Mobilde konsol yüksekliğinin 120px'e çekilerek editöre daha fazla dikey alan tanınması.
+  - `game-hub.css`: Arcade canvas'ının `min(88vw, 340px)` ile taşma yapmadan küçük ekranlara sığması, mobil dokunmatik D-pad ve yatay kontrol butonlarının akıcı ölçeklenmesi.
+- **Doğrulama ve Metrikler**:
+  - Vitest: **Monorepo genelinde 34 test dosyasında 210 testin tamamı (%100) başarıyla geçti** (User interface: 30 test dosyasında 196 test).
+  - TypeScript: 4 paketin tamamında `npm run typecheck` **0 hata**.
+  - ESLint & SonarJS: `npm run lint` **0 hata, 0 uyarı** (Bilişsel karmaşıklık <= 15).
+
+## [2026-10-17] - Mobil Sürüm Kullanılabilirlik & Hata Testi Denetimi (Mobile QA Audit)
+
+### Yapılanlar & Denetim Bulguları
+- **Kıdemli QA & Mobil UX Denetimi Gerçekleştirildi**:
+  - Chrome DevTools MCP üzerinden iPhone 14 (390x844, touch, mobile) ve kompakt Android (360x740, touch, mobile) emülasyonu yapılarak tüm çekirdek uygulamalar interaktif olarak test edildi.
+  - **Masaüstü Bölüm Başlığı Kırpılma Hatası Giderildi (Fix)**:
+    - Mobil ana ekranda `.desktop-viewport.is-mobile` içine durum çubuğu güvenli alanı (`padding-top: calc(var(--statusbar-height, 42px) + 8px)`) eklendi ve `.desktop-apps-grid` üst boşluğu sıfırlandı. Böylece "Uygulamalar" başlığının durum çubuğu altına girmesi önlendi (Header top: 48px, statusbar bottom: 42px).
+  - **Uygulama İçi Mobil Davranışların Doğrulanması**:
+    - **Terminal CLI**: Otomatik açılış mobilde düzgün baskılandı; tıklandığında tam ekran sheet olarak açıldı, `help` ve `nano` komutları yatay taşma olmadan çalıştı, dokunmatik kısayol butonları doğrulandı.
+    - **Markdown Viewer**: Belge açma (`bio.md`), Düzenle (`edit`), Önizleme (`preview`) ve Bölünmüş (`split` - dikey %50/%50 istifleme) modları test edildi.
+    - **JavaScript IDE**: `demo.js` açıldı, 120px konsol paneli ve yeşil `Run` butonu ile kod sandbox içinde çalıştırıldı (8ms çalıştırma süresi ve loglar doğrulandı).
+    - **Game Hub**: Neon Snake oyunu başlatıldı, dokunmatik ekran D-pad butonları (Yukarı, Aşağı, Sol, Sağ, Duraklat) ve canvas ölçeklemesi test edildi.
+    - **Ayarlar & Temalar**: Spatial Dark Glass, Swiss Industrial, Cyberpunk Neon ve Classic Macintosh temaları mobil sheet formunda başarıyla doğrulandı; sıfır dikey zıplama (`scrollTop: 0`) teyit edildi.
+  - **Kompakt Ekran (360px) Stres Testi**:
+    - `@media (max-width: 360px)` devreye girerek 4 sütunlu ızgara otomatik 3 sütuna dönüştü; sıfır yatay taşma (`scrollWidth === clientWidth`) doğrulandı.
+- **Doğrulama ve Metrikler**:
+  - `npm test`: **30 test dosyasında 196 testin tamamı (%100) başarıyla geçti**.
+  - `npm run typecheck`: **0 hata**.
+  - `npm run lint`: **0 hata, 0 uyarı** (Monorepo genelinde SonarJS kuralları %100 temiz).
+
+## [2026-10-17] - Mobil Spatial Dikey Ses Kapsülü Mimarisi (Mobile Spatial Volume Popover Capsule)
+
+### Yapılanlar
+- **Mobil Dikey Ses Popover Kapsülü (`SoundControl.tsx`, `SoundControl.test.tsx`, `desktop.css`)**:
+  - Mobil ekranlarda (<768px) durum çubuğundaki ses butonuna dokunulduğunda açılan, iOS Control Center ve VisionOS estetiğinde yarı saydam buzlu cam **Spatial Dikey Ses Kapsülü** (`.sound-popover-capsule`) geliştirildi.
+  - **44×136px Dokunmatik Dikey Slider**:
+    - Pointer Events API (`onPointerDown`, `onPointerMove`, `onPointerUp`) ve `setPointerCapture` ile başparmak dikey sürükleme desteği sağlandı; kullanıcı parmağı izleme alanından çıksa bile kesintisiz ses hesaplaması yapıldı.
+    - Anlık yüzde göstergesi (ör. `%80`), sıvı mavi dolgu (`.sound-popover-fill`), dinamik ses ikonu (`Volume2`, `Volume1`, `VolumeX`).
+    - Bırakıldığında Web Audio API `volume-tick` önizleme sesi çalınması sağlandı.
+  - **Hızlı Sessize Alma Butonu (Mute Toggle)**:
+    - Kapsülün altında tam genişlikte 32px yüksekliğinde "Sessize Al / Sesi Aç" eylem butonu entegre edildi.
+  - **Dışarı Dokunma ve Klavye Erişilebilirliği**:
+    - Outside click (`pointerdown` listener) ve `Escape` tuşu ile otomatik kapanma sağlandı.
+    - `role="slider"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow` ve `ArrowUp`, `ArrowDown`, `Home`, `End` klavye kontrolleri ile WCAG 2.2 AA erişilebilirlik sağlandı.
+  - **4 Tema İle Tam Uyum**:
+    - `spatial-glass`: 24px blur buzlu cam, 20px radyan, mavi/cam göbeği degrade.
+    - `swiss-industrial`: Mat grafit şasi, 4px radyan, masif Braun turuncusu dolgu.
+    - `cyberpunk-neon`: Koyu lacivert HUD kabini, neon pembe çerçeve, siyan-pembe degrade parıltı.
+    - `classic-mac`: Susan Kare 1984 platin gri şasi, 1px siyah kenarlık, siyah masif retro dolgu.
+  - **SonarJS & Bilişsel Karmaşıklık İyileştirmeleri**:
+    - İç içe ternary ifadeler `getSoundButtonLabel` fonksiyonuna taşındı, klavye ve ikon mantığı saf yardımcı fonksiyonlara (`getNextVolumeFromKey`, `VolumeIcon`) ayrılarak bilişsel karmaşıklık < 10 seviyesine indirildi (S3776 & S6819 & S6848 uyumlu).
+- **Test ve Kalite Durumu**:
+  - `SoundControl.test.tsx`: 5 yeni mobil popover birim ve entegrasyon testi eklendi; toplam test sayısı 201'e çıktı.
+  - Vitest: **30 test dosyasında 201 testin tamamı (%100) başarıyla geçti**.
+  - TypeScript: `npm run typecheck` **0 hata**.
+  - ESLint / SonarJS: `npm run lint` **0 hata, 0 uyarı**.
+
+## [2026-10-17] - Mobil Dikey Ses Kapsülü Düzen Kayması (CLS / Layout Shift) Düzeltmesi
+
+### Yapılanlar
+- **Sorun Tespiti (Layout Jerk & UX Shift)**:
+  - Mobil dikey ses popover'ında ses seviyesi sıfıra (`0`) çekildiğinde `sound.store.ts` reaktif olarak `isMuted = true` durumuna geçiyordu.
+  - `SoundControl.tsx` popover başlığında `{isMuted ? t('sound_mute') : `${currentPercent}%`}` koşulu bulunduğu için `%0` yerine "Sesi Kapat" (Türkçe) metni render ediliyordu.
+  - Dar kapsül genişliğinde "SESİ KAPAT" metni iki satıra sarılarak (`SESİ` \n `KAPAT`) başlık yüksekliğini iki katına çıkarıyor, alttaki dikey slider izini ve sessize alma butonunu aniden aşağı iterek zıplamaya (Cumulative Layout Shift) ve UX bozulmasına sebep oluyordu.
+- **Düzeltmeler**:
+  - **Daima Yüzde Gösterimi**: Popover başlığı (`.sound-popover-header`), sessize alınmış olsa bile daima `{currentPercent}%` (ör. `0%`) gösterecek şekilde sabitlendi; böylece başlık metninin karakter uzunluğu ve kelime yapısı dikey oynamaya yol açamaz.
+  - **CSS Geometrisi & No-Wrap Koruması (`desktop.css`)**:
+    - `.sound-popover-capsule`: Genişlik `92px`'den `108px`'e genişletildi, `padding: 12px 8px 10px` ve `box-sizing: border-box` ile dengelendi.
+    - `.sound-popover-header`: `height: 18px; min-height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;` kuralları ile dikey yüksekliği kesin olarak sabitlendi.
+    - `.sound-popover-mute-btn`: Yükseklik `30px; min-height: 30px` olarak sabitlendi; buton içi `svg` için `flex-shrink: 0`, metin `span` etiketi için `white-space: nowrap; overflow: hidden; text-overflow: ellipsis;` kuralları eklenerek çoklu satıra bölünme tamamen engellendi.
+  - **Birim ve Entegrasyon Testleri**:
+    - `SoundControl.test.tsx`: Sessize alma durumunda başlığın metinsel kelimeye dönüşmeyip `0%` göstermeye devam ettiğini ve düzen kaymasını önlediğini doğrulayan 10. test yazıldı.
+- **Doğrulama ve Metrikler**:
+  - Vitest: **30 test dosyasında 202 testin tamamı (%100) başarıyla geçti**.
+  - TypeScript: `npm run typecheck` **0 hata**.
+  - SonarJS & ESLint: Bilişsel karmaşıklık < 10, **0 hata, 0 uyarı**.
+  - HTML Meta & Güvenli Alan: `index.html` viewport meta etiketine `viewport-fit=cover` eklenerek modern çentikli telefonlarda (iOS Dynamic Island, Android gesture nav) `env(safe-area-inset-*)` tam entegrasyonu sağlandı.
+
+## [2026-10-17] - Mobil Dokunmatik Jestler, Doğrudan Müzik Geçişi ve Haptik Bağlam Menüsü
+
+### Yapılanlar
+- **1. Aşağı Kaydırarak Kapatma / Küçültme Hareketi (Swipe-Down to Dismiss Sheet - `WindowFrame.tsx`, `window.css`)**:
+  - Mobil tam ekran bottom sheet başlık çubuğuna (`.window-titlebar` / `.window-mobile-indicator-bar`) Pointer Events API tabanlı akıcı parmak izleme motoru (`setupSheetSwipeListener`) eklendi.
+  - Sürükleme esnasında sheet `--sheet-translate-y` CSS değişkeni ile 1:1 parmağı takip eder (`.is-swiping` ile `transition: none`, `opacity` dinamik solma).
+  - 110px eşiği aşıldığında pencere otomatik olarak simge durumuna küçülür (`minimizeWindow`). Eşik aşılmazsa `0.28s cubic-bezier(0.32, 0.72, 0, 1)` yay animasyonu ile eski tepe konumuna zıplar (snap-back).
+  - Pencere kontrol butonlarına (X ve -) basıldığında jest çakışması engellendi.
+  - SonarJS kurallarına tam uyum için `getMobileSheetOpacity` ve `setupSheetSwipeListener` yardımcıları saf fonksiyon olarak bileşen dışına ayrıştırıldı.
+- **2. Mobilde Doğrudan Müzik Parçası Değiştirme (`MusicPlayer.tsx`, `desktop.css`)**:
+  - Durum çubuğunda mobilde gizlenen sonraki parça butonu (`.next-track-btn`) `display: flex !important` yapılarak 22×22px dokunmatik buton olarak görünür kılındı.
+  - Durum çubuğu müzik konteynerine şarkı adı ve BPM bilgisi (`title`) eklendi.
+  - Oynat/Durdur butonu %100 saf ve hatasız çalışacak şekilde optimize edildi.
+- **3. Masaüstü ve Dosya Kartlarında Uzun Basma Bağlam Menüsü (Mobile Long-Press - `Desktop.tsx`)**:
+  - Mobilde boş masaüstü alanına 500ms basılı tutulduğunda dokunulan koordinatlarda masaüstü bağlam menüsü açılır (Yeni Not, Yeni Belge, Yeni Script, Dosya Yükle, Düzeni Sıfırla).
+  - Destekleyen mobil cihazlarda 40ms haptik titreşim (`navigator.vibrate(40)`) geri bildirimi verilir.
+  - Kullanıcı parmağını 10px'den fazla kaydırdığında (scroll jesti) uzun basma zamanlayıcısı otomatik iptal edilir.
+  - Masaüstü dosya kartlarına uzun basıldığında dosya bağlam menüsü (Aç, Yeniden Adlandır, Sil) açılır.
+  - Uzun basma jesti sonrası parmak kaldırıldığında menünün hemen kapanmasını önleyen `justLongPressedRef` koruması entegre edildi.
+- **Test ve Kalite Durumu**:
+  - `WindowFrame.test.tsx`: Swipe-down eşik aşımı küçültme ve eşik altı snap-back davranışlarını test eden 2 yeni test eklendi (toplam 16 test).
+  - `Desktop.test.tsx`: Mobil arka plan uzun basma, hareket halinde iptal olma ve dosya kartı uzun basma senaryolarını test eden 3 yeni test eklendi (toplam 19 test).
+  - Vitest: **30 test dosyasında 207 testin tamamı (%100) başarıyla geçti**.
+  - TypeScript: `tsc --noEmit` **0 hata**.
+  - ESLint & SonarJS: Bilişsel karmaşıklık $\le$ 15, **0 hata, 0 uyarı**.
+
+
+

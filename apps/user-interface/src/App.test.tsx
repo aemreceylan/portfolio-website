@@ -2,9 +2,14 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { App } from './App';
 import { useI18nStore } from '#i18n/i18n.store';
+import { useViewportStore } from '#stores/viewport.store';
+import { useWindowManager } from '#stores/window-manager.store';
 
 describe('Root App Component', () => {
   beforeEach(() => {
+    window.innerWidth = 1200;
+    useWindowManager.getState().reset();
+    useViewportStore.getState().setDimensions(1200, 800);
     document.head.innerHTML = `
       <meta name="description" content="" />
       <meta property="og:title" content="" />
@@ -16,11 +21,20 @@ describe('Root App Component', () => {
     useI18nStore.getState().setLanguage('en');
   });
 
-  it('should render the Desktop and boot terminal automatically', () => {
+  it('should render the Desktop and boot terminal automatically on desktop', () => {
     render(<App />);
 
     expect(screen.getByText('AEC')).toBeInTheDocument();
     expect(screen.getByTestId('window-terminal')).toBeInTheDocument();
+  });
+
+  it('should not auto-open terminal on mobile devices to preserve clean springboard launcher', () => {
+    window.innerWidth = 375;
+    useViewportStore.getState().setDimensions(375, 667);
+    render(<App />);
+
+    expect(screen.getByText('AEC')).toBeInTheDocument();
+    expect(screen.queryByTestId('window-terminal')).not.toBeInTheDocument();
   });
 
   it('should synchronize document.documentElement.lang, title and meta tags with active language', () => {

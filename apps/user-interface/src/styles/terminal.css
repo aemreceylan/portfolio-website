@@ -145,3 +145,31 @@
   color: var(--aurora-cyan);
   font-weight: 700;
 }
+
+/* Mobile Responsive Adaptation */
+@media (max-width: 767px) {
+  .terminal-container {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .nano-titlebar {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .nano-textarea {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .nano-footer {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .nano-shortcut-btn {
+    padding: 5px 8px;
+    min-height: 28px;
+  }
+}
