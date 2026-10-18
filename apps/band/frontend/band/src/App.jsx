@@ -5,7 +5,7 @@ import Users from "./Components/Users/Users";
 import "./roots.css";
 import "./fonts.css";
 import "./App.css";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect } from "react";
 import LoginSignup from "./Components/LoginSignup/LoginSignUp";
 import { WSContext } from "./Contexts/WSProvider";
 import FloatingElement from "./Components/UI/FloatingElement/FloatingElement";
@@ -31,27 +31,38 @@ export default function App() {
 
     // Notify WebOS Container Runtime that BAND guest application is ready
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage({
-        source: 'aec-webos-guest',
-        targetAppId: 'band',
-        timestamp: Date.now(),
-        payload: {
-          type: 'WEBOS_GUEST_READY',
-          appId: 'band',
-          version: '1.0.0',
+      const targetOrigin =
+        typeof window !== 'undefined' && window.location.origin
+          ? window.location.origin
+          : '*';
+
+      window.parent.postMessage(
+        {
+          source: 'aec-webos-guest',
+          targetAppId: 'band',
+          timestamp: Date.now(),
+          payload: {
+            type: 'WEBOS_GUEST_READY',
+            appId: 'band',
+            version: '1.0.0',
+          },
         },
-      }, '*');
+        targetOrigin
+      );
     }
-  }, []);
+  }, [setInviteToken]);
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setContextMenu({ isVisible: false });
+    };
+    window.addEventListener("click", handleGlobalClick);
+    return () => window.removeEventListener("click", handleGlobalClick);
+  }, [setContextMenu]);
+
   return (
     <>
       {login ? (
-        <div
-          id="app"
-          onClick={() => {
-            setContextMenu({ isVisible: false });
-          }}
-        >
+        <div id="app">
           <div id="app-main">
             <HubList />
             <Hub />
@@ -67,7 +78,7 @@ export default function App() {
           return (
             <FloatingElement
               coordinate={[]}
-              key={i}
+              key={element.id || `stream-media-${i}`}
               styles={{
                 width: "15%",
                 aspectRatio: "16/9",

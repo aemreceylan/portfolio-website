@@ -235,7 +235,7 @@ function getSimulatedUserListMap() {
 /**
  * Handle API & File requests against the simulated database
  */
-export async function handleSimulatedRequest({ url, method = "GET", body }) {
+export async function handleSimulatedRequest({ url, body }) {
   let parsedBody = {};
   if (body) {
     if (typeof body === "string") {

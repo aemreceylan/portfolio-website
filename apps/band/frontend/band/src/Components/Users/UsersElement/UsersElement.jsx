@@ -1,7 +1,6 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import "./UsersElement.css";
 import { WSContext } from "../../../Contexts/WSProvider";
-import useFetch from "../../../hooks/useFetch";
 
 export default function UsersElement({ data }) {
   const {

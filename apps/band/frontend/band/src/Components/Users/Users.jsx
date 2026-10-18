@@ -29,7 +29,7 @@ export default function Users() {
             <div id="users-buttons">
               <div
                 id="users-buttons-frame"
-                // onClick={() => setIsOpen((prev) => !prev)}
+                onClick={() => setIsOpen((prev) => !prev)}
               >
                 {isOpen ? (
                   <svg

@@ -9,7 +9,7 @@ import { checkSimulatedUserValidation } from "../services/simulatedBackend";
 export default function useUserValidation() {
   const [result, setResult] = useState();
 
-  const userValidation = async (authToken) => {
+  const userValidation = async (_authToken) => {
     try {
       const response = await fetch(
         "http://localhost:3000/api/user-validation",

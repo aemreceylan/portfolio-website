@@ -10,7 +10,7 @@ export default function ChatBox() {
   const fileUploadRef = useRef();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [sendFilesRequest, sendFileData, uploading] = useFetch();
+  const [sendFilesRequest, sendFileData] = useFetch();
 
   useEffect(() => {
     if (sendFileData) {

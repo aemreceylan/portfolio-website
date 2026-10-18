@@ -8,8 +8,6 @@ import useUserValidation from "../../hooks/useUserValidation.js";
 import useFetch from "../../hooks/useFetch.js";
 import Module from "./Module/Module.jsx";
 
-import config from "../../../../../backend/server/config.js";
-
 function RtcModal({ children }) {
   return (
     <>
@@ -69,7 +67,7 @@ export default function Hub() {
   const [rtcDevices, setRtcDevices] = useState();
   const [selectedInviteType, setSelectedInviteType] = useState("inviteOnly");
   const [uplodadedProfileFile, setUplodadedProfileFile] = useState();
-  const [sendProfileFileRequest, sendProfileFileData, uploading] = useFetch();
+  const [sendProfileFileRequest, sendProfileFileData] = useFetch();
 
   const camVideoRef = useRef();
   const micAudioRef = useRef();
@@ -124,7 +122,7 @@ export default function Hub() {
       if (streams.camVideoTest) {
         streams.camVideoTest.getTracks().forEach((element) => element.stop());
         setStreams((prev) => {
-          const { camVideoTest, ...other } = prev;
+          const { camVideoTest: _camVideoTest, ...other } = prev;
           return other;
         });
         if (camVideoRef.current) camVideoRef.current.srcObject = null;
@@ -132,7 +130,7 @@ export default function Hub() {
       if (streams.micAudioTest) {
         streams.micAudioTest.getTracks().forEach((element) => element.stop());
         setStreams((prev) => {
-          const { micAudioTest, ...other } = prev;
+          const { micAudioTest: _micAudioTest, ...other } = prev;
           return other;
         });
         if (micAudioRef.current) micAudioRef.current.srcObject = null;
@@ -149,7 +147,7 @@ export default function Hub() {
               .getTracks()
               .forEach((element) => element.stop());
             setStreams((prev) => {
-              const { camVideoTest, ...other } = prev;
+              const { camVideoTest: _camVideoTest, ...other } = prev;
               return other;
             });
             if (camVideoRef.current) camVideoRef.current.srcObject = null;
@@ -159,7 +157,7 @@ export default function Hub() {
               .getTracks()
               .forEach((element) => element.stop());
             setStreams((prev) => {
-              const { micAudioTest, ...other } = prev;
+              const { micAudioTest: _micAudioTest, ...other } = prev;
               return other;
             });
             if (micAudioRef.current) micAudioRef.current.srcObject = null;
@@ -326,6 +324,7 @@ export default function Hub() {
   useEffect(() => {
     if (createInviteLinkData) {
       if (createInviteLinkData.status) {
+        console.log("Invite link created successfully");
       }
       console.log(createInviteLinkData.msg);
     }
@@ -372,7 +371,7 @@ export default function Hub() {
               </div>
               <div
                 id="hub-panel-buttons-frame"
-                // onClick={() => setIsOpen((prev) => !prev)}
+                onClick={() => setIsOpen((prev) => !prev)}
               >
                 {isOpen ? (
                   <svg

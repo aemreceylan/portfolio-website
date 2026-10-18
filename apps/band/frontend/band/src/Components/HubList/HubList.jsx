@@ -1,21 +1,16 @@
-import { useContext, useEffect } from "react";
-import useFetch from "../../hooks/useFetch";
+import { useContext } from "react";
 import Panel from "../Panel/Panel";
-import HubListElement from "./HubElement/HubListElement";
 import "./HubList.css";
 import { WSContext } from "../../Contexts/WSProvider";
-import { useRef } from "react";
 
 export default function HubList() {
   const {
-    setLogout,
     logOutRequest,
     setContextMenu,
     setProfileScreen,
     profileId,
     userId,
     setSelectedChannel,
-    profilePhotoURL,
     nick,
     userList,
   } = useContext(WSContext);

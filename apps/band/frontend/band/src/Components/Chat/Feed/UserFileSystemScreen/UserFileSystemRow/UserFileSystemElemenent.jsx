@@ -197,7 +197,7 @@ export default function UserFileSystemElement({
   isSelecting,
   handleUserFileSystem,
   setFolderPath,
-  folderId,
+  folderId: _folderId,
   setFolderId,
 }) {
   const clickTimeout = useRef();

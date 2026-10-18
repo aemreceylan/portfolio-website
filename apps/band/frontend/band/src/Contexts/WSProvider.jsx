@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useRef } from "react";
+import { createContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import useFetch from "../hooks/useFetch";
 import useCall from "../hooks/useCall";
@@ -15,7 +15,7 @@ export default function WSProvider({ children }) {
   const [socket, setSocket] = useState();
   const [authToken, setAuthToken] = useState();
   const [selectedChannel, setSelectedChannel] = useState({ id: "", name: "" });
-  const [csrfToken, setCsrfToken] = useState();
+  const [, setCsrfToken] = useState();
   const [logout, setLogout] = useState(false);
   const [selectedRTC, setSelectedRTC] = useState({
     id: "",

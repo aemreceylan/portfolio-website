@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import Message from "./Message/Message";
 
 import "./Post.css";

@@ -1,4 +1,4 @@
-import { useContext, useRef } from "react";
+import { useContext } from "react";
 import "./Video.css";
 import { WSContext } from "../../../../../../Contexts/WSProvider";
 export default function Video({ styles, stream, setRtcVideoFullScreen }) {

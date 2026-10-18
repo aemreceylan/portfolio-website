@@ -27,7 +27,7 @@ export const BandApp: React.FC<BandAppProps> = ({ manifest, windowId }) => {
 
   const modeSummary = (
     <div className="band-mode-summary" data-testid="band-mode-summary">
-      <div className="band-mode-segmented-group" role="group" aria-label="Çalışma Modu">
+      <div className="band-mode-segmented-group" aria-label="Çalışma Modu">
         <button
           type="button"
           className={`band-mode-segment-btn offline ${backendMode === 'standalone' ? 'active' : ''}`}
@@ -84,12 +84,11 @@ export const BandApp: React.FC<BandAppProps> = ({ manifest, windowId }) => {
 
       {/* Compact Info & Mode Configuration Modal */}
       {showModeModal && (
-        <div className="band-info-modal-backdrop" onClick={() => setShowModeModal(false)}>
+        <div className="band-info-modal-backdrop">
           <dialog
             open
             className="band-info-modal-card"
             aria-label="BAND Bilgi ve Çalışma Modu"
-            onClick={(e) => e.stopPropagation()}
           >
             <div className="band-info-modal-header">
               <div className="band-info-title-group">

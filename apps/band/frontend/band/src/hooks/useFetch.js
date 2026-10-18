@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import useWait from "./useWait";
+import { waitForData } from "./useWait";
 import { _csrfToken as csrfToken } from "../Contexts/WSProvider";
 import {
   handleSimulatedRequest,
@@ -17,7 +17,7 @@ export default function useFetch() {
 
   const request = useCallback(
     async ({ url, method = "GET", headers, body }) => {
-      const wait = useWait(csrfToken);
+      const wait = waitForData(csrfToken);
       setLoading(true);
       const reqData = {
         method: method,
@@ -30,7 +30,7 @@ export default function useFetch() {
         reqData.headers = { ...reqData.headers, "CSRF-Token": csrfToken[0] };
       }
       const activeSession = getActiveSession();
-      if (activeSession && activeSession.authToken) {
+      if (activeSession?.authToken) {
         reqData.headers = {
           ...reqData.headers,
           Authorization: `Bearer ${activeSession.authToken}`,
