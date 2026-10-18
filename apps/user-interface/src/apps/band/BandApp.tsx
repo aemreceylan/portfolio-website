@@ -6,18 +6,22 @@ import './BandApp.css';
 
 export interface BandAppProps {
   manifest?: AppManifest;
+  windowId?: string;
 }
 
 /**
  * BAND (Band Absolutely Not Discord) WebOS Application
  * Containerized execution with compact mode summary and configurable device simulator.
  */
-export const BandApp: React.FC<BandAppProps> = ({ manifest }) => {
+export const BandApp: React.FC<BandAppProps> = ({ manifest, windowId }) => {
   const [backendMode, setBackendMode] = useState<'standalone' | 'connected'>('standalone');
   const [showModeModal, setShowModeModal] = useState(false);
 
+  const querySuffix = windowId ? `?instanceId=${encodeURIComponent(windowId)}` : '';
   const entryUrl =
-    backendMode === 'connected' ? 'http://localhost:3000' : '/apps/band/index.html';
+    backendMode === 'connected'
+      ? `http://localhost:3000${querySuffix}`
+      : `/apps/band/index.html${querySuffix}`;
 
   const enableDeviceSimulator = manifest?.container?.enableDeviceSimulator ?? true;
 

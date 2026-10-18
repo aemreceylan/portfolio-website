@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Dock } from './Dock';
 import { useWindowManager } from '#stores/window-manager.store';
-import { terminalManifest } from '#apps/app-registry';
+import { terminalManifest, bandManifest } from '#apps/app-registry';
 import { useI18nStore } from '#i18n/i18n.store';
 import { useViewportStore } from '#stores/viewport.store';
 
@@ -127,6 +127,35 @@ describe('Dock Component', () => {
 
     render(<Dock />);
     expect(screen.getByTestId('dock-item-terminal')).toBeInTheDocument();
+  });
+
+  it('should apply behind-maximized class to dock when an active window is maximized', () => {
+    useWindowManager.getState().openWindow(terminalManifest);
+    useWindowManager.getState().maximizeWindow('terminal');
+
+    const { container } = render(<Dock />);
+    const dockContainer = container.querySelector('.spatial-dock-container');
+    expect(dockContainer).toHaveClass('behind-maximized');
+  });
+
+  it('should display New Window action in dock context menu for non-system apps and open new instance', () => {
+    useWindowManager.getState().openWindow(bandManifest);
+
+    render(<Dock />);
+
+    const dockItem = screen.getByTestId('dock-item-band');
+    fireEvent.contextMenu(dockItem);
+
+    const newWindowBtn = screen.getByTestId('dock-menu-new-window-btn');
+    expect(newWindowBtn).toBeInTheDocument();
+
+    fireEvent.click(newWindowBtn);
+
+    const storeWindows = useWindowManager.getState().windows;
+    expect(storeWindows['band']).toBeDefined();
+    expect(storeWindows['band'].isOpen).toBe(true);
+    expect(storeWindows['band-2']).toBeDefined();
+    expect(storeWindows['band-2'].isOpen).toBe(true);
   });
 });
 

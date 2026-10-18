@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Minus, Maximize2, Minimize2 } from 'lucide-react';
-import { WindowState } from '@personal-os/shared';
-import { useWindowManager } from '#stores/window-manager.store';
+import { WindowState, WindowSize } from '@personal-os/shared';
+import { useWindowManager, STATUSBAR_HEIGHT } from '#stores/window-manager.store';
 import { useTranslation } from '#i18n/i18n.store';
-import { useViewport } from '#stores/viewport.store';
+import { useViewport, useViewportStore } from '#stores/viewport.store';
 
 interface WindowFrameProps {
   window: WindowState;
@@ -47,6 +47,80 @@ const getMobileSheetOpacity = (isMinimized: boolean, sheetOffsetY: number): numb
   if (sheetOffsetY > 0) return Math.max(0.4, 1 - sheetOffsetY / 500);
   return 1;
 };
+
+/**
+ * Clamps window drag position to prevent frames from sliding beyond screen boundaries:
+ * - Left: x >= 0 (cannot slide off-screen to the left)
+ * - Top: y >= STATUSBAR_HEIGHT (cannot slide beneath top status bar)
+ * - Right: x <= screenWidth - windowWidth (cannot slide off-screen to the right)
+ * - Bottom: y <= screenHeight - windowHeight (cannot slide off-screen to the bottom)
+ */
+export function clampWindowDragPosition(
+  initialX: number,
+  initialY: number,
+  deltaX: number,
+  deltaY: number,
+  windowWidth: number,
+  windowHeight: number,
+  screenWidth: number,
+  screenHeight: number
+): { x: number; y: number } {
+  const maxX = Math.max(0, screenWidth - windowWidth);
+  const maxY = Math.max(STATUSBAR_HEIGHT, screenHeight - windowHeight);
+
+  const x = Math.min(maxX, Math.max(0, initialX + deltaX));
+  const y = Math.min(maxY, Math.max(STATUSBAR_HEIGHT, initialY + deltaY));
+
+  return { x, y };
+}
+
+/**
+ * Clamps window resize dimensions and position to prevent frames from resizing beyond screen boundaries:
+ * - North: y cannot be smaller than STATUSBAR_HEIGHT
+ * - West: x cannot be smaller than 0
+ * - East: right boundary cannot exceed screenWidth
+ * - South: bottom boundary cannot exceed screenHeight
+ */
+export function clampWindowResizeBounds(
+  direction: string,
+  start: {
+    initialWidth: number;
+    initialHeight: number;
+    initialX: number;
+    initialY: number;
+    deltaX: number;
+    deltaY: number;
+  },
+  minSize: WindowSize,
+  screen: { width: number; height: number }
+): { x?: number; y?: number; width?: number; height?: number } {
+  const partial: { x?: number; y?: number; width?: number; height?: number } = {};
+
+  if (direction.includes('e')) {
+    const maxWidth = Math.max(minSize.width, screen.width - start.initialX);
+    partial.width = Math.min(maxWidth, Math.max(minSize.width, start.initialWidth + start.deltaX));
+  } else if (direction.includes('w')) {
+    const clampedWidth = Math.max(minSize.width, start.initialWidth - start.deltaX);
+    const desiredX = start.initialX + (start.initialWidth - clampedWidth);
+    const clampedX = Math.max(0, desiredX);
+    partial.x = clampedX;
+    partial.width = start.initialX + start.initialWidth - clampedX;
+  }
+
+  if (direction.includes('s')) {
+    const maxHeight = Math.max(minSize.height, screen.height - start.initialY);
+    partial.height = Math.min(maxHeight, Math.max(minSize.height, start.initialHeight + start.deltaY));
+  } else if (direction.includes('n')) {
+    const potentialY = start.initialY + start.deltaY;
+    const clampedY = Math.max(STATUSBAR_HEIGHT, potentialY);
+    const effectiveDeltaY = clampedY - start.initialY;
+    const clampedHeight = Math.max(minSize.height, start.initialHeight - effectiveDeltaY);
+    partial.height = clampedHeight;
+    partial.y = start.initialY + (start.initialHeight - clampedHeight);
+  }
+
+  return partial;
+}
 
 /**
  * Spatial Glass Window Frame component providing:
@@ -252,13 +326,22 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
 
     const onPointerMove = (moveEvent: PointerEvent) => {
       if (!dragStartRef.current) return;
-      const deltaX = moveEvent.clientX - dragStartRef.current.startX;
-      const deltaY = moveEvent.clientY - dragStartRef.current.startY;
+      const { width: vpWidth, height: vpHeight } = useViewportStore.getState();
+      const screenWidth = vpWidth || (typeof window !== 'undefined' ? window.innerWidth : 1200);
+      const screenHeight = vpHeight || (typeof window !== 'undefined' ? window.innerHeight : 800);
 
-      const newX = Math.max(0, dragStartRef.current.initialX + deltaX);
-      const newY = Math.max(0, dragStartRef.current.initialY + deltaY);
+      const nextPos = clampWindowDragPosition(
+        dragStartRef.current.initialX,
+        dragStartRef.current.initialY,
+        moveEvent.clientX - dragStartRef.current.startX,
+        moveEvent.clientY - dragStartRef.current.startY,
+        win.bounds.width,
+        win.bounds.height,
+        screenWidth,
+        screenHeight
+      );
 
-      updateBounds(win.id, { x: newX, y: newY });
+      updateBounds(win.id, nextPos);
     };
 
     const onPointerUp = (upEvent: PointerEvent) => {
@@ -309,30 +392,23 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
 
     const onPointerMove = (moveEvent: PointerEvent) => {
       if (!resizeStartRef.current) return;
-      const { direction, startX, startY, initialWidth, initialHeight, initialX, initialY } =
-        resizeStartRef.current;
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
+      const { width: vpWidth, height: vpHeight } = useViewportStore.getState();
+      const screenWidth = vpWidth || (typeof window !== 'undefined' ? window.innerWidth : 1200);
+      const screenHeight = vpHeight || (typeof window !== 'undefined' ? window.innerHeight : 800);
 
-      const partial: { x?: number; y?: number; width?: number; height?: number } = {};
-
-      // Horizontal Resize calculation
-      if (direction.includes('e')) {
-        partial.width = Math.max(win.minSize.width, initialWidth + deltaX);
-      } else if (direction.includes('w')) {
-        const clampedWidth = Math.max(win.minSize.width, initialWidth - deltaX);
-        partial.width = clampedWidth;
-        partial.x = initialX + (initialWidth - clampedWidth);
-      }
-
-      // Vertical Resize calculation
-      if (direction.includes('s')) {
-        partial.height = Math.max(win.minSize.height, initialHeight + deltaY);
-      } else if (direction.includes('n')) {
-        const clampedHeight = Math.max(win.minSize.height, initialHeight - deltaY);
-        partial.height = clampedHeight;
-        partial.y = initialY + (initialHeight - clampedHeight);
-      }
+      const partial = clampWindowResizeBounds(
+        resizeStartRef.current.direction,
+        {
+          initialWidth: resizeStartRef.current.initialWidth,
+          initialHeight: resizeStartRef.current.initialHeight,
+          initialX: resizeStartRef.current.initialX,
+          initialY: resizeStartRef.current.initialY,
+          deltaX: moveEvent.clientX - resizeStartRef.current.startX,
+          deltaY: moveEvent.clientY - resizeStartRef.current.startY,
+        },
+        win.minSize,
+        { width: screenWidth, height: screenHeight }
+      );
 
       updateBounds(win.id, partial);
     };
@@ -365,7 +441,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({ window: win, children 
         opacity: getMobileSheetOpacity(isMinimized, sheetOffsetY),
       }
     : {
-        zIndex: win.zIndex,
+        zIndex: isMaximized && isActive ? Math.max(win.zIndex, 9990) : win.zIndex,
         transform: `translate3d(${win.bounds.x}px, ${win.bounds.y}px, 0)`,
         width: `${win.bounds.width}px`,
         height: `${win.bounds.height}px`,

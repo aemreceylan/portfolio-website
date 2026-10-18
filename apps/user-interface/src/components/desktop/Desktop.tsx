@@ -10,6 +10,7 @@ import {
   Terminal,
   Settings,
   Search,
+  Plus,
 } from 'lucide-react';
 import { useWindowManager } from '#stores/window-manager.store';
 import { AppIconResolver } from '#components/icons/AppIconResolver';
@@ -893,19 +894,37 @@ export const Desktop: React.FC = () => {
    */
   const renderContextMenuContent = () => {
     if (contextMenu.app) {
+      const isSystemApp = contextMenu.app.category === 'system' || contextMenu.app.singleton;
       return (
-        <button
-          type="button"
-          className="spatial-context-item"
-          role="menuitem"
-          onClick={() => {
-            handleLaunchApp(contextMenu.app!);
-            setContextMenu((prev) => ({ ...prev, isOpen: false }));
-          }}
-        >
-          <ExternalLink size={14} />
-          <span>{t('ctx_open')}</span>
-        </button>
+        <>
+          <button
+            type="button"
+            className="spatial-context-item"
+            role="menuitem"
+            onClick={() => {
+              handleLaunchApp(contextMenu.app!);
+              setContextMenu((prev) => ({ ...prev, isOpen: false }));
+            }}
+          >
+            <ExternalLink size={14} />
+            <span>{t('ctx_open')}</span>
+          </button>
+          {!isSystemApp && (
+            <button
+              type="button"
+              className="spatial-context-item"
+              role="menuitem"
+              data-testid="ctx-menu-new-window-btn"
+              onClick={() => {
+                openWindow(contextMenu.app!, undefined, { newInstance: true });
+                setContextMenu((prev) => ({ ...prev, isOpen: false }));
+              }}
+            >
+              <Plus size={14} />
+              <span>{t('ctx_new_window')}</span>
+            </button>
+          )}
+        </>
       );
     }
 
@@ -1311,7 +1330,7 @@ export const Desktop: React.FC = () => {
       {/* Render Open Windows */}
       {Object.values(windows).map((win) => {
         if (!win.isOpen) return null;
-        const appEntry = APP_REGISTRY[win.id];
+        const appEntry = APP_REGISTRY[win.appId ?? win.id];
         if (!appEntry) return null;
 
         const AppComponent = appEntry.component;
@@ -1319,7 +1338,7 @@ export const Desktop: React.FC = () => {
         return (
           <WindowFrame key={win.id} window={win}>
             <Suspense fallback={<SpatialSuspenseSkeleton appTitle={win.title} />}>
-              <AppComponent manifest={appEntry.manifest} />
+              <AppComponent manifest={appEntry.manifest} windowId={win.id} />
             </Suspense>
           </WindowFrame>
         );

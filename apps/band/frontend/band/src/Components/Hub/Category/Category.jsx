@@ -1,28 +1,49 @@
 import Channel from "./Channel/Channel";
 import "./Category.css";
 import { useState, useEffect } from "react";
+import { getInstanceId } from "../../../services/simulatedBackend";
 
 export default function Category({ data }) {
+  const catKey = `categoryIsOpen_${getInstanceId()}`;
   const [isOpen, setIsOpen] = useState(() => {
-    if (localStorage.getItem("categoryIsOpen")) {
-      const categoryIsOpen = JSON.parse(localStorage.getItem("categoryIsOpen"));
-      if (categoryIsOpen[data.name]) return categoryIsOpen[data.name];
-      else {
+    const raw =
+      localStorage.getItem(catKey) ||
+      (getInstanceId() === "default" || getInstanceId() === "band"
+        ? localStorage.getItem("categoryIsOpen")
+        : null);
+    if (raw) {
+      try {
+        const categoryIsOpen = JSON.parse(raw);
+        if (categoryIsOpen[data.name] !== undefined) return categoryIsOpen[data.name];
         categoryIsOpen[data.name] = false;
-        localStorage.setItem("categoryIsOpen", JSON.stringify(categoryIsOpen));
+        localStorage.setItem(catKey, JSON.stringify(categoryIsOpen));
+        return false;
+      } catch {
         return false;
       }
     }
+    return false;
   });
   useEffect(() => {
-    localStorage.setItem(
-      "categoryIsOpen",
-      JSON.stringify({
-        ...JSON.parse(localStorage.getItem("categoryIsOpen")),
+    try {
+      const prevData = JSON.parse(
+        localStorage.getItem(catKey) ||
+          (getInstanceId() === "default" || getInstanceId() === "band"
+            ? localStorage.getItem("categoryIsOpen") || "{}"
+            : "{}")
+      );
+      const updated = {
+        ...prevData,
         [data.name]: isOpen,
-      })
-    );
-  }, [isOpen]);
+      };
+      localStorage.setItem(catKey, JSON.stringify(updated));
+      if (getInstanceId() === "default" || getInstanceId() === "band") {
+        localStorage.setItem("categoryIsOpen", JSON.stringify(updated));
+      }
+    } catch {
+      // ignore
+    }
+  }, [isOpen, catKey, data.name]);
   return (
     <>
       <div className="hub-category">

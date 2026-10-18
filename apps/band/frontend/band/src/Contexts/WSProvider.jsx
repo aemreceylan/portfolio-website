@@ -2,7 +2,7 @@ import { createContext, useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import useFetch from "../hooks/useFetch";
 import useCall from "../hooks/useCall";
-import { createBandSocket } from "../services/simulatedBackend";
+import { createBandSocket, getInstanceId } from "../services/simulatedBackend";
 
 export const WSContext = createContext();
 
@@ -95,8 +95,19 @@ export default function WSProvider({ children }) {
 
   useEffect(() => {
     isAuthRequest({ url: "api/session-check" });
-    if (localStorage.getItem("selectedChannel"))
-      setSelectedChannel(JSON.parse(localStorage.getItem("selectedChannel")));
+    const selChannelKey = `selectedChannel_${getInstanceId()}`;
+    const storedChannel =
+      localStorage.getItem(selChannelKey) ||
+      (getInstanceId() === "default" || getInstanceId() === "band"
+        ? localStorage.getItem("selectedChannel")
+        : null);
+    if (storedChannel) {
+      try {
+        setSelectedChannel(JSON.parse(storedChannel));
+      } catch {
+        // ignore
+      }
+    }
     csrfRequest({
       url: "api/get-csrf",
     });

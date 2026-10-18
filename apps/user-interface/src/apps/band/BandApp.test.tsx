@@ -72,4 +72,24 @@ describe('BandApp WebOS Application Component', () => {
 
     expect(screen.queryByTestId('sandbox-viewport-controls')).not.toBeInTheDocument();
   });
+
+  it('appends instanceId query parameter when windowId is provided to isolate multiple window environments', () => {
+    render(<BandApp manifest={bandManifest} windowId="band-2" />);
+
+    const iframe = screen.getByTestId('sandbox-iframe-band');
+    expect(iframe).toHaveAttribute('src', '/apps/band/index.html?instanceId=band-2');
+
+    // Switch to connected mode
+    const onlineBtn = screen.getByRole('button', { name: /online/i });
+    fireEvent.click(onlineBtn);
+
+    expect(iframe).toHaveAttribute('src', 'http://localhost:3000?instanceId=band-2');
+  });
+
+  it('preserves clean URL without query parameter when windowId is omitted', () => {
+    render(<BandApp manifest={bandManifest} />);
+
+    const iframe = screen.getByTestId('sandbox-iframe-band');
+    expect(iframe).toHaveAttribute('src', '/apps/band/index.html');
+  });
 });

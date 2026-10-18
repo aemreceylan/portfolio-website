@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { WindowFrame } from './WindowFrame';
+import { WindowFrame, clampWindowDragPosition, clampWindowResizeBounds } from './WindowFrame';
 import { useWindowManager } from '#stores/window-manager.store';
 import { useI18nStore } from '#i18n/i18n.store';
 import { useViewportStore } from '#stores/viewport.store';
@@ -312,6 +312,148 @@ describe('WindowFrame Component', () => {
 
       expect(windowContainer).not.toHaveClass('is-swiping');
       expect(useWindowManager.getState().windows['test-app'].isMinimized).toBe(false);
+    });
+
+    it('should clamp window dragging so the titlebar cannot be dragged under the top status bar', () => {
+      render(
+        <WindowFrame window={mockWindowState}>
+          <div>Drag Content</div>
+        </WindowFrame>
+      );
+
+      const titlebar = screen.getByLabelText('Test Application Titlebar');
+
+      // Drag aggressively upwards: initialY is 100, drag deltaY = -300
+      fireEvent.pointerDown(titlebar, { button: 0, clientX: 200, clientY: 200, pointerId: 1 });
+      fireEvent.pointerMove(document, { clientX: 200, clientY: -100, pointerId: 1 });
+      fireEvent.pointerUp(document, { pointerId: 1 });
+
+      const updatedWindow = useWindowManager.getState().windows['test-app'];
+      // Must be clamped to STATUSBAR_HEIGHT (42), never below!
+      expect(updatedWindow.bounds.y).toBe(42);
+    });
+
+    it('should clamp north resize so window titlebar cannot resize into the top status bar', () => {
+      const { container } = render(
+        <WindowFrame window={mockWindowState}>
+          <div>Resize Content</div>
+        </WindowFrame>
+      );
+
+      const northHandle = container.querySelector('.resize-handle.n');
+      expect(northHandle).toBeInTheDocument();
+
+      // Resize upwards into statusbar area
+      fireEvent.pointerDown(northHandle!, { clientX: 200, clientY: 100, pointerId: 1 });
+      fireEvent.pointerMove(document, { clientX: 200, clientY: 0, pointerId: 1 });
+      fireEvent.pointerUp(document, { pointerId: 1 });
+
+      const updatedWindow = useWindowManager.getState().windows['test-app'];
+      expect(updatedWindow.bounds.y).toBeGreaterThanOrEqual(42);
+    });
+
+    it('should clamp window dragging to the right and bottom screen edges', () => {
+      // Screen: 1200x800, Window: width 600, height 400, initialX: 100, initialY: 100
+      render(
+        <WindowFrame window={mockWindowState}>
+          <div>Drag Content</div>
+        </WindowFrame>
+      );
+
+      const titlebar = screen.getByLabelText('Test Application Titlebar');
+
+      // Drag aggressively to the right and bottom: deltaX = +2000, deltaY = +2000
+      fireEvent.pointerDown(titlebar, { button: 0, clientX: 200, clientY: 200, pointerId: 1 });
+      fireEvent.pointerMove(document, { clientX: 2200, clientY: 2200, pointerId: 1 });
+      fireEvent.pointerUp(document, { pointerId: 1 });
+
+      const updatedWindow = useWindowManager.getState().windows['test-app'];
+      // Max X is 1200 - 600 = 600
+      expect(updatedWindow.bounds.x).toBe(600);
+      // Max Y is 800 - 400 = 400
+      expect(updatedWindow.bounds.y).toBe(400);
+    });
+
+    it('should clamp east and south resize so window cannot resize past right and bottom screen edges', () => {
+      // Screen: 1200x800, Window: initialX: 100, initialY: 100, width: 600, height: 400
+      const { container } = render(
+        <WindowFrame window={mockWindowState}>
+          <div>Resize Content</div>
+        </WindowFrame>
+      );
+
+      // 1. Southeast resize handle ('se')
+      const seHandle = container.querySelector('.resize-handle.se');
+      expect(seHandle).toBeInTheDocument();
+
+      // Drag aggressively past screen width and height
+      fireEvent.pointerDown(seHandle!, { clientX: 700, clientY: 500, pointerId: 1 });
+      fireEvent.pointerMove(document, { clientX: 3000, clientY: 3000, pointerId: 1 });
+      fireEvent.pointerUp(document, { pointerId: 1 });
+
+      const updatedWindow = useWindowManager.getState().windows['test-app'];
+      // Max width is 1200 - initialX(100) = 1100
+      expect(updatedWindow.bounds.width).toBe(1100);
+      // Max height is 800 - initialY(100) = 700
+      expect(updatedWindow.bounds.height).toBe(700);
+    });
+  });
+
+  describe('Pure Clamping Functions', () => {
+    it('clampWindowDragPosition correctly bounds all 4 coordinates', () => {
+      // Normal within screen
+      const normal = clampWindowDragPosition(100, 100, 50, 50, 600, 400, 1200, 800);
+      expect(normal).toEqual({ x: 150, y: 150 });
+
+      // Out of bounds top and left
+      const topAndLeft = clampWindowDragPosition(100, 100, -200, -200, 600, 400, 1200, 800);
+      expect(topAndLeft).toEqual({ x: 0, y: 42 });
+
+      // Out of bounds bottom and right
+      const bottomAndRight = clampWindowDragPosition(100, 100, 2000, 2000, 600, 400, 1200, 800);
+      expect(bottomAndRight).toEqual({ x: 600, y: 400 });
+    });
+
+    it('clampWindowResizeBounds correctly bounds east, south, west, north', () => {
+      const minSize = { width: 300, height: 200 };
+      const screen = { width: 1200, height: 800 };
+
+      // East resize past screen
+      const east = clampWindowResizeBounds(
+        'e',
+        { initialWidth: 600, initialHeight: 400, initialX: 100, initialY: 100, deltaX: 2000, deltaY: 0 },
+        minSize,
+        screen
+      );
+      expect(east.width).toBe(1100); // 1200 - 100
+
+      // South resize past screen
+      const south = clampWindowResizeBounds(
+        's',
+        { initialWidth: 600, initialHeight: 400, initialX: 100, initialY: 100, deltaX: 0, deltaY: 2000 },
+        minSize,
+        screen
+      );
+      expect(south.height).toBe(700); // 800 - 100
+
+      // West resize past left screen edge
+      const west = clampWindowResizeBounds(
+        'w',
+        { initialWidth: 600, initialHeight: 400, initialX: 100, initialY: 100, deltaX: -500, deltaY: 0 },
+        minSize,
+        screen
+      );
+      expect(west.x).toBe(0);
+      expect(west.width).toBe(700); // initialX(100) + initialWidth(600) - 0 = 700
+
+      // North resize past status bar
+      const north = clampWindowResizeBounds(
+        'n',
+        { initialWidth: 600, initialHeight: 400, initialX: 100, initialY: 100, deltaX: 0, deltaY: -200 },
+        minSize,
+        screen
+      );
+      expect(north.y).toBe(42);
     });
   });
 });

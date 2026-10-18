@@ -1,7 +1,11 @@
 import { useCallback, useState } from "react";
 import useWait from "./useWait";
 import { _csrfToken as csrfToken } from "../Contexts/WSProvider";
-import { handleSimulatedRequest } from "../services/simulatedBackend";
+import {
+  handleSimulatedRequest,
+  getActiveSession,
+  getInstanceId,
+} from "../services/simulatedBackend";
 
 /**
  * Custom hook for making fetch requests with backend DB simulation fallback.
@@ -24,6 +28,14 @@ export default function useFetch() {
       if (method === "POST") {
         await wait;
         reqData.headers = { ...reqData.headers, "CSRF-Token": csrfToken[0] };
+      }
+      const activeSession = getActiveSession();
+      if (activeSession && activeSession.authToken) {
+        reqData.headers = {
+          ...reqData.headers,
+          Authorization: `Bearer ${activeSession.authToken}`,
+          "X-Instance-Id": getInstanceId(),
+        };
       }
       try {
         const response = await fetch("http://localhost:3000/" + url, reqData);

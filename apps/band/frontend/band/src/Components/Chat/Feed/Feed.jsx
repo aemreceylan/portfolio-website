@@ -3,6 +3,7 @@ import "./Feed.css";
 import { useContext, useEffect, useRef, useState } from "react";
 import { WSContext } from "../../../Contexts/WSProvider";
 import useFetch from "../../../hooks/useFetch";
+import { getInstanceId } from "../../../services/simulatedBackend";
 import RtcScreen from "./RtcScreen/RtcScreen";
 import ProfileScreen from "./ProfileScreen/ProfileScreen";
 import UserFileSystemScreen from "./UserFileSystemScreen/UserFileSystemScreen";
@@ -73,7 +74,11 @@ export default function Feed() {
       socket?.emit("joinChannel", selectedChannel.id, (data) => {
         console.log(data);
       });
-      localStorage.setItem("selectedChannel", JSON.stringify(selectedChannel));
+      const selChannelKey = `selectedChannel_${getInstanceId()}`;
+      localStorage.setItem(selChannelKey, JSON.stringify(selectedChannel));
+      if (getInstanceId() === "default" || getInstanceId() === "band") {
+        localStorage.setItem("selectedChannel", JSON.stringify(selectedChannel));
+      }
     }
   }, [selectedChannel]);
 

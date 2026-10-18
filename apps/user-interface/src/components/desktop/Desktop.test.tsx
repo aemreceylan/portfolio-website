@@ -402,6 +402,22 @@ describe('Desktop Component', () => {
       expect(screen.getByText(/Dosya Boyutu Sınırı Aşıldı/i)).toBeInTheDocument();
       expect(useFileSystemStore.getState().getFile('huge-file.txt')).toBeUndefined();
     });
+
+    it('shows New Window option in desktop app context menu for non-system apps and opens new instance', () => {
+      render(<Desktop />);
+
+      const bandAppIcon = screen.getByTestId('desktop-app-band');
+      fireEvent.contextMenu(bandAppIcon);
+
+      const newWindowBtn = screen.getByTestId('ctx-menu-new-window-btn');
+      expect(newWindowBtn).toBeInTheDocument();
+
+      fireEvent.click(newWindowBtn);
+
+      const windows = useWindowManager.getState().windows;
+      expect(windows['band']).toBeDefined();
+      expect(windows['band'].isOpen).toBe(true);
+    });
   });
 });
 

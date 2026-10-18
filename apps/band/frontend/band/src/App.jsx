@@ -10,13 +10,22 @@ import LoginSignup from "./Components/LoginSignup/LoginSignUp";
 import { WSContext } from "./Contexts/WSProvider";
 import FloatingElement from "./Components/UI/FloatingElement/FloatingElement";
 import ContextMenu from "./Components/UI/ContextMenu/ContextMEnu";
+import { getInstanceId } from "./services/simulatedBackend";
+
 export default function App() {
   const { login, streams, setInviteToken, contextMenu, setContextMenu } =
     useContext(WSContext);
   useEffect(() => {
     document.addEventListener("contextmenu", (e) => e.preventDefault());
-    if (!localStorage.getItem("categoryIsOpen"))
-      localStorage.setItem("categoryIsOpen", "{}");
+    const catKey = `categoryIsOpen_${getInstanceId()}`;
+    if (!localStorage.getItem(catKey)) {
+      localStorage.setItem(catKey, "{}");
+    }
+    if (getInstanceId() === "default" || getInstanceId() === "band") {
+      if (!localStorage.getItem("categoryIsOpen")) {
+        localStorage.setItem("categoryIsOpen", "{}");
+      }
+    }
     const urlParams = new URLSearchParams(window.location.search);
     setInviteToken(urlParams.get("token"));
 

@@ -1040,5 +1040,106 @@
   - BAND backend `config.js` portu olan `3000` ile tam senkronizasyon sağlandı (`http://localhost:3000`).
   - Çalışma modu sekmesindeki geliştirici komutları `cd apps/band/backend/server && npm install && npm start` olarak güncellendi.
 
+## [2026-10-18] - Pencere Sürükleme Üst Sınırı, Tam Ekran Dock Yönetimi ve Sistem-Dışı Uygulama Çoklu Örneği (Multi-Instance)
 
+### Yapılanlar
+
+- **1. Pencere Sürükleme ve Kuzey Yönlü Boyutlandırma Sınırlandırması (Drag Clamping)**:
+  - **Sorun**: Kullanıcı pencere çerçevesini yukarı doğru serbest sürüklediğinde pencerenin başlık çubuğu üst durum çubuğunun (42px) altına kayabiliyor ve başlık çubuğu ulaşılamaz hale gelip pencere orada mahsur kalabiliyordu.
+  - **Düzeltme**:
+    - `WindowFrame.tsx`: Sürükleme sırasında hesaplanan `newY` koordinatına `Math.max(STATUSBAR_HEIGHT, initialY + deltaY)` sınırı kondu.
+    - Kuzey yönlü (`n`, `ne`, `nw`) yeniden boyutlandırmalarda tepe noktasının `STATUSBAR_HEIGHT` altına inmesi matematiksel olarak engellendi.
+    - `window-manager.store.ts`: `updateBounds` mutasyonunda `partialBounds.y` otomatik olarak `Math.max(STATUSBAR_HEIGHT, partialBounds.y)` olarak güvenceye alındı.
+
+- **2. Tam Ekran Pencerede Dock Katman Önceliği ve Otomatik Çekilme (`behind-maximized`)**:
+  - **Sorun**: Bir pencere ekranı kapladığında (maximize), ekranın altındaki açık uygulamalar dock'u pencerenin önünde kalarak pencere içi içeriklerin veya butonların tıklanmasını engelliyordu.
+  - **Düzeltme**:
+    - `Dock.tsx`: Aktif odaktaki pencerenin tam ekran olup olmadığını tespit eden reaktif `isMaximizedActive` durumu tanımlandı ve kapsayıcıya `.behind-maximized` sınıfı uygulandı.
+    - `dock.css`: `.spatial-dock-container.behind-maximized` sınıfı ile dock `translateY(80px)` animasyonu ile ekranın altına yumuşakça kaydırıldı, `opacity: 0; pointer-events: none; z-index: 50;` ile pencerenin arkasına itildi.
+    - `WindowFrame.tsx`: Ekranı kaplayan pencereye `zIndex: Math.max(win.zIndex, 9990)` atanarak durum çubuğunun hemen altında ve tüm alt zeminlerin üzerinde kalması sağlandı.
+
+- **3. Sistem Dışı Uygulamalarda Eşzamanlı Çoklu Örnek (Multi-Instance Architecture)**:
+  - **Mimarî**: Sistem uygulamaları (`terminal`, `settings`) `singleton: true` ve `category: 'system'` olarak tekil kimliklerini korurken; `band`, `markdown-viewer`, `js-ide` ve `game-hub` uygulamaları `singleton: false` olarak yapılandırıldı.
+  - **Kimlik ve Başlık Ataması (`resolveNextWindowId`)**:
+    - İlk açılan pencere `appId` kimliğini alır.
+    - Açıkken yeniden açıldığında veya dock / masaüstü sağ tık menüsünden "Yeni Pencere" seçildiğinde ardışık `appId-2`, `appId-3` kimlikleri ve `BAND (2)` yerelleştirilmiş başlık ekleri atanır.
+    - Kaskat koordinatlarla yeni pencereler kademeli olarak açılarak üst üste binme engellendi.
+    - `WindowState` arayüzüne `appId?: string` alanı eklenerek türetilen tüm örneklerin dinamik olarak `APP_REGISTRY` üzerindeki orijinal kök manifestoya ve simgeye bağlanması sağlandı.
+  - **Kullanıcı Etkileşim Noktaları**:
+    - **Masaüstü Sağ Tık Menüsü**: Sistem dışı uygulamalara sağ tıklandığında "Yeni Pencere Aç" (`ctx_new_window`) seçeneği sunuldu.
+    - **Dock Sağ Tık Menüsü**: Dock üzerindeki açık sistem-dışı uygulamalara sağ tıklandığında "Yeni Pencere" seçeneği sunuldu.
+    - **7 Dilli Yerelleştirme**: `ctx_new_window` anahtarı 7 dilde sisteme kaydedildi.
+
+- **4. SonarJS / SonarQube Bilişsel Karmaşıklık Refaktoring'i**:
+  - `window-manager.store.ts`: `openWindow` fonksiyonundaki dallanmalar `findReusableInstance` ve `calculateNewWindowBounds` saf yardımcı fonksiyonlarına ayrılarak bilişsel karmaşıklık SonarJS eşiği olan 15'in çok altına (3 seviyesine) indirildi.
+
+- **Test Kapsamı & Doğrulama**:
+  - `WindowFrame.test.tsx`: Sürükleme ve kuzey yönlü boyutlandırmanın `y >= STATUSBAR_HEIGHT` sınırında tutulduğu test edildi.
+  - `Dock.test.tsx`: Aktif pencere tam ekran yapıldığında `behind-maximized` sınıfının uygulandığı ve dock sağ tık menüsünden "Yeni Pencere" açılabildiği test edildi.
+  - `Desktop.test.tsx`: Masaüstü sağ tık menüsünde sistem dışı uygulamalar için "Yeni Pencere Aç" eyleminin çalıştığı test edildi.
+  - `window-manager.store.test.ts`: `updateBounds` sınır koruması ve çoklu örnek açılış/kapanış yaşam döngüsü test edildi.
+  - **Vitest**: **37 test dosyasında 314 testin tamamı (%100) başarıyla geçti**.
+  - **ESLint & SonarJS**: **0 hata, 0 uyarı**.
+  - **TypeScript**: **4 pakette 0 hata**.
+
+## [2026-10-18] - Pencerelerin Dört Yönlü Viewport Sınırlandırması (Alt ve Sağ Ekran Kenarı Koruması)
+
+### Yapılanlar
+
+- **1. Dört Yönlü Sürükleme Sınırlandırması (`clampWindowDragPosition`)**:
+  - **Sorun**: Kullanıcı pencere çerçevelerini sağa ve aşağı doğru sürüklediğinde pencerenin ekrandan tamamen çıkıp kaybolması mümkündü; yalnızca üst (42px) ve sol (0px) sınırları korunuyordu.
+  - **Düzeltme**:
+    - `WindowFrame.tsx`: Saf matematiksel `clampWindowDragPosition` yardımcı fonksiyonu yazıldı.
+    - **Sağ Sınır**: `x <= screenWidth - windowWidth` ile sınırlandırıldı (`maxX = Math.max(0, screenWidth - windowWidth)`). Pencerenin sağ kenarı ekranın dışına çıkamaz.
+    - **Alt Sınır**: `y <= screenHeight - windowHeight` ile sınırlandırıldı (`maxY = Math.max(STATUSBAR_HEIGHT, screenHeight - windowHeight)`). Pencerenin alt kenarı ekranın alt sınırını aşamaz; pencere ve başlık çubuğu alta doğru ekrandan kaybolamaz.
+    - `useViewportStore` entegre edilerek `window.innerWidth`/`innerHeight` dinamik ekran ve test çözünürlükleri ile tam senkronize çalışması sağlandı.
+
+- **2. Dört Yönlü Boyutlandırma Sınırlandırması (`clampWindowResizeBounds`)**:
+  - Doğu (`e`, `ne`, `se`) yönlü boyutlandırmada pencere genişliği `screenWidth - initialX` ile sınırlandırıldı.
+  - Güney (`s`, `se`, `sw`) yönlü boyutlandırmada pencere yüksekliği `screenHeight - initialY` ile sınırlandırıldı.
+  - Batı (`w`, `nw`, `sw`) yönlü boyutlandırmada `x >= 0` ve Kuzey (`n`, `ne`, `nw`) yönlü boyutlandırmada `y >= STATUSBAR_HEIGHT` sınırları korundu.
+
+- **3. Store Seviyesinde `updateBounds` Koruması**:
+  - `window-manager.store.ts`: `partialBounds.x` mutasyonuna `Math.max(0, partialBounds.x)` koruması eklenerek store seviyesinde negatif koordinatlar engellendi.
+
+- **Test Kapsamı & Doğrulama**:
+  - `WindowFrame.test.tsx`:
+    - Sağa ve alta agresif sürükleme yapıldığında `x` ve `y` koordinatlarının `screenWidth - windowWidth` ve `screenHeight - windowHeight` sınırlarında durduğunu doğrulayan entegrasyon testi eklendi.
+    - Doğu ve güney yönlü yeniden boyutlandırmanın ekran sınırlarında durduğunu doğrulayan entegrasyon testi eklendi.
+    - `clampWindowDragPosition` ve `clampWindowResizeBounds` saf fonksiyonları için kapsamlı birim testleri eklendi.
+  - `window-manager.store.test.ts`: `x` koordinatının 0'dan küçük değerlere ayarlanamadığını doğrulayan birim testi eklendi.
+  - **Vitest**: **37 test dosyasında 319 testin tamamı (%100) başarıyla geçti**.
+  - **ESLint & SonarJS**: **0 hata, 0 uyarı**.
+  - **TypeScript**: **4 pakette 0 hata**.
+
+## [2026-10-18] - Çoklu Pencere Ortam İzolasyonu (Multi-Tenant Isolation) & Gerçek Zamanlı Eşzamanlı Mesajlaşma Mimarisi
+
+### Yapılanlar
+
+- **1. Host Seviyesinde Instance ID Dağıtımı (`Desktop.tsx`, `BandApp.tsx`, `app-registry.tsx`)**:
+  - `Desktop.tsx`: Her açık pencere için `<AppComponent manifest={appEntry.manifest} windowId={win.id} />` prop'u aktarıldı.
+  - `app-registry.tsx`: `APP_REGISTRY` tanımı `windowId?: string` kabul edecek şekilde güncellendi.
+  - `BandApp.tsx`: `BandAppProps` içine `windowId?: string` eklendi; mikro-konteyner `entryUrl` adresine `?instanceId=${windowId}` sorgu parametresi enjekte edildi (örn: `/apps/band/index.html?instanceId=band-2`). Geriye dönük uyumluluk korunarak `windowId` sağlanmadığında temiz URL üretilmesi teminat altına alındı.
+
+- **2. BAND Simüle Backend Oturum Ayrıştırması (`simulatedBackend.js`, `simulatedBackend.d.ts`)**:
+  - URL arama parametresinden pencereye özel `instanceId` okuyan `getInstanceId()` yardımcı motoru yazıldı.
+  - Oturum anahtarı dinamik ad alanına (namespace) bağlandı: `band_db_session_${instanceId}`.
+  - Çoklu pencerede açık olan tüm oturumları (`band_db_session_*`) otomatik tarayarak eşzamanlı aktif kullanıcıları saptayan `getActiveUserIds()` geliştirildi. Böylece Pencere 1'deki Alice ve Pencere 2'deki Bob birbirlerini eşzamanlı olarak "çevrimiçi (online)" olarak görebilmektedir.
+
+- **3. Cross-Window Gerçek Zamanlı Soket Senkronizasyonu (`BroadcastChannel`)**:
+  - Standart W3C `BroadcastChannel` (`band_multi_instance_bus`) entegrasyonu sağlandı.
+  - Pencere 1'den (Alice) mesaj gönderildiğinde, kanal veya kategori eklendiğinde ya da oturum açma/kapama gerçekleştiğinde, diğer pencerelerdeki `SimulatedSocket` dinleyicileri olayı gerçek zamanlı olarak alıp arayüz akışını anında günceller.
+  - Kullanıcılar (`band_db_users`), kanallar (`band_db_channels`) ve mesajlar (`band_db_messages`) ana veritabanı koleksiyonları ortak tutularak iki hesap arasında kesintisiz çift yönlü sohbet testi sağlandı.
+
+- **4. Arayüz Navigasyon İzolasyonu (`WSProvider.jsx`, `Feed.jsx`, `Category.jsx`, `App.jsx`)**:
+  - Seçili kanal (`selectedChannel_${instanceId}`) ve açık kategori durumu (`categoryIsOpen_${instanceId}`) pencere bazlı izole edildi; bir pencerede kanal değiştirildiğinde diğer pencere bundan etkilenmez.
+  - Canlı backend (Port 3000) desteği için `useFetch.js` içine `Authorization: Bearer <authToken>` ve `X-Instance-Id` başlıkları eklendi.
+
+- **5. Test Kapsamı ve Kalite Doğrulaması**:
+  - `BandApp.test.tsx`: `windowId` sağlandığında `instanceId` sorgu parametresinin doğru üretildiğini ve online/offline mod geçişlerinde korunduğunu doğrulayan testler eklendi.
+  - `MultiInstanceIsolation.test.tsx`: İki ayrı pencere örneğinde (Alice ve Bob) oturumların birbirini ezmediğini, bir kullanıcı çıkış yaptığında diğerinin oturumunun korunduğunu kanıtlayan entegrasyon testleri yazıldı.
+  - **Vitest**: **38 test dosyasında 324 testin tamamı (%100) başarıyla geçti**.
+  - **ESLint & SonarJS**: **0 hata, 0 uyarı**.
+  - **TypeScript**: **4 pakette 0 hata**.
+  - **Üretim Derlemesi**: Monorepo ve BAND frontend paketleri sıfır hatayla derlendi.
 

@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Minus, Maximize2 } from 'lucide-react';
+import { X, Minus, Maximize2, Plus } from 'lucide-react';
 import { useWindowManager } from '#stores/window-manager.store';
 import { useSoundStore } from '#stores/sound.store';
 import { useTranslation } from '#i18n/i18n.store';
 import type { Translations } from '#i18n/translations';
 import { AppIconResolver } from '#components/icons/AppIconResolver';
 import { useViewport } from '#stores/viewport.store';
+import { APP_REGISTRY } from '#apps/app-registry';
 import '#styles/dock.css';
 
 interface DockMenuState {
   isOpen: boolean;
-  appId: string | null;
+  windowId: string | null;
   x: number;
   y: number;
 }
@@ -24,12 +25,19 @@ const getLocalizedTitle = (
   defaultTitle: string,
   t: (key: keyof Translations) => string
 ): string => {
-  if (appId === 'settings') return t('appName_settings');
-  if (appId === 'terminal') return t('appName_terminal');
-  if (appId === 'markdown-viewer') return t('appName_markdown');
-  if (appId === 'js-ide') return t('appName_ide');
-  if (appId === 'game-hub') return t('appName_game_hub');
-  return defaultTitle;
+  let baseName = defaultTitle;
+  if (appId === 'settings') baseName = t('appName_settings');
+  else if (appId === 'terminal') baseName = t('appName_terminal');
+  else if (appId === 'markdown-viewer') baseName = t('appName_markdown');
+  else if (appId === 'js-ide') baseName = t('appName_ide');
+  else if (appId === 'game-hub') baseName = t('appName_game_hub');
+  else if (appId === 'band') baseName = t('appName_band');
+
+  const instanceMatch = defaultTitle.match(/\s\(\d+\)$/);
+  if (instanceMatch && !baseName.endsWith(instanceMatch[0])) {
+    return `${baseName}${instanceMatch[0]}`;
+  }
+  return baseName;
 };
 
 /**
@@ -37,15 +45,17 @@ const getLocalizedTitle = (
  * Displays only currently open or minimized applications. When all windows are closed,
  * the dock automatically stays hidden to maintain a clutter-free desktop.
  * On mobile viewports, docks safely on the home screen when windows are minimized.
- * Provides a context menu on right-click to close or minimize/restore open applications.
+ * Provides a context menu on right-click to close, minimize/restore, or open new instances.
+ * Automatically stays behind and hides when an active window is maximized to prevent obstruction.
  */
 export const Dock: React.FC = () => {
-  const { windows, activeWindowId, minimizeWindow, focusWindow, closeWindow } = useWindowManager();
+  const { windows, activeWindowId, minimizeWindow, focusWindow, closeWindow, openWindow } =
+    useWindowManager();
   const { t } = useTranslation();
   const { isMobile } = useViewport();
   const [dockMenu, setDockMenu] = useState<DockMenuState>({
     isOpen: false,
-    appId: null,
+    windowId: null,
     x: 0,
     y: 0,
   });
@@ -55,13 +65,13 @@ export const Dock: React.FC = () => {
 
   // Close context menu if target window is closed
   useEffect(() => {
-    if (dockMenu.isOpen && dockMenu.appId) {
-      const target = windows[dockMenu.appId];
+    if (dockMenu.isOpen && dockMenu.windowId) {
+      const target = windows[dockMenu.windowId];
       if (!target?.isOpen) {
-        setDockMenu({ isOpen: false, appId: null, x: 0, y: 0 });
+        setDockMenu({ isOpen: false, windowId: null, x: 0, y: 0 });
       }
     }
-  }, [windows, dockMenu.isOpen, dockMenu.appId]);
+  }, [windows, dockMenu.isOpen, dockMenu.windowId]);
 
   // Close context menu on global click outside, global contextmenu outside dock, or Escape key
   useEffect(() => {
@@ -69,18 +79,18 @@ export const Dock: React.FC = () => {
 
     const handleGlobalClick = (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest('.dock-context-menu')) return;
-      setDockMenu((prev) => ({ ...prev, isOpen: false, appId: null }));
+      setDockMenu((prev) => ({ ...prev, isOpen: false, windowId: null }));
     };
 
     const handleGlobalContextMenu = (e: MouseEvent) => {
       if (!(e.target as HTMLElement).closest('.dock-item')) {
-        setDockMenu((prev) => ({ ...prev, isOpen: false, appId: null }));
+        setDockMenu((prev) => ({ ...prev, isOpen: false, windowId: null }));
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setDockMenu((prev) => ({ ...prev, isOpen: false, appId: null }));
+        setDockMenu((prev) => ({ ...prev, isOpen: false, windowId: null }));
       }
     };
 
@@ -100,6 +110,14 @@ export const Dock: React.FC = () => {
   const isMobileWindowActive =
     isMobile && activeWindowId && windows[activeWindowId]?.isOpen && !windows[activeWindowId]?.isMinimized;
 
+  // Check if an active window is currently maximized on desktop
+  const isMaximizedActive = Boolean(
+    activeWindowId &&
+      windows[activeWindowId]?.isOpen &&
+      !windows[activeWindowId]?.isMinimized &&
+      windows[activeWindowId]?.isMaximized
+  );
+
   // Return null if no windows are open, or if an active mobile full-screen app is running
   if (openWindows.length === 0 || isMobileWindowActive) {
     return null;
@@ -111,36 +129,36 @@ export const Dock: React.FC = () => {
    * - If active: minimizes it to dock
    * - If backgrounded: brings it to the top focus
    */
-  const handleDockItemClick = (appId: string) => {
+  const handleDockItemClick = (windowId: string) => {
     useSoundStore.getState().playSound('click');
-    const win = windows[appId];
+    const win = windows[windowId];
     if (!win) return;
 
     if (win.isMinimized) {
-      focusWindow(appId);
-    } else if (activeWindowId === appId) {
-      minimizeWindow(appId);
+      focusWindow(windowId);
+    } else if (activeWindowId === windowId) {
+      minimizeWindow(windowId);
     } else {
-      focusWindow(appId);
+      focusWindow(windowId);
     }
   };
 
   /**
    * Opens OS context menu positioned above the right-clicked dock icon
    */
-  const handleDockItemContextMenu = (e: React.MouseEvent, appId: string) => {
+  const handleDockItemContextMenu = (e: React.MouseEvent, windowId: string) => {
     e.preventDefault();
     e.stopPropagation();
     useSoundStore.getState().playSound('click');
 
     const menuWidth = 190;
-    const menuHeight = 110;
+    const menuHeight = 140;
     const x = Math.min(Math.max(10, e.clientX - menuWidth / 2), window.innerWidth - menuWidth - 10);
     const y = Math.max(10, e.clientY - menuHeight - 12);
 
     setDockMenu({
       isOpen: true,
-      appId,
+      windowId,
       x,
       y,
     });
@@ -149,23 +167,30 @@ export const Dock: React.FC = () => {
   /**
    * Closes application directly from dock context menu
    */
-  const handleCloseFromDock = (appId: string) => {
+  const handleCloseFromDock = (windowId: string) => {
     useSoundStore.getState().playSound('click');
-    setDockMenu({ isOpen: false, appId: null, x: 0, y: 0 });
-    closeWindow(appId);
+    setDockMenu({ isOpen: false, windowId: null, x: 0, y: 0 });
+    closeWindow(windowId);
   };
+
+  const targetMenuWindow = dockMenu.windowId ? windows[dockMenu.windowId] : null;
+  const targetMenuAppId = targetMenuWindow ? targetMenuWindow.appId ?? targetMenuWindow.id : null;
+  const targetMenuAppEntry = targetMenuAppId ? APP_REGISTRY[targetMenuAppId] : null;
+  const isTargetNonSystem =
+    targetMenuAppEntry && targetMenuAppEntry.manifest.category !== 'system' && !targetMenuAppEntry.manifest.singleton;
 
   return (
     <>
       <nav
-        className="spatial-dock-container"
+        className={`spatial-dock-container ${isMaximizedActive ? 'behind-maximized' : ''}`}
         aria-label="Açık Uygulamalar Çubuğu"
         onContextMenu={(e) => e.preventDefault()}
       >
         {openWindows.map((win) => {
-          const localizedTitle = getLocalizedTitle(win.id, win.title, t);
+          const effectiveAppId = win.appId ?? win.id;
+          const localizedTitle = getLocalizedTitle(effectiveAppId, win.title, t);
           const isActive = activeWindowId === win.id && !win.isMinimized;
-          const isMenuTarget = dockMenu.isOpen && dockMenu.appId === win.id;
+          const isMenuTarget = dockMenu.isOpen && dockMenu.windowId === win.id;
 
           return (
             <button
@@ -178,7 +203,7 @@ export const Dock: React.FC = () => {
               title={localizedTitle}
               data-testid={`dock-item-${win.id}`}
             >
-              <AppIconResolver appId={win.id} size={24} />
+              <AppIconResolver appId={effectiveAppId} size={24} />
               <span className="dock-tooltip">{localizedTitle}</span>
               <span
                 className="dock-dot"
@@ -193,7 +218,7 @@ export const Dock: React.FC = () => {
       </nav>
 
       {/* Dock Context Menu (rendered in document.body to prevent layout clipping) */}
-      {dockMenu.isOpen && dockMenu.appId && windows[dockMenu.appId] &&
+      {dockMenu.isOpen && dockMenu.windowId && targetMenuWindow &&
         createPortal(
           <div
             role="menu"
@@ -203,20 +228,34 @@ export const Dock: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
-                setDockMenu({ isOpen: false, appId: null, x: 0, y: 0 });
+                setDockMenu({ isOpen: false, windowId: null, x: 0, y: 0 });
               }
             }}
             onContextMenu={(e) => e.preventDefault()}
             data-testid="dock-context-menu"
           >
             <div className="dock-context-header">
-              <span>{getLocalizedTitle(dockMenu.appId, windows[dockMenu.appId].title, t)}</span>
+              <span>{getLocalizedTitle(targetMenuAppId || '', targetMenuWindow.title, t)}</span>
             </div>
+            {isTargetNonSystem && targetMenuAppEntry && (
+              <button
+                type="button"
+                className="window-titlebar-context-item"
+                data-testid="dock-menu-new-window-btn"
+                onClick={() => {
+                  setDockMenu({ isOpen: false, windowId: null, x: 0, y: 0 });
+                  openWindow(targetMenuAppEntry.manifest, undefined, { newInstance: true });
+                }}
+              >
+                <Plus size={14} />
+                <span>{t('ctx_new_window')}</span>
+              </button>
+            )}
             <button
               type="button"
               className="window-titlebar-context-item danger"
               data-testid="dock-menu-close-btn"
-              onClick={() => handleCloseFromDock(dockMenu.appId!)}
+              onClick={() => handleCloseFromDock(dockMenu.windowId!)}
             >
               <X size={14} />
               <span>{t('window_ctx_close')}</span>
@@ -226,18 +265,18 @@ export const Dock: React.FC = () => {
               className="window-titlebar-context-item"
               data-testid="dock-menu-toggle-btn"
               onClick={() => {
-                const targetWin = windows[dockMenu.appId!];
-                setDockMenu({ isOpen: false, appId: null, x: 0, y: 0 });
+                const targetWin = dockMenu.windowId ? windows[dockMenu.windowId] : null;
+                setDockMenu({ isOpen: false, windowId: null, x: 0, y: 0 });
                 if (targetWin?.isMinimized) {
-                  focusWindow(dockMenu.appId!);
+                  focusWindow(dockMenu.windowId!);
                 } else {
-                  minimizeWindow(dockMenu.appId!);
+                  minimizeWindow(dockMenu.windowId!);
                 }
               }}
             >
-              {windows[dockMenu.appId].isMinimized ? <Maximize2 size={14} /> : <Minus size={14} />}
+              {targetMenuWindow.isMinimized ? <Maximize2 size={14} /> : <Minus size={14} />}
               <span>
-                {windows[dockMenu.appId].isMinimized ? t('window_ctx_restore') : t('window_ctx_minimize')}
+                {targetMenuWindow.isMinimized ? t('window_ctx_restore') : t('window_ctx_minimize')}
               </span>
             </button>
           </div>,

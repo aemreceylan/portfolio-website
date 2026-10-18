@@ -24,6 +24,7 @@ export interface WindowBounds extends WindowPosition, WindowSize {}
  */
 export interface WindowState {
   id: string;
+  appId?: string;
   title: string;
   iconName: string;
   isOpen: boolean;

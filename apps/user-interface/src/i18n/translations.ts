@@ -112,6 +112,7 @@ export interface Translations {
 
   // Desktop Context Menu & File Actions
   ctx_open: string;
+  ctx_new_window: string;
   ctx_rename: string;
   ctx_delete: string;
   ctx_new_file: string;
@@ -231,6 +232,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_reset_cancel_btn: 'Cancel',
     settings_reset_success: 'System has been successfully restored to factory defaults!',
     ctx_open: 'Open',
+    ctx_new_window: 'New Window',
     ctx_rename: 'Rename',
     ctx_delete: 'Delete',
     ctx_new_file: 'New File',
@@ -340,6 +342,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_reset_cancel_btn: 'İptal',
     settings_reset_success: 'Sistem başarıyla fabrika ayarlarına döndürüldü!',
     ctx_open: 'Aç',
+    ctx_new_window: 'Yeni Pencere Aç',
     ctx_rename: 'Yeniden Adlandır',
     ctx_delete: 'Sil',
     ctx_new_file: 'Yeni Dosya',
@@ -449,6 +452,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_reset_cancel_btn: 'Abbrechen',
     settings_reset_success: 'Das System wurde erfolgreich auf die Werkseinstellungen zurückgesetzt!',
     ctx_open: 'Öffnen',
+    ctx_new_window: 'Neues Fenster',
     ctx_rename: 'Umbenennen',
     ctx_delete: 'Löschen',
     ctx_new_file: 'Neue Datei',
@@ -558,6 +562,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_reset_cancel_btn: 'Annuler',
     settings_reset_success: 'Le système a été réinitialisé avec succès aux paramètres d\'usine !',
     ctx_open: 'Ouvrir',
+    ctx_new_window: 'Nouvelle fenêtre',
     ctx_rename: 'Renommer',
     ctx_delete: 'Supprimer',
     ctx_new_file: 'Nouveau fichier',
@@ -667,6 +672,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_reset_cancel_btn: 'Cancelar',
     settings_reset_success: '¡El sistema se ha restablecido con éxito a los valores de fábrica!',
     ctx_open: 'Abrir',
+    ctx_new_window: 'Nueva ventana',
     ctx_rename: 'Renombrar',
     ctx_delete: 'Eliminar',
     ctx_new_file: 'Nuevo archivo',
@@ -776,6 +782,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_reset_cancel_btn: 'Отмена',
     settings_reset_success: 'Система успешно сброшена до заводских настроек!',
     ctx_open: 'Открыть',
+    ctx_new_window: 'Новое окно',
     ctx_rename: 'Переименовать',
     ctx_delete: 'Удалить',
     ctx_new_file: 'Новый файл',
@@ -885,6 +892,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, Translations> = {
     settings_reset_cancel_btn: 'キャンセル',
     settings_reset_success: 'システムは正常に工場出荷時の状態にリセットされました！',
     ctx_open: '開く',
+    ctx_new_window: '新しいウィンドウ',
     ctx_rename: '名前を変更',
     ctx_delete: '削除',
     ctx_new_file: '新規ファイル',

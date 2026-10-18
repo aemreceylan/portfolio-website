@@ -23,8 +23,13 @@ const CASCADE_OFFSET = 30;
  */
 const INITIAL_Z_INDEX = 100;
 
+export interface OpenWindowOptions {
+  /** If true, explicitly opens a new window instance for non-system apps */
+  newInstance?: boolean;
+}
+
 interface WindowManagerStore {
-  /** Map of application ID to its current runtime window instance */
+  /** Map of window ID to its current runtime window instance */
   windows: Record<string, WindowState>;
   /** ID of the currently focused active window */
   activeWindowId: string | null;
@@ -32,7 +37,7 @@ interface WindowManagerStore {
   highestZIndex: number;
 
   /** Opens an application window or brings it into focus if already open */
-  openWindow: (app: AppManifest, screenBounds?: WindowSize) => void;
+  openWindow: (app: AppManifest, screenBounds?: WindowSize, options?: OpenWindowOptions) => void;
   /** Closes the window and removes it from active taskbar */
   closeWindow: (windowId: string) => void;
   /** Minimizes the window to the dock */
@@ -57,87 +62,127 @@ function resolveScreenDimensions(screenBounds?: WindowSize): { width: number; he
   return { width: 1200, height: 800 };
 }
 
+/**
+ * Resolves the next unique window identifier and instance index for an application.
+ * If the primary slot (app.id) is not currently open, reuses app.id.
+ * Otherwise finds the next incremental suffix (e.g. 'band-2', 'band-3').
+ */
+function resolveNextWindowId(
+  appId: string,
+  windows: Record<string, WindowState>
+): { id: string; instanceIndex: number } {
+  const primary = windows[appId];
+  if (!primary || !primary.isOpen) {
+    return { id: appId, instanceIndex: 1 };
+  }
+
+  let index = 2;
+  while (windows[`${appId}-${index}`]?.isOpen) {
+    index++;
+  }
+  return { id: `${appId}-${index}`, instanceIndex: index };
+}
+
+function findReusableInstance(
+  app: AppManifest,
+  windows: Record<string, WindowState>,
+  options?: OpenWindowOptions
+): WindowState | null {
+  const isSystemApp = app.category === 'system' || app.singleton;
+  if (isSystemApp) {
+    return windows[app.id] ?? null;
+  }
+
+  if (options?.newInstance) {
+    return null;
+  }
+
+  const existingInstances = Object.values(windows).filter(
+    (w) => (w.appId ?? w.id) === app.id
+  );
+  const openInstances = existingInstances.filter((w) => w.isOpen);
+
+  if (openInstances.length === 0) {
+    return windows[app.id] ?? null;
+  }
+
+  const allMinimized = openInstances.every((w) => w.isMinimized);
+  if (allMinimized) {
+    const [topmost] = [...openInstances].sort((a, b) => b.zIndex - a.zIndex);
+    return topmost ?? null;
+  }
+
+  return null;
+}
+
+function calculateNewWindowBounds(
+  app: AppManifest,
+  openCount: number,
+  screenBounds?: { width: number; height: number }
+): WindowBounds {
+  const defaultX = INITIAL_OFFSET + (openCount % 10) * CASCADE_OFFSET;
+  const defaultY = STATUSBAR_HEIGHT + 10 + (openCount % 10) * CASCADE_OFFSET;
+  const width = app.defaultSize.width;
+  const height = app.defaultSize.height;
+
+  const adjustedX = screenBounds
+    ? Math.min(defaultX, Math.max(10, screenBounds.width - width - 20))
+    : defaultX;
+  const adjustedY = screenBounds
+    ? Math.min(defaultY, Math.max(STATUSBAR_HEIGHT + 10, screenBounds.height - height - 60))
+    : defaultY;
+
+  return { x: adjustedX, y: adjustedY, width, height };
+}
+
 export const useWindowManager = create<WindowManagerStore>((set, get) => ({
   windows: {},
   activeWindowId: null,
   highestZIndex: INITIAL_Z_INDEX,
 
-  openWindow: (app, screenBounds) => {
+  openWindow: (app, screenBounds, options) => {
     const { windows, highestZIndex } = get();
-    const existing = windows[app.id];
+    const reusableInstance = findReusableInstance(app, windows, options);
 
-    // If window already exists in store
-    if (existing) {
-      if (existing.isOpen) {
-        // If minimized, restore and focus it
-        const nextZIndex = highestZIndex + 1;
-        set({
-          windows: {
-            ...windows,
-            [app.id]: {
-              ...existing,
-              isMinimized: false,
-              zIndex: nextZIndex,
-            },
-          },
-          activeWindowId: app.id,
-          highestZIndex: nextZIndex,
-        });
-        useSoundStore.getState().playSound('window-open');
-        return;
-      }
-
-      // If closed, reopen it
+    if (reusableInstance) {
       const nextZIndex = highestZIndex + 1;
       set({
         windows: {
           ...windows,
-          [app.id]: {
-            ...existing,
+          [reusableInstance.id]: {
+            ...reusableInstance,
             isOpen: true,
             isMinimized: false,
             zIndex: nextZIndex,
           },
         },
-        activeWindowId: app.id,
+        activeWindowId: reusableInstance.id,
         highestZIndex: nextZIndex,
       });
       useSoundStore.getState().playSound('window-open');
       return;
     }
 
-    // Calculate intelligent cascaded coordinates
+    const isSystemApp = app.category === 'system' || app.singleton;
+    const { id: targetWindowId, instanceIndex } = isSystemApp
+      ? { id: app.id, instanceIndex: 1 }
+      : resolveNextWindowId(app.id, windows);
+
     const openCount = Object.values(windows).filter((w) => w.isOpen).length;
-    const defaultX = INITIAL_OFFSET + (openCount % 10) * CASCADE_OFFSET;
-    const defaultY = INITIAL_OFFSET + (openCount % 10) * CASCADE_OFFSET;
-
-    const width = app.defaultSize.width;
-    const height = app.defaultSize.height;
-
-    // Boundary check if screen dimensions are known
-    const adjustedX = screenBounds
-      ? Math.min(defaultX, Math.max(10, screenBounds.width - width - 20))
-      : defaultX;
-    const adjustedY = screenBounds
-      ? Math.min(defaultY, Math.max(STATUSBAR_HEIGHT + 10, screenBounds.height - height - 60))
-      : defaultY;
-
+    const bounds = calculateNewWindowBounds(app, openCount, screenBounds);
     const nextZIndex = highestZIndex + 1;
+    const title = instanceIndex > 1 ? `${app.name} (${instanceIndex})` : app.name;
 
     const newWindow: WindowState = {
-      id: app.id,
-      title: app.name,
+      id: targetWindowId,
+      appId: app.id,
+      title,
       iconName: app.iconName,
       isOpen: true,
       isMinimized: false,
       isMaximized: false,
       zIndex: nextZIndex,
-      bounds: {
-        x: adjustedX,
-        y: adjustedY,
-        width,
-        height,
-      },
+      bounds,
       minSize: app.minSize,
       resizable: app.resizable,
     };
@@ -145,9 +190,9 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
     set({
       windows: {
         ...windows,
-        [app.id]: newWindow,
+        [targetWindowId]: newWindow,
       },
-      activeWindowId: app.id,
+      activeWindowId: targetWindowId,
       highestZIndex: nextZIndex,
     });
     useSoundStore.getState().playSound('window-open');
@@ -316,8 +361,12 @@ export const useWindowManager = create<WindowManagerStore>((set, get) => ({
         ? Math.max(target.minSize.height, partialBounds.height)
         : target.bounds.height;
 
-    const nextX = partialBounds.x !== undefined ? partialBounds.x : target.bounds.x;
-    const nextY = partialBounds.y !== undefined ? partialBounds.y : target.bounds.y;
+    const nextX =
+      partialBounds.x !== undefined ? Math.max(0, partialBounds.x) : target.bounds.x;
+    const nextY =
+      partialBounds.y !== undefined
+        ? Math.max(STATUSBAR_HEIGHT, partialBounds.y)
+        : target.bounds.y;
 
     set({
       windows: {

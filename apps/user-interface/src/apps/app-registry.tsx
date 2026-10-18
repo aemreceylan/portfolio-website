@@ -70,7 +70,7 @@ export const markdownViewerManifest: AppManifest = {
   defaultSize: { width: 760, height: 540 },
   minSize: { width: 380, height: 280 },
   resizable: true,
-  singleton: true,
+  singleton: false,
 };
 
 /**
@@ -85,7 +85,7 @@ export const jsIdeManifest: AppManifest = {
   defaultSize: { width: 800, height: 580 },
   minSize: { width: 420, height: 320 },
   resizable: true,
-  singleton: true,
+  singleton: false,
 };
 
 /**
@@ -100,7 +100,7 @@ export const gameHubManifest: AppManifest = {
   defaultSize: { width: 760, height: 560 },
   minSize: { width: 440, height: 380 },
   resizable: true,
-  singleton: true,
+  singleton: false,
 };
 
 /**
@@ -115,7 +115,7 @@ export const bandManifest: AppManifest = {
   defaultSize: { width: 1040, height: 680 },
   minSize: { width: 560, height: 420 },
   resizable: true,
-  singleton: true,
+  singleton: false,
   metadata: {
     techStack: [
       'React 18',
@@ -146,7 +146,7 @@ export const APP_REGISTRY: Record<
   string,
   {
     manifest: AppManifest;
-    component: React.ComponentType<{ manifest: AppManifest }>;
+    component: React.ComponentType<{ manifest: AppManifest; windowId?: string }>;
   }
 > = {
   terminal: {
@@ -171,7 +171,7 @@ export const APP_REGISTRY: Record<
   },
   band: {
     manifest: bandManifest,
-    component: () => <BandAppComponent />,
+    component: (props) => <BandAppComponent {...props} />,
   },
 };
 

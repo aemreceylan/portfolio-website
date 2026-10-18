@@ -32,9 +32,18 @@ Pencereler **Zustand** store üzerinden reaktif olarak yönetilir:
 * **8 Yönlü Boyutlandırma (N, S, E, W, NE, NW, SE, SW)**:
   - Kullanıcı pencerenin herhangi bir kenarından veya köşesinden tutarak pencereyi genişletip daraltabilir.
   - Sol (`W`) ve üst (`N`) kenarlar sürüklendiğinde, pencerenin konumu (`x`, `y`) ve boyutu (`width`, `height`) eşzamanlı ve `minSize` kısıtları korunarak matematiksel olarak dengelenir.
-* **Tam Ekran & Üst Bar Çakışma Koruması**:
+* **Tam Ekran & Dört Yönlü Viewport Sınır Koruması (4-Sided Boundary Clamping & Maximize)**:
   - Üst durum çubuğu 42px (`--statusbar-height: 42px`) kalınlığındadır.
+  - **Dört Yönlü Sürükleme Sınırlandırması (`clampWindowDragPosition`)**:
+    - **Üst (Top)**: `y >= STATUSBAR_HEIGHT` (42px). Başlık çubuğu üst durum çubuğunun altına kaçamaz.
+    - **Sol (Left)**: `x >= 0`. Pencere sol ekran sınırının dışına kayamaz.
+    - **Sağ (Right)**: `x <= screenWidth - windowWidth`. Pencerenin sağ kenarı ekran sınırını aşamaz; pencere sağa doğru kaybolamaz.
+    - **Alt (Bottom)**: `y <= screenHeight - windowHeight`. Pencerenin alt kenarı ekranın alt sınırını aşamaz; pencere ve başlık çubuğu alta doğru ekrandan çıkamaz.
+  - **Dört Yönlü Boyutlandırma Sınırlandırması (`clampWindowResizeBounds`)**:
+    - Doğu (`e`, `ne`, `se`) ve Güney (`s`, `se`, `sw`) boyutlandırmalarında pencere genişliği ve yüksekliği ekranın sağ ve alt kenarları ile sınırlandırılır (`maxWidth = screen.width - initialX`, `maxHeight = screen.height - initialY`).
+    - Batı (`w`, `nw`, `sw`) boyutlandırmasında `x >= 0`, Kuzey (`n`, `ne`, `nw`) boyutlandırmasında `y >= STATUSBAR_HEIGHT` korunur.
   - Ekranı kaplama eyleminde (`maximizeWindow`), pencere tepe noktası kesin olarak `y: 42px` ve yüksekliği `screenHeight - 42px` olarak ayarlanır, böylece pencere başlık çubuğu asla üst barın altında gizlenmez.
+  - **Tam Ekran Katman Hiyerarşisi (Maximize Stacking)**: Ekranı kaplayan aktif pencerenin `zIndex` değeri `Math.max(win.zIndex, 9990)` seviyesine yükseltilir; durum çubuğunun (`z-index: 9998`) hemen altında, masaüstü katmanlarının ise tamamen üzerinde konumlanır.
 * **Pencere Kontrol İkonları ve Eylemleri**:
   - **Kapat (Kırmızı)**: `X` ikonu. Pencereyi kapatır ve açık uygulamalar çubuğundan (Dock) kaldırır.
   - **Küçült (Sarı)**: `Minus` ikonu. Pencereyi simge durumuna küçülterek Dock'a indirir.
@@ -47,20 +56,29 @@ Pencereler **Zustand** store üzerinden reaktif olarak yönetilir:
     - Pencerenin hem başlık çubuğuna hem de uygulama içeriğine (`window-content`) sağ tıklandığında tarayıcının yerel menüsü engellenir (`preventDefault`), pencere odağa getirilir ve WebOS pencere bağlam menüsü açılır.
     - Menü eylemleri: **Kapat** (`Close`), **Simge Durumuna Küçült** (`Minimize`), **Ekranı Kapla / Geri Yükle** (`Maximize / Restore`).
     - Dışarı tıklandığında veya `Escape` tuşuna basıldığında menü otomatik olarak kapanır.
+* **Çoklu Pencere Örneklemesi (Multi-Instance Architecture)**:
+  - Sistem uygulamaları (`terminal`, `settings`) işletim sistemi gereği katı tekil (`singleton: true`, `category: 'system'`) olarak çalışır; yeniden açılmak istendiğinde mevcut pencere restore edilir ve odağa alınır.
+  - Sistem dışı uygulamalar (`band`, `markdown-viewer`, `js-ide`, `game-hub`) `singleton: false` olarak yapılandırılmıştır ve aynı anda birden fazla kez bağımsız örnekler halinde açılabilir.
+  - Her yeni örnek benzersiz dinamik kimlik (`appId-2`, `appId-3`) ve yerelleştirilmiş başlık eki (`BAND (2)`) alır.
+  - Tüm örnekler `WindowState.appId` üzerinden kök manifestoya bağlıdır ve bağımsız koordinat/z-index/boyut yaşam döngüsüne sahiptir.
 
 ---
 
 ## 4. Dinamik Açık Uygulamalar Çubuğu (Dock / Taskbar)
 
 * **Sadece Çalışan Uygulamalar**: Alt bar artık tüm statik uygulamaları değil; **yalnızca o an açık veya simge durumunda olan uygulamaları** listeler.
+* **Tam Ekran Altında Otomatik Çekilme (`behind-maximized`)**:
+  - Odaktaki aktif pencere tam ekran yapıldığında (`isMaximizedActive`), Dock kapsayıcısı `.behind-maximized` sınıfı alır.
+  - CSS transformasyonu ile dock ekranın altına yumuşakça kaydırılır (`transform: translateX(-50%) translateY(80px); opacity: 0; pointer-events: none; z-index: 50;`). Böylece tam ekran pencerenin alt tarafındaki içeriklerin, butonların ve durum barlarının önüne dock asla geçemez.
+  - Pencere normal boyuta döndürüldüğünde veya arka plana alındığında dock akıcı bir bezier animasyonuyla yeniden görünür hale gelir.
 * **Taşmasız Hover Efekti**: Dock butonları büyüdüğünde (`scale(1.12) translateY(-2px)`) dock sınırlarını taşmayacak şekilde dikey boşluklar ve esnek çerçeve yapılandırılmıştır.
 * **Etkileşim**:
   - Aktif pencereye tıklandığında simge durumuna küçülür.
   - Simge durumundaki veya arkadaki pencereye tıklandığında öne gelir ve odaklanır.
   - Pencere kapatıldığında alt bardan otomatik olarak ayrılır.
-* **Sağ Tık Bağlam Menüsü (Dock Context Menu & Direct Close)**:
+* **Sağ Tık Bağlam Menüsü & Çoklu Örnek Açma (Dock Context Menu)**:
   - Dock üzerindeki herhangi bir açık uygulama simgesine sağ tıklandığında tarayıcının yerel menüsü engellenir ve dock simgesinin hemen üzerinde temaya duyarlı bağlam menüsü açılır.
-  - Menü, uygulamanın yerelleştirilmiş adını, pencereyi doğrudan sonlandıran **Kapat** (`Close`) seçeneğini ve **Küçült / Geri Yükle** kontrolünü sunar.
+  - Menü, uygulamanın yerelleştirilmiş adını, pencereyi doğrudan sonlandıran **Kapat** (`Close`) seçeneğini, **Küçült / Geri Yükle** kontrolünü ve sistem dışı uygulamalar için doğrudan **Yeni Pencere** (`ctx_new_window`) açma seçeneğini sunar.
   - "Kapat" tıklandığında pencere kapatılır, dock'tan kaldırılır ve menü kapatılır. Dışarı tıklandığında veya `Escape` tuşuna basıldığında menü kapanır.
 
 ---
@@ -692,3 +710,50 @@ Geliştiricinin daha önce yazdığı veya gelecekte ekleyeceği farklı teknolo
   - **Spotlight (Cmd+K)**: Komut paletinde anında aranıp açılabilir.
   - **VFS**: Sanal Dosya Sistemi'nde korumalı `band-case-study.md` vaka analizi belgesi yer alır.
   - **Masaüstü & Dock**: Masaüstü ızgarasında ve çalışan uygulamalar dock'unda Discord esintili özel simge ve etiket ile temsil edilir.
+
+---
+
+## 24. Çoklu Pencere Örneği (Multi-Instance) & Dinamik Katmanlama Mimarisi
+
+Kullanıcıların tek bir uygulama tipi ile sınırlı kalmadan, gerçek masaüstü işletim sistemlerindeki gibi eşzamanlı çoklu pencerelerle çalışabilmesi için mimari genişletilmiştir:
+
+* **Sistem vs Sistem-Dışı Uygulama Ayrımı (`AppManifest`)**:
+  - `terminal` ve `settings`: `singleton: true` ve `category: 'system'`. Sistem genelinde tek bir kabuk ve ayarlar merkezi olmalıdır; bu uygulamalar başlatıldığında var olan pencere restore edilir ve odağa getirilir.
+  - `band`, `markdown-viewer`, `js-ide`, `game-hub`: `singleton: false` ve `category: 'productivity' | 'utilities' | 'entertainment'`. Her başlatmada veya kullanıcı "Yeni Pencere" talep ettiğinde yeni bir bağımsız pencere örneği oluşturulur.
+* **Akıllı Kimlik Çözümleme (`resolveNextWindowId`)**:
+  - İlk pencere ana kimliği (`appId`) alır (ör. `band`).
+  - Ana pencere açıkken yeni bir pencere talep edildiğinde otomatik olarak ardışık son ekler atanır (`band-2`, `band-3`, vb.).
+  - Her pencere `WindowState.appId` alanında kök uygulama manifestosunu taşır; böylece `APP_REGISTRY` dinamik olarak kök bileşeni ve simgeyi çözer.
+  - Pencereler kapatıldığında sadece ilgili örnek sonlandırılır; diğer örneklerin yaşam döngüsü kesintiye uğramaz.
+* **Dört Yönlü Viewport Sınırlandırması (4-Sided Viewport Clamping)**:
+  - `WindowFrame.tsx`: `clampWindowDragPosition` fonksiyonu ile `x` koordinatı `[0, screenWidth - windowWidth]`, `y` koordinatı `[STATUSBAR_HEIGHT, screenHeight - windowHeight]` aralığına kilitlenir. Pencere ne sağa, ne sola, ne yukarı ne de aşağı ekrandan çıkıp kaybolamaz.
+  - `clampWindowResizeBounds` fonksiyonu ile 8 yönlü boyutlandırma sınırlandırılır; doğu (`e`) ve güney (`s`) boyutlandırmalarında pencere genişlik ve yüksekliği ekranın sağ ve alt kenarlarını taşamaz.
+  - `window-manager.store.ts`: `updateBounds` mutasyonunda `partialBounds.x` için `Math.max(0, ...)` ve `partialBounds.y` için `Math.max(STATUSBAR_HEIGHT, ...)` koruması işletilir.
+* **Tam Ekran Dock Gizleme & Katman Yükseltme (`behind-maximized`)**:
+  - Odaktaki aktif pencere ekranı kapladığında Dock bileşeni `.behind-maximized` sınıfı ile `translateY(80px)` animasyonuyla ekran altına çekilir ve `pointer-events: none` olur.
+  - Tam ekran pencerenin `zIndex` değeri `9990` seviyesine çıkarılarak alttaki tüm masaüstü katmanlarının önüne geçmesi garantilenir.
+
+---
+
+## 25. Çoklu Pencere Ortam İzolasyonu (Multi-Tenant Isolation) & Gerçek Zamanlı Eşzamanlı Mesajlaşma Mimarisi
+
+Aynı uygulamanın (özellikle **BAND** gibi mesajlaşma ve işbirliği platformlarının) iki ayrı çerçevede iki farklı kullanıcı hesabıyla (örneğin Pencere 1'de *Alice*, Pencere 2'de *Bob*) bağımsız oturum açıp birbiriyle eşzamanlı mesajlaşabilmesi için **İzole Oturum & Paylaşılan İletişim Havuzu (Isolated Identity & Shared Communication Plane)** mimarisi uygulanmıştır:
+
+* **Tarayıcı Same-Origin Kısıtlaması & Çözüm Mimarisi**:
+  - Aynı köken (`origin`) altında çalışan tüm iframe'ler standart olarak tek bir `localStorage` havuzuna ve Cookie kavanozuna erişir.
+  - Veritabanı koleksiyonlarının (`users`, `messages`, `channels`) tamamen izole edilmesi Alice ve Bob'u iki farklı paralel evrene hapseder; bu nedenle veri düzeyi ortak tutulup **oturum düzeyi ad alanına (`namespace`) bölünmüştür**.
+* **Host Seviyesinde Instance Parametresi Dağıtımı (`Desktop.tsx`, `BandApp.tsx`)**:
+  - `Desktop.tsx` açık pencereleri render ederken `windowId={win.id}` (örn. `band` ve `band-2`) prop'unu dinamik olarak uygulama bileşenine iletir.
+  - `BandApp.tsx` mikro-konteyner URL'ine `?instanceId=${windowId}` sorgu parametresini ekler (`/apps/band/index.html?instanceId=band-2`).
+* **Dinamik Oturum Anahtarları & Eşzamanlı Kullanıcı Tespiti (`simulatedBackend.js`)**:
+  - Oturum anahtarı dinamik olarak `band_db_session_${instanceId}` şeklinde çözümlenir; Pencere 1'deki oturum işlemi Pencere 2'deki oturumu ezmez.
+  - `getActiveUserIds()` motoru depolamadaki tüm aktif `band_db_session_*` anahtarlarını tarayarak açık pencerelerdeki tüm kullanıcıları eşzamanlı olarak tespit eder. Böylece Alice ve Bob pencerelerinde birbirlerini "çevrimiçi (online)" olarak görür.
+* **Cross-Window Gerçek Zamanlı Soket Senkronizasyonu (`BroadcastChannel`)**:
+  - Farklı JavaScript bellek alanlarına (heap) sahip iframe'ler arasında çift yönlü gerçek zamanlı sinyalleşme için modern W3C `BroadcastChannel` (`band_multi_instance_bus`) entegre edilmiştir.
+  - Pencere 1'den atılan bir mesaj (`newMessageFromClient`), ortak veritabanına (`band_db_messages`) yazıldıktan sonra `broadcastEvent('newMessageFromServer', ...)` ile yayınlanır.
+  - Pencere 2'deki simüle soket alıcısı bu olayı dinleyerek mesajı gecikmesiz olarak ekrana basar.
+* **Arayüz Navigasyon İzolasyonu & Canlı Backend Desteği**:
+  - Seçili kanal (`selectedChannel_${instanceId}`) ve açık kategori durumu (`categoryIsOpen_${instanceId}`) pencereye özel tutulur.
+  - Canlı backend (Port 3000) bağlantısında `useFetch.js` üzerinden `Authorization: Bearer <authToken>` ve `X-Instance-Id` başlıkları taşınarak canlı sunucu tarafında da oturum ayrışması sağlanır.
+
+

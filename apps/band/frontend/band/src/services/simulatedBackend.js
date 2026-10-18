@@ -64,8 +64,30 @@ function saveCollection(key, list) {
 }
 
 // Active session helper
+export function getInstanceId() {
+  try {
+    if (typeof window !== "undefined" && window.location && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("instanceId");
+      if (id) return id.trim();
+    }
+  } catch {
+    // fallback
+  }
+  return "default";
+}
+
+export function getSessionKey() {
+  const inst = getInstanceId();
+  return inst === "default" ? SESSION_KEY : `band_db_session_${inst}`;
+}
+
 export function getActiveSession() {
-  const data = getStorageItem(SESSION_KEY);
+  const key = getSessionKey();
+  let data = getStorageItem(key);
+  if (!data && (getInstanceId() === "default" || getInstanceId() === "band")) {
+    data = getStorageItem(SESSION_KEY);
+  }
   if (!data) return null;
   try {
     return JSON.parse(data);
@@ -75,27 +97,71 @@ export function getActiveSession() {
 }
 
 export function setActiveSession(session) {
-  setStorageItem(SESSION_KEY, JSON.stringify(session));
+  const key = getSessionKey();
+  setStorageItem(key, JSON.stringify(session));
+  if (getInstanceId() === "default" || getInstanceId() === "band") {
+    setStorageItem(SESSION_KEY, JSON.stringify(session));
+  }
 }
 
 export function clearActiveSession() {
-  removeStorageItem(SESSION_KEY);
+  removeStorageItem(getSessionKey());
+  if (getInstanceId() === "default" || getInstanceId() === "band") {
+    removeStorageItem(SESSION_KEY);
+  }
 }
 
 // Global active socket listeners for simulated backend events
 const socketEventHub = new Set();
 
+// Cross-window real-time event hub for multi-instance support
+const BROADCAST_CHANNEL_NAME = "band_multi_instance_bus";
+let crossWindowBus = null;
+
+try {
+  if (typeof BroadcastChannel !== "undefined") {
+    crossWindowBus = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+    crossWindowBus.onmessage = (event) => {
+      const data = event?.data;
+      if (!data || typeof data !== "object") return;
+
+      if (data.type === "newMessageFromServer" && data.payload) {
+        socketEventHub.forEach((s) => s.trigger("newMessageFromServer", data.payload));
+      } else if (data.type === "userList") {
+        const userMap = getSimulatedUserListMap();
+        socketEventHub.forEach((s) => s.trigger("userList", userMap));
+      } else if (data.type === "sectionList") {
+        const sections = getPopulatedSections();
+        const payload = JSON.stringify(sections);
+        socketEventHub.forEach((s) => s.trigger("sectionList", payload));
+      }
+    };
+  }
+} catch {
+  // BroadcastChannel unavailable in non-browser context
+}
+
+function broadcastEvent(type, payload) {
+  if (crossWindowBus) {
+    try {
+      crossWindowBus.postMessage({ type, payload, originInstance: getInstanceId() });
+    } catch {
+      // ignore
+    }
+  }
+}
+
 export function emitSimulatedSectionList() {
-  if (socketEventHub.size === 0) return;
   const sections = getPopulatedSections();
   const payload = JSON.stringify(sections);
   socketEventHub.forEach((s) => s.trigger("sectionList", payload));
+  broadcastEvent("sectionList", payload);
 }
 
 export function emitSimulatedUserList() {
-  if (socketEventHub.size === 0) return;
   const userMap = getSimulatedUserListMap();
   socketEventHub.forEach((s) => s.trigger("userList", userMap));
+  broadcastEvent("userList", userMap);
 }
 
 function getPopulatedSections() {
@@ -112,13 +178,44 @@ function getPopulatedSections() {
   }));
 }
 
+function getActiveUserIds() {
+  const activeIds = new Set();
+  try {
+    if (typeof localStorage !== "undefined") {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("band_db_session") || key === "band_db_session")) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              const s = JSON.parse(raw);
+              if (s && s.isAuth && s.userId) {
+                activeIds.add(s.userId);
+              }
+            } catch {
+              // ignore malformed
+            }
+          }
+        }
+      }
+    }
+  } catch {
+    // fallback
+  }
+  const curr = getActiveSession();
+  if (curr && curr.isAuth && curr.userId) {
+    activeIds.add(curr.userId);
+  }
+  return activeIds;
+}
+
 function getSimulatedUserListMap() {
   const users = getCollection(USERS_KEY);
-  const session = getActiveSession();
+  const activeIds = getActiveUserIds();
   const list = [];
 
   for (const user of users) {
-    const isOnline = session ? session.userId === user._id : false;
+    const isOnline = activeIds.has(user._id);
     list.push([
       user._id,
       {
@@ -562,9 +659,12 @@ export class SimulatedSocket {
       messages.push(newMsg);
       saveCollection(MESSAGES_KEY, messages);
 
-      // Broadcast to all sockets
+      // Broadcast to local sockets
       const serialized = JSON.stringify(newMsg);
       socketEventHub.forEach((s) => s.trigger("newMessageFromServer", serialized));
+
+      // Broadcast to other windows / instances
+      broadcastEvent("newMessageFromServer", serialized);
 
       if (typeof callback === "function") {
         callback({ status: true });

@@ -27,6 +27,18 @@ const mockSettingsApp: AppManifest = {
   singleton: true,
 };
 
+const mockBandApp: AppManifest = {
+  id: 'band',
+  name: 'BAND',
+  description: 'Community platform',
+  iconName: 'MessageSquare',
+  category: 'projects',
+  defaultSize: { width: 900, height: 600 },
+  minSize: { width: 500, height: 400 },
+  resizable: true,
+  singleton: false,
+};
+
 describe('Window Manager Store (Zustand)', () => {
   beforeEach(() => {
     // Reset state before each test
@@ -141,5 +153,62 @@ describe('Window Manager Store (Zustand)', () => {
     expect(moved.y).toBe(150);
     expect(moved.width).toBe(800);
     expect(moved.height).toBe(500);
+  });
+
+  it('should enforce that window y coordinate cannot be placed below STATUSBAR_HEIGHT', () => {
+    const store = useWindowManager.getState();
+    store.openWindow(mockApp);
+
+    // Try setting y coordinate negative or smaller than STATUSBAR_HEIGHT
+    store.updateBounds('terminal', { y: 10 });
+    expect(useWindowManager.getState().windows['terminal'].bounds.y).toBe(STATUSBAR_HEIGHT);
+
+    store.updateBounds('terminal', { y: -50 });
+    expect(useWindowManager.getState().windows['terminal'].bounds.y).toBe(STATUSBAR_HEIGHT);
+  });
+
+  it('should enforce that window x coordinate cannot be placed below 0', () => {
+    const store = useWindowManager.getState();
+    store.openWindow(mockApp);
+
+    store.updateBounds('terminal', { x: -100 });
+    expect(useWindowManager.getState().windows['terminal'].bounds.x).toBe(0);
+  });
+
+  it('should allow non-system applications to open multiple simultaneous instances with automatic index and cascading', () => {
+    const store = useWindowManager.getState();
+
+    // First instance
+    store.openWindow(mockBandApp);
+    const firstState = useWindowManager.getState();
+    expect(firstState.windows['band']).toBeDefined();
+    expect(firstState.windows['band'].isOpen).toBe(true);
+    expect(firstState.windows['band'].title).toBe('BAND');
+    expect(firstState.activeWindowId).toBe('band');
+
+    // Second instance
+    store.openWindow(mockBandApp);
+    const secondState = useWindowManager.getState();
+    expect(secondState.windows['band'].isOpen).toBe(true);
+    expect(secondState.windows['band-2']).toBeDefined();
+    expect(secondState.windows['band-2'].isOpen).toBe(true);
+    expect(secondState.windows['band-2'].title).toBe('BAND (2)');
+    expect(secondState.windows['band-2'].appId).toBe('band');
+    expect(secondState.activeWindowId).toBe('band-2');
+
+    // Third instance via explicit newInstance option
+    store.openWindow(mockBandApp, undefined, { newInstance: true });
+    const thirdState = useWindowManager.getState();
+    expect(thirdState.windows['band-3']).toBeDefined();
+    expect(thirdState.windows['band-3'].isOpen).toBe(true);
+    expect(thirdState.windows['band-3'].title).toBe('BAND (3)');
+    expect(thirdState.activeWindowId).toBe('band-3');
+
+    // Closing instance 2 should not affect instance 1 or instance 3
+    store.closeWindow('band-2');
+    const closedState = useWindowManager.getState();
+    expect(closedState.windows['band-2'].isOpen).toBe(false);
+    expect(closedState.windows['band'].isOpen).toBe(true);
+    expect(closedState.windows['band-3'].isOpen).toBe(true);
   });
 });
