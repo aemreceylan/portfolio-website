@@ -651,3 +651,44 @@ WebOS deneyimini masaüstü standartlarına ulaştıran, klavye ve dokunmatik od
   - **Sistem Eylemleri**: Müziği Çal/Durdur, Sesi Aç/Kapat, Tüm Pencereleri Simge Durumuna Küçült.
 * **7 Dilde Yerelleştirme**:
   - Tüm arama yer tutucuları, kategori başlıkları ve boş durum mesajları İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Rusça ve Japonca dillerine eklenmiştir.
+
+---
+
+## 23. WebOS Micro-Container & Sandboxing Runtime (Hafif Uygulama Konteyneri & BAND Entegrasyonu)
+
+Geliştiricinin daha önce yazdığı veya gelecekte ekleyeceği farklı teknoloji yığınlarına (React 18, Vue, Svelte, Vanilla JS vb.) sahip projelerin ana WebOS monolitine kod müdahalesi gerektirmeden, izole ve tak-çalıştır biçimde entegre edilmesini sağlayan **WebOS Micro-Container & Sandboxing Runtime** geliştirilmiştir:
+
+* **Sertleştirilmiş Iframe Konteyneri (`<AppSandbox />`)**:
+  - Alt projeler WebOS pencereleri içinde `sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"` nitelikleriyle izole bir belge bağlamında (`document context`) çalıştırılır.
+  - `allowSameOrigin` (varsayılan `true`), yerel build edilmiş ES modüllerinin ve stil dosyalarının `origin: 'null'` CORS engeline takılmadan ve tarayıcı depolamasına erişerek render olmasını sağlar; istenildiğinde manifest üzerinden tamamen izole edilebilir.
+  - İhtiyaca göre ses, kamera ve ekran paylaşımı donanım izinleri (`allow="camera; microphone; display-capture"`) deklaratif olarak tahsis edilir.
+  - "Korumalı Konteyner" gibi gereksiz durum rozetleri kaldırılarak araç çubuğu temizlenmiş, sol alana uygulama-özel bileşenlerin yerleşebileceği esnek `customToolbarLeft` slotu entegre edilmiştir.
+* **Tip Güvenli IPC Köprüsü (`useWebOSBridge.ts` - WebOS Bridge)**:
+  - Host ile Guest arasında `postMessage` tabanlı çift yönlü haberleşme kanalı kurulur.
+  - Misafir uygulama yüklendiğinde `WEBOS_GUEST_READY` yayını yapar; host sistem aktif tema, aksan rengi ve dil yapılandırmasını (`WEBOS_INIT_CONFIG`) iletir.
+  - WebOS masaüstünde duvar kağıdı veya aksan rengi değiştiğinde misafir uygulamaya anında `WEBOS_THEME_CHANGED` mesajı gönderilerek görsel ahenk korunur.
+  - OWASP A03/A07 standartlarında sıkı köken ve kaynak denetimi uygulanır (`event.source === iframeRef.current?.contentWindow`).
+* **Hata İzolasyon Bariyeri (Crash Boundary & Self-Healing)**:
+  - Konteyner içindeki bir projede çalışma zamanı istisnası (`uncaught error`) meydana geldiğinde bu hata pencere içine hapsolur; ana WebOS masaüstü kesinlikle çökmez.
+  - Konteyner kullanıcıya hatanın detaylarını sunan Spatial Dark Glass bir kart ve tek tıkla konteyneri baştan başlatan **"Uygulamayı Yeniden Başlat"** butonu sunar.
+* **Manifest Güdümlü Cihaz Görünüm Simülatörü (Device Viewport Simulator)**:
+  - Proje manifestosu (`manifest.container.enableDeviceSimulator`) üzerinden yapılandırılabilir (varsayılan `true`).
+  - Arka uç / manifest seviyesinden herhangi bir proje için aktif edilip kapatılabilir (ör. backend API projelerinde veya responsive testi gerekmeyen araçlarda gizlenebilir).
+  - Aktif olduğunda araç çubuğunda **Desktop (100%)**, **Tablet (768px)** ve **Mobile (375px)** butonları ile gerçek zamanlı responsive simülasyonu sunar.
+* **İlk Konteyner Entegrasyonu: BAND (Band Absolutely Not Discord)**:
+  - **Uygulama Modeli**: Ahmet Emre Ceylan tarafından geliştirilen açık kaynaklı (`https://github.com/aemreceylan/BAND`), kişisel barındırmalı (self-hosted) Mediasoup v3 WebRTC SFU, Socket.IO, Express 5 ve MongoDB tabanlı iletişim platformu.
+  - **Orijinal Kaynak Entegrasyonu (`apps/band/`)**:
+    - GitHub deposu monorepo içerisine doğrudan dahil edilmiştir (`apps/band/backend/server` ve `apps/band/frontend/band`).
+    - Vite ile derlenen React 18 frontend paketi doğrudan WebOS mikro-konteyner kök dizinine (`public/apps/band/`) paketlenir.
+    - Tasarıma ve UI bileşenlerine hiçbir müdahale yapılmamış, sahte demo verileri doldurulmadan orijinal bileşenler korunmuştur.
+  - **Saf Veritabanı ve Ağ Simülasyon Motoru (`simulatedBackend.js`)**:
+    - Canlı backend (`http://localhost:3000`) açıkken doğrudan Node.js/MongoDB servisiyle haberleşir.
+    - Canlı servis kapalıyken şeffaf biçimde devreye giren simüle veritabanı motoru; MongoDB `User`, `Category`, `Channel`, `Message` modellerini ve Express oturum yönetimini kullanıcı arayüzü üzerinden anlık saklayıp yürütür.
+  - **Yalınlaştırılmış Pencere Mimarisi (`BandApp.tsx`)**:
+    - Üstteki gereksiz sekme barı ("Canlı Uygulama", "Çalışma Modu", "Vaka Analizi") kaldırılarak pencere alanı doğrudan uygulama arayüzüne ayrılmıştır.
+    - **Kompakt Çalışma Modu Rozeti (`customToolbarLeft`)**: Konteynerin alt araç çubuğuna entegre edilen kompakt bir durum hapı (`.band-mode-pill`) üzerinden "Simüle DB (Offline)" ile "Canlı Backend (Port 3000)" arasında tek tıkla geçiş yapılabilir. Detaylar ve GitHub bağlantısı ise kompakt bilgi ikonu (`Info`) ile açılan Spatial Glass modal pencerede sunulur.
+* **Sistem Geneli Ekosistem Entegrasyonu**:
+  - **Terminal**: `band` komutu ile terminalden doğrudan başlatılabilir.
+  - **Spotlight (Cmd+K)**: Komut paletinde anında aranıp açılabilir.
+  - **VFS**: Sanal Dosya Sistemi'nde korumalı `band-case-study.md` vaka analizi belgesi yer alır.
+  - **Masaüstü & Dock**: Masaüstü ızgarasında ve çalışan uygulamalar dock'unda Discord esintili özel simge ve etiket ile temsil edilir.

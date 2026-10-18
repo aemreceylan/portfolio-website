@@ -1,0 +1,8 @@
+#uploadedFiles-container{
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    margin: 1rem 0;
+    gap: 1rem;
+    align-items: center;
+}

@@ -4,6 +4,7 @@ import { TerminalApp } from './TerminalApp';
 import { useI18nStore } from '../../i18n/i18n.store';
 import { useFileSystemStore } from '../../stores/filesystem.store';
 import { useThemeStore } from '../../stores/theme.store';
+import { useWindowManager } from '../../stores/window-manager.store';
 
 describe('TerminalApp Component', () => {
   beforeEach(() => {
@@ -150,6 +151,18 @@ describe('TerminalApp Component', () => {
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
     expect(screen.getByText(/Permission denied\. Try "sudo rm -rf \/"/i)).toBeInTheDocument();
+  });
+
+  it('opens BAND window when executing "band" command in terminal', () => {
+    render(<TerminalApp />);
+
+    const input = screen.getByPlaceholderText(/type a command/i);
+    fireEvent.change(input, { target: { value: 'band' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+
+    expect(screen.getByText(/Starting BAND \(Band Absolutely Not Discord\)/i)).toBeInTheDocument();
+    expect(useWindowManager.getState().windows['band']).toBeDefined();
+    expect(useWindowManager.getState().windows['band'].isOpen).toBe(true);
   });
 
   describe('Terminal Security & Input Validation (OWASP Compliance)', () => {

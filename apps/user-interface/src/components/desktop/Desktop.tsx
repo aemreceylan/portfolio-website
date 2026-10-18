@@ -1113,6 +1113,7 @@ export const Desktop: React.FC = () => {
           if (manifest.id === 'markdown-viewer') appName = t('appName_markdown');
           if (manifest.id === 'js-ide') appName = t('appName_ide');
           if (manifest.id === 'game-hub') appName = t('appName_game_hub');
+          if (manifest.id === 'band') appName = t('appName_band');
           const itemId = `app-${manifest.id}`;
           const pos = getItemPosition(itemId, appIdx);
           const isDragging = draggingItemState?.id === itemId;

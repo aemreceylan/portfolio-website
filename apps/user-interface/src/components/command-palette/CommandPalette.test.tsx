@@ -178,4 +178,19 @@ describe('CommandPalette Component', () => {
     rerender(<CommandPalette />);
     expect(screen.getByTestId('command-palette-modal')).toBeInTheDocument();
   });
+
+  it('searches and opens BAND app from command palette', () => {
+    useCommandPaletteStore.getState().open();
+    render(<CommandPalette />);
+
+    const input = screen.getByTestId('command-palette-input');
+    fireEvent.change(input, { target: { value: 'BAND' } });
+
+    expect(screen.getByText('BAND')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('BAND'));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(useWindowManager.getState().windows['band']).toBeDefined();
+    expect(useWindowManager.getState().windows['band'].isOpen).toBe(true);
+  });
 });

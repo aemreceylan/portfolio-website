@@ -1,0 +1,94 @@
+.userFileSystem-element-list {
+  display: flex;
+  width: 100%;
+}
+
+.userFileSystem-files-element-list-header {
+  border-bottom: 1px solid var(--dark-font-light-gray);
+}
+
+.userFileSystem-files-element-list-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.userFileSystem-files-element-list-row:hover {
+  background-color: var(--dark-font-dark-gray);
+}
+
+.userFileSystemElement-info-list {
+  text-align: left;
+  padding: 0.5rem 0 0.5rem 0.5rem;
+  overflow-x: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.userFileSystem-element-file-icon {
+  width: 1.5rem;
+  aspect-ratio: 1/1;
+}
+
+.userFileSystem-element-file-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.userFileSystem-element-grid {
+  width: 18%;
+  aspect-ratio: 10/8;
+  border: 1px solid var(--dark-font-light-gray);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: var(--dark-font-light-gray);
+  gap: 1rem;
+}
+
+.userFileSystem-element-grid:hover {
+  background-color: var(--dark-font-dark-gray);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.userFileSystem-element-grid-icon {
+  width: 30%;
+  aspect-ratio: 1/1;
+}
+
+.userFileSystem-element-grid-icon > svg {
+  width: 100%;
+  height: 100%;
+}
+
+#userFileSystem-element-file-select {
+  width: 1.5rem;
+  aspect-ratio: 1/1;
+}
+
+#userFileSystem-element-file-select > svg {
+  width: 100%;
+  height: 100%;
+}
+
+#userFileSystem-selecting{
+  margin-bottom: 1rem;
+  color: var(--dark-font-light-gray);
+  border: 1px solid var(--dark-font-light-gray);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--dark-background-medium-gray);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+}
+
+.userFileSystem-element-grid-selected{
+  background-color: var(--dark-font-dark-gray);
+}

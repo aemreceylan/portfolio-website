@@ -28,12 +28,14 @@ describe('FileSystem Store (VFS)', () => {
     const skills = store.getFile('skills.md');
     const contact = store.getFile('contact.md');
     const welcome = store.getFile('welcome.txt');
+    const band = store.getFile('band-case-study.md');
 
     expect(bio).toBeDefined();
     expect(bio?.isSystem).toBe(true);
     expect(skills?.isSystem).toBe(true);
     expect(contact?.isSystem).toBe(true);
     expect(welcome?.isSystem).toBe(true);
+    expect(band?.isSystem).toBe(true);
   });
 
   it('should create valid user files with txt, md, and js extensions', () => {

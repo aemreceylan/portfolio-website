@@ -5,6 +5,7 @@ import {
   FileText,
   Code2,
   Gamepad2,
+  MessageSquare,
   Palette,
   Music,
   Volume2,
@@ -18,6 +19,7 @@ import {
   markdownViewerManifest,
   jsIdeManifest,
   gameHubManifest,
+  bandManifest,
 } from '#apps/app-registry';
 import { useWindowManager } from '#stores/window-manager.store';
 import { useFileSystemStore, VFSFile } from '#stores/filesystem.store';
@@ -96,6 +98,18 @@ function buildAppItems(
       icon: <Gamepad2 size={18} aria-hidden="true" />,
       onSelect: () => {
         openWindow(gameHubManifest);
+        closePalette();
+      },
+    },
+    {
+      id: 'app-band',
+      title: t('appName_band'),
+      description: t('appDesc_band'),
+      category: 'apps',
+      categoryLabel: t('spotlight_category_apps'),
+      icon: <MessageSquare size={18} aria-hidden="true" />,
+      onSelect: () => {
+        openWindow(bandManifest);
         closePalette();
       },
     },

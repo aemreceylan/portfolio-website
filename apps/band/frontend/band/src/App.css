@@ -1,0 +1,75 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  overflow: hidden;
+}
+
+body {
+  font-family: "Lato";
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#app-main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+main div {
+  height: 100%;
+}
+
+#hubList {
+  width: 5rem;
+  flex-shrink: 0;
+}
+
+#hub {
+  width: 15rem;
+  flex-shrink: 0;
+}
+
+#chat {
+  /* flex-grow: 1; */
+  width: calc(100% - 36rem);
+}
+
+#users {
+  width: 16rem;
+  flex-shrink: 0;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #fff;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

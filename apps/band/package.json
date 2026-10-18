@@ -1,0 +1,11 @@
+{
+  "name": "@personal-os/band",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BAND (Band Absolutely Not Discord) - Self-Hosted WebRTC SFU & Real-time Platform",
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix frontend/band",
+    "build:frontend": "npm run build --prefix frontend/band",
+    "start:backend": "npm start --prefix backend/server"
+  }
+}

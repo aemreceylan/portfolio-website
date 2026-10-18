@@ -24,6 +24,10 @@ export const GameHubAppComponent = lazy(() =>
   import('#apps/games/GameHubApp').then((m) => ({ default: m.GameHubApp }))
 );
 
+export const BandAppComponent = lazy(() =>
+  import('#apps/band/BandApp').then((m) => ({ default: m.BandApp }))
+);
+
 /**
  * Core Terminal application manifest
  */
@@ -100,6 +104,42 @@ export const gameHubManifest: AppManifest = {
 };
 
 /**
+ * BAND (Band Absolutely Not Discord) community platform manifest
+ */
+export const bandManifest: AppManifest = {
+  id: 'band',
+  name: 'BAND',
+  description: 'Kişisel barındırmalı (self-hosted), güvenli ve gerçek zamanlı Mediasoup WebRTC SFU topluluk platformu',
+  iconName: 'MessageSquare',
+  category: 'projects',
+  defaultSize: { width: 1040, height: 680 },
+  minSize: { width: 560, height: 420 },
+  resizable: true,
+  singleton: true,
+  metadata: {
+    techStack: [
+      'React 18',
+      'Vite 6',
+      'Mediasoup SFU v3',
+      'Socket.IO 4',
+      'MongoDB 8',
+      'Express.js 5',
+      'Argon2',
+    ],
+    githubUrl: 'https://github.com/aemreceylan/BAND',
+    isSelfHosted: true,
+    architectureOverview:
+      'High-performance SFU (Selective Forwarding Unit) WebRTC pipeline with multi-core C++ worker routers and hierarchical in-memory cloud file system.',
+  },
+  container: {
+    entryUrl: '/apps/band/index.html',
+    enableDeviceSimulator: true,
+    allowSameOrigin: true,
+    allowHardware: { camera: true, microphone: true, displayCapture: true },
+  },
+};
+
+/**
  * Central registry of all active applications available in AEC Desktop.
  */
 export const APP_REGISTRY: Record<
@@ -128,6 +168,10 @@ export const APP_REGISTRY: Record<
   'game-hub': {
     manifest: gameHubManifest,
     component: () => <GameHubAppComponent />,
+  },
+  band: {
+    manifest: bandManifest,
+    component: () => <BandAppComponent />,
   },
 };
 

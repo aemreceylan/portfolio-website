@@ -22,6 +22,21 @@ export const projectAppMetadataSchema = z.object({
     .optional(),
 });
 
+export const containerConfigSchema = z.object({
+  entryUrl: z.string().optional(),
+  enableDeviceSimulator: z.boolean().default(true),
+  allowHardware: z
+    .object({
+      camera: z.boolean().optional(),
+      microphone: z.boolean().optional(),
+      displayCapture: z.boolean().optional(),
+    })
+    .optional(),
+  allowSameOrigin: z.boolean().default(true),
+});
+
+export type ContainerConfig = z.infer<typeof containerConfigSchema>;
+
 export const appManifestSchema = z.object({
   id: z
     .string()
@@ -38,6 +53,7 @@ export const appManifestSchema = z.object({
   singleton: z.boolean().default(true),
   isDynamic: z.boolean().optional(),
   metadata: projectAppMetadataSchema.optional(),
+  container: containerConfigSchema.optional(),
 });
 
 export type ValidatedAppManifest = z.infer<typeof appManifestSchema>;

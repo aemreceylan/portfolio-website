@@ -21,6 +21,7 @@ describe('Desktop Component', () => {
     expect(screen.getByText('AEC')).toBeInTheDocument();
     expect(screen.getByText('Terminal CLI')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('BAND')).toBeInTheDocument();
   });
 
   it('should open window when clicking a desktop app icon', () => {
@@ -31,6 +32,16 @@ describe('Desktop Component', () => {
 
     expect(useWindowManager.getState().windows['terminal']).toBeDefined();
     expect(useWindowManager.getState().windows['terminal'].isOpen).toBe(true);
+  });
+
+  it('should open BAND window when clicking BAND desktop icon', () => {
+    render(<Desktop />);
+
+    const bandIcon = screen.getByTestId('desktop-app-band');
+    fireEvent.click(bandIcon);
+
+    expect(useWindowManager.getState().windows['band']).toBeDefined();
+    expect(useWindowManager.getState().windows['band'].isOpen).toBe(true);
   });
 
   it('should render virtual desktop files from VFS store', () => {

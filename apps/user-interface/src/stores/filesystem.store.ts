@@ -236,8 +236,48 @@ You can:
 3. View and format documents with the Markdown Viewer app.
 4. Write and safely execute scripts inside the JavaScript IDE.
 5. Customize desktop wallpapers and dynamic accent colors in the Settings app.
+6. Open the BAND community application from the desktop or terminal ('band').
 
 Type 'help' in the terminal to explore all available commands.
+`,
+    createdAt: 1700000000000,
+    updatedAt: 1700000000000,
+  },
+  {
+    id: 'sys-band-case-study',
+    name: 'band-case-study.md',
+    extension: 'md',
+    isSystem: true,
+    content: `# BAND (Band Absolutely Not Discord) — Mimari Vaka Analizi
+
+**Açık Kaynak Kodlu & Kişisel Barındırmalı Topluluk İletişim Platformu**
+GitHub: https://github.com/aemreceylan/BAND
+
+---
+
+## 🎯 Projenin Amacı ve Felsefesi
+Merkezi iletişim servisleri (Discord, Slack vb.) kullanıcı verilerini kendi sunucularında toplayarak veri mahremiyeti ve gözetim riskleri doğurmaktadır.
+BAND; kullanıcı topluluklarının kendi bağımsız sunucularını kurarak ses, video, ekran paylaşımı, metin sohbeti ve bulut depolama üzerinde %100 egemenlik kazanmasını sağlar.
+
+---
+
+## ⚡ Temel Mimari Bileşenleri
+
+1. **Mediasoup v3 SFU (Selective Forwarding Unit)**:
+   - P2P mesh darboğazını ve MCU transcode yükünü önleyen hafif WebRTC yönlendirici.
+   - C++ çekirdekli çok çekirdekli (Multi-core) CPU Worker ve Router havuz yönetimi.
+
+2. **Gerçek Zamanlı İletişim (Socket.IO 4 & Express 5)**:
+   - Oda (room) tabanlı anlık mesajlaşma, regex URL algılama ve infinite scroll.
+
+3. **Entegre Kişisel Bulut Depolama**:
+   - Google Drive tarzı hiyerarşik klasör yapısı (MongoDB düğüm yaklaşımı).
+   - \`archiver\` kütüphanesi ile seçili dosyaları tek tıkla ZIP arşiv olarak indirme.
+
+4. **DevSecOps & Kurumsal Güvenlik**:
+   - GPU kaba kuvvet saldırılarına dirençli Argon2 parola hashleme.
+   - Durumsuz (stateless) JWT kimlik doğrulama.
+   - \`@dr.pogodin/csurf\` ile CSRF saldırılarına karşı tam koruma.
 `,
     createdAt: 1700000000000,
     updatedAt: 1700000000000,

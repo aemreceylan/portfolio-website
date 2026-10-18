@@ -1,0 +1,284 @@
+#userFileSystem-container {
+  width: 100%;
+  height: 100%;
+}
+
+#userFileSystem {
+  width: 85%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1), 0 1.5px 6px rgba(0, 0, 0, 0.08);
+  background-color: var(--dark-background-medium-gray);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+#userFileSystem-topBar {
+  display: flex;
+  padding: 2rem 2rem 1rem 2rem;
+}
+
+#userFileSystem-topBar-path {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+#userFileSystem-topBar-path-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  cursor: pointer;
+  color: var(--dark-font-medium-gray);
+}
+
+.userFileSystem-topBar-path-element {
+  cursor: pointer;
+}
+
+.userFileSystem-topBar-path-element:hover {
+  color: var(--dark-font-light-gray);
+}
+
+#userFileSystem-topBar-path-path {
+  color: var(--dark-font-medium-gray);
+  font-size: 1.5rem;
+}
+
+#userFileSystem-topBar-path-icon > svg {
+  width: 100%;
+  height: 100%;
+}
+
+#userFileSystem-topBar-path-icon:hover {
+  color: var(--dark-font-light-gray);
+  border-radius: 50%;
+}
+
+#userFileSystem-topBar-path-icon:active {
+  transform: scale(1.1);
+}
+
+#userFileSystem-topBar-style {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-right: 3rem;
+}
+
+#userFileSystem-topBar-style > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  cursor: pointer;
+  color: var(--dark-font-medium-gray);
+}
+
+#userFileSystem-topBar-style > div:hover {
+  color: var(--dark-font-light-gray);
+  background-color: var(--dark-font-dark-gray);
+  border-radius: 50%;
+}
+
+#userFileSystem-topBar-style > div:active {
+  transform: scale(1.1);
+}
+
+#userFileSystem-topBar-style > div > svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+#userFileSystem-topBar-new {
+  display: flex;
+  gap: 0.5rem;
+}
+
+#userFileSystem-topBar-new > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  cursor: pointer;
+  color: var(--dark-font-medium-gray);
+}
+
+#userFileSystem-topBar-new > div:hover {
+  color: var(--dark-font-light-gray);
+  background-color: var(--dark-font-dark-gray);
+  border-radius: 50%;
+}
+
+#userFileSystem-topBar-new > div:active {
+  transform: scale(1.1);
+}
+
+#userFileSystem-topBar-new > div > svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.userFileSystem-topBar-style-selected {
+  background-color: var(--dark-background-light-gray);
+  border: 1px solid var(--dark-font-dark-gray);
+  border-radius: 50%;
+}
+
+#userFileSystem-files {
+  padding: 2rem;
+  background-color: var(--dark-background-light-gray);
+}
+
+#userFileSystem-files-list {
+  width: 100%;
+  color: var(--dark-font-light-gray);
+}
+
+#userFileSystem-files-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+#userFileSystem-no-files {
+  padding: 2rem;
+  color: var(--dark-font-light-gray);
+}
+
+#modal-new {
+  width: 40rem;
+  height: 20rem;
+  background-color: var(--dark-background-light-gray);
+  border-radius: 0.5rem;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--dark-background-dark-gray);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+#userFileSystem-files-dragging {
+  width: 40rem;
+}
+
+#userFileSystem-files-dragging img {
+  width: 100%;
+  height: 100%;
+}
+
+#modal-new-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+#modal-new-input-name {
+  background-color: var(--dark-background-dark-gray);
+  border: none;
+  outline: none;
+  font-family: "Lato";
+  color: var(--dark-font-light-gray);
+  width: 80%;
+  padding: 1.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  border: 1px solid black;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+#modal-new-input-name:hover {
+  border-color: var(--dark-font-light-gray);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+#modal-new-input-name::placeholder {
+  color: var(--dark-font-medium-gray);
+  text-align: center;
+}
+
+#modal-new-button {
+  font-family: "Lato";
+  background-color: var(--dark-background-dark-gray);
+  border: none;
+  color: var(--dark-font-light-gray);
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid black;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+#modal-new-button:hover {
+  border-color: var(--dark-font-light-gray);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+#modal-new-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  aspect-ratio: 1/1;
+  cursor: pointer;
+  color: var(--dark-font-light-gray);
+  font-size: 1.5rem;
+  border: 1px solid var(--dark-font-light-gray);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#userFileSystem-selecting {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 3rem;
+}
+
+#userFileSystem-selecting-cancel {
+  border-radius: 50%;
+  width: 1.5rem;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+#userFileSystem-selecting-cancel:hover {
+  background-color: var(--dark-font-dark-gray);
+  color: var(--dark-font-light-gray);
+}
+
+#userFileSystem-selecting-operators {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+#userFileSystem-selecting-operators > div {
+  cursor: pointer;
+  color: var(--dark-font-light-gray);
+  width: 1.1rem;
+  aspect-ratio: 1/1;
+}
+
+#userFileSystem-selecting-operators > div svg {
+  width: 100%;
+  height: 100%;
+}

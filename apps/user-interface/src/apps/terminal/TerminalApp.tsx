@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { useTranslation } from '#i18n/i18n.store';
 import { useFileSystemStore, validateSafeFilename } from '#stores/filesystem.store';
 import { performSystemReset } from '#services/system-reset';
+import { useWindowManager } from '#stores/window-manager.store';
+import { bandManifest } from '#apps/app-registry';
 import '#styles/terminal.css';
 
 /**
@@ -29,6 +31,7 @@ function buildHelpLines(t: (key: keyof Translations) => string): TerminalLine[] 
     { id: `out-${ts}-8`, type: 'accent', text: `  exit        - ${t('terminal_cmd_exit_desc')}` },
     { id: `out-${ts}-9`, type: 'accent', text: `  clear       - ${t('terminal_cmd_clear_desc')}` },
     { id: `out-${ts}-10`, type: 'accent', text: `  sudo rm -rf - ${t('terminal_cmd_reset_desc')}` },
+    { id: `out-${ts}-11`, type: 'accent', text: '  band        - Launch BAND community platform app' },
   ];
 }
 
@@ -472,6 +475,17 @@ function handleNanoCommand(
         setLines([]);
         setInputValue('');
         return;
+
+      case 'band': {
+        const wm = useWindowManager.getState();
+        wm.openWindow(bandManifest);
+        newOutputLines.push({
+          id: `out-${Date.now()}-band`,
+          type: 'accent',
+          text: 'Starting BAND (Band Absolutely Not Discord) community platform...',
+        });
+        break;
+      }
 
       default:
         newOutputLines.push({

@@ -8,6 +8,8 @@ export default tseslint.config(
       '**/dist/**',
       '**/node_modules/**',
       '**/build/**',
+      '**/public/**',
+      'apps/band/**',
       '**/.agents/**',
       '**/.system_generated/**',
       'coverage/**',

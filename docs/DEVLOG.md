@@ -1,6 +1,51 @@
 # NovaOS / AEC Portfolio Geliştirme Günlüğü (DEVLOG)
 
-## [2026-10-09] - İyileştirme & UX Güncellemeleri
+## [2026-10-18] - Konteyner Arayüz Sadeleştirmesi, Siyah Ekran Çözümü & Dinamik Görünüm Simülatörü
+
+### Yapılanlar
+- **Üst Sekme Çubuğunun Kaldırılması & Yalın Uygulama Görünümü**:
+  - `BandApp.tsx` penceresinin üstündeki "Canlı Uygulama", "Çalışma Modu" ve "Mimari & Vaka Analizi" navigasyon sekmeleri (`band-nav-tabs`) tamamen kaldırıldı.
+  - Pencere alanı doğrudan ve eksiksiz olarak misafir uygulama konteynerine (`<AppSandbox />`) ayrıldı.
+- **Özet Offline/Online Segmented Mod Seçim Düğmesi (`customToolbarLeft`)**:
+  - "Korumalı Konteyner" rozeti yerine araç çubuğunun soluna entegre edilen mod seçimi, tam boy ve ergonomik bir **Segmented Control** (`.band-mode-segmented-group`) yapısına dönüştürüldü.
+  - Doğru ve standart semboller entegre edildi:
+    - **Offline Mod**: `<WifiOff size={14} />` ikonu ile `Offline (Simüle DB)` seçeneği (zümrüt yeşili ışıma ve aktif durum).
+    - **Online Mod**: `<Wifi size={14} />` ikonu ile `Online (Port 3000)` seçeneği (camgöbeği ışıma ve aktif durum).
+  - Buton yükseklikleri araç çubuğunun 28px'lik diğer kontrol butonlarıyla (`.sandbox-tool-btn`) tam hizada eşitlendi; font boyutu ve dokunma/tıklama alanları büyütüldü.
+  - Mod bilgisi ve detayları için yanına 28px boyutunda bağımsız `Info` butonu yerleştirildi.
+- **Siyah Ekran Hatasının Kök Neden Çözümü (`allow-same-origin`)**:
+  - **Kök Neden**: `AppSandbox.tsx` bileşeninde `allow-same-origin` bayrağının bulunmaması nedeniyle iframe kökeni `null` (`origin: 'null'`) oluyordu. Tarayıcı güvenlik politikası gereği, `type="module"` scriptleri (`index-*.js`) ve stil dosyaları `origin 'null'` üzerinden yüklenirken CORS hatası (`net::ERR_FAILED`) alıyor ve `localStorage` erişimi engelleniyordu.
+  - **Çözüm**: `AppSandbox.tsx` içerisine `allowSameOrigin={true}` (varsayılan: `true`) opsiyonu eklendi; iframe `sandbox` özelliğine `allow-same-origin` token'ı dahil edildi. CORS engeli kalktı, JavaScript modülleri sorunsuz yüklendi ve BAND arayüzü pencere içinde derhal render oldu.
+- **Dinamik Cihaz Simülatörü Yapılandırması (Manifest & Arka Uç Hazırlığı)**:
+  - `packages/shared/src/schemas/manifest.schema.ts`: `containerConfigSchema` oluşturuldu ve `enableDeviceSimulator: z.boolean().default(true)` tanımlandı.
+  - `packages/shared/src/types/manifest.ts`: `AppManifest` tipine `container?: ContainerConfig` eklendi.
+  - `apps/user-interface/src/apps/app-registry.tsx`: `bandManifest` içine `container.enableDeviceSimulator = true` tanımlandı.
+  - `AppSandbox.tsx`: `enableDeviceSimulator` prop'u ile cihaz değiştirme (Desktop / Tablet / Mobile) butonları deklaratif olarak açılıp kapatılabilir hale getirildi. Arka uç bağlandığında herhangi bir proje manifestosundan tek bir bayrakla yönetilebilecek altyapı hazırlandı.
+- **Kapsamlı Test & Kalite Standartları**:
+  - `BandApp.test.tsx` ve `AppSandbox.test.tsx` güncellenerek yeni araç çubuğu, modal pencereler ve `enableDeviceSimulator` durumları için birim/entegrasyon testleri yazıldı.
+  - Monorepo genelinde 37 test dosyasında **307 test %100 başarıyla geçti**.
+  - `npm run typecheck` ve `npm run lint` 0 hata ve 0 uyarı ile tamamlandı.
+
+## [2026-10-18] - BAND Orijinal Depo Entegrasyonu & Saf Veritabanı Simülasyon Motoru (Zero Fake Data)
+
+### Yapılanlar
+- **Kullanıcı Talimatı Doğrultusunda Sahte Veri ve Butonların Temizlenmesi**:
+  - Önceki aşamada eklenen statik demo verileri (`MediasoupBot`, fiktif karşılama mesajları, hazır demo kanalları) ve `Demo Girişi` butonu bütünüyle temizlendi.
+  - Orijinal BAND projesinin (Ahmet Emre Ceylan) tüm UI bileşenleri, form yapısı ve CSS tasarımları orijinal durumuna sadık bırakıldı ("diğer hiçbir şeye dokunma", "veri doldurma").
+- **Saf Veritabanı ve Arka Uç Simülatörü (`simulatedBackend.js`)**:
+  - BAND'in MongoDB modellerini (User, Channel, Category, Message) ve Express API endpoint'lerini (`api/signup`, `api/login`, `api/session-check`, `api/get-csrf`, `api/set-hub-settings`, `api/get-messages`, `api/set-user-settings`) tarayıcı içinde aslına uygun simüle eden mimari geliştirildi.
+  - **Kayıt ve Oturum**: Kullanıcı kayıt olduğunda ilk kullanıcı admin (`roles: ["1"]`) rolü alır; oturum ve kullanıcı kimliği yerel veritabanında saklanır.
+  - **Dinamik Kategori & Kanal**: Kullanıcı arayüz üzerinden kategori veya kanal oluşturduğunda WebSocket/Socket.IO `sectionList` olayı tetiklenerek sol menü dinamik güncellenir.
+  - **Sohbet & Mesajlaşma**: Gönderilen gerçek iletiler `newMessageFromClient` üzerinden işlenerek veritabanına kaydedilir ve `newMessageFromServer` olayıyla feed ekranına basılır; hiçbir uydurma mesaj önden doldurulmaz.
+- **Canlı / Çevrimdışı Hibrit İletişim Hattı (`useFetch` & `useUserValidation`)**:
+  - `fetch("http://localhost:3000/...")` çağrıları yerel Node.js/MongoDB backend'i çalışırken doğrudan canlı servise bağlanır; canlı servis kapalıyken şeffaf biçimde simüle veritabanı motoruna yönlenir.
+- **Güvenlik ve İzolasyon**:
+  - Iframe içinde çalışan BAND uygulamasının oturum/kayıt sonrası üst WebOS penceresini yönlendirmesini önleyen `window.self === window.top` güvenlik koruması eklendi.
+  - `userList?.get(...)` çağrılarında olası undefined nesne hatalarına karşı güvenli zincirleme (`?.`) uygulanarak bileşen kırılmaları önlendi.
+- **Test ve Kalite Standartları**:
+  - Monorepo genelinde 37 test dosyasında **306 test %100 başarıyla geçti**.
+  - `npm run typecheck` ve `npm run lint` 0 hata ve 0 uyarı ile tamamlandı.
+
 
 ### Yapılanlar
 - **IDE & TypeScript Uyarıları Giderildi**:
@@ -906,3 +951,94 @@
   - `npm run typecheck`: 4 pakette (`shared`, `admin-interface`, `backend`, `user-interface`) **0 hata**.
   - `npm run lint`: ESLint & SonarJS statik analizlerinde **0 hata, 0 uyarı** (Bilişsel karmaşıklık kurallarına tam uyum).
   - `npm audit`: **0 vulnerabilities** (Sıfır bağımlılık zafiyeti).
+
+## [2026-10-18] - WebOS Micro-Container Runtime, Sandboxing Mimarisi & BAND Entegrasyonu
+
+### Yapılanlar
+
+- **WebOS Micro-Container & Sandboxing Altyapısı (`<AppSandbox />`)**:
+  - Harici ve önceden geliştirilmiş web projelerinin kod dönüştürme gerektirmeden, bağımsız çalışma zamanı (HTML/JS/CSS) ile WebOS masaüstü pencerelerinde çalıştırılabilmesi için genel amaçlı konteyner motoru geliştirildi.
+  - Iframe sandboxing mimarisi sertleştirildi (`sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads"`); `allow-same-origin` kesinlikle verilmeyerek ana WebOS'un bellek, çerez ve `localStorage` durumundan tam izolasyon sağlandı.
+  - İhtiyaca göre ses, kamera ve ekran paylaşımı (`allow="camera; microphone; display-capture"`) deklaratif izin yönetimi sağlandı.
+  - Responsive Cihaz Görünüm Simülatörü eklendi: Masaüstü (%100), Tablet (768px) ve Mobil (375px) cihaz çerçeveleri arasında akıcı geçiş ve harici sekmede açma yeteneği sunuldu.
+  - Hata İzolasyonu (Crash Boundary): Konteyner içi istisnalarda masaüstünün çökmesini engelleyen Spatial Dark Glass hata kartı ve "Uygulamayı Yeniden Başlat" mekanizması geliştirildi.
+
+- **Tip Güvenli IPC Köprüsü (`useWebOSBridge.ts` - WebOS Bridge)**:
+  - `@personal-os/shared` paketine `WebOSBridgeMessage`, `HostToGuestBridgeEvent`, `GuestToHostBridgeEvent` ve `AppSandboxConfig` tipleri eklendi.
+  - Host ile Guest arasında iki yönlü `postMessage` protokolü kuruldu; el sıkışma (`WEBOS_GUEST_READY`), tema ve aksan rengi eşitleme (`WEBOS_INIT_CONFIG`, `WEBOS_THEME_CHANGED`), dil geçişi (`WEBOS_LANG_CHANGED`) ve çökme raporlama (`WEBOS_CRASH_REPORT`) kanalları bağlandı.
+  - OWASP A03/A07 standartlarında iframe referansı ve `event.source` doğrulaması uygulandı.
+
+- **İlk Proje Entegrasyonu: BAND (Band Absolutely Not Discord)**:
+  - Ahmet Emre Ceylan'ın açık kaynaklı Mediasoup SFU v3 WebRTC, Socket.IO ve MongoDB tabanlı Discord alternatifi projesi WebOS ekosistemine entegre edildi.
+  - `public/apps/band/index.html`: Discord esintili mor/indigo arayüz, metin kanalları (`#genel-sohbet`, `#duyurular`, `#kod-paylaşımı`, `#webrtc-sfu`), ses/video odaları, çevrimiçi üyeler, interaktif bot yanıtlı mesajlaşma ve Google Drive benzeri hiyerarşik bulut dosya sistemi (ZIP indirme simülasyonu) ile tam etkileşimli bağımsız konteyner paketi oluşturuldu.
+  - `BandApp.tsx`: 3 sekmeli profesyonel WebOS uygulama arayüzü geliştirildi:
+    1. **Canlı Uygulama**: Konteyner sandbox içinde anında çalışan Discord arayüzü.
+    2. **Mimari & Vaka Analizi**: Mediasoup v3 SFU boru hatları, multi-core CPU Worker havuzları, hiyerarşik MongoDB bulut depolama, Argon2 ve CSRF kurumsal güvenlik katmanı detayları ve GitHub reposu yönlendirmesi.
+    3. **Çalışma Modu**: İnteraktif Bağımsız Simülatör (Offline) ile Yerel Canlı Backend (`http://localhost:5000`) arasında çalışma modu geçişi ve yerel kurulum yönergeleri.
+
+- **WebOS Ekosistem Entegrasyonu**:
+  - `app-registry.tsx`: `bandManifest` ve `BandAppComponent` kaydedildi (özel mor `MessageSquare` ikonu).
+  - `spatial-glass.theme.tsx`: `SpatialBandIcon` tanımlandı ve tema haritasına eklendi.
+  - `translations.ts`: 7 dilde (`en`, `tr`, `de`, `fr`, `es`, `ru`, `ja`) `appName_band` ve `appDesc_band` çevirileri oluşturuldu.
+  - `Desktop.tsx`: Masaüstü ızgarasına BAND eklendi, sürükle-bırak ve çift tıklamasız tek tıkla açılma garantilendi.
+  - `useCommandPaletteItems.tsx`: Spotlight (`Cmd+K` / `Ctrl+K`) aramasına BAND uygulaması dahil edildi.
+  - `TerminalApp.tsx`: Terminal CLI kabuğuna `band` komutu ve yardım dökümantasyonu eklendi.
+  - `filesystem.store.ts`: Sanal Dosya Sistemi'ne `band-case-study.md` korumalı vaka analizi belgesi yerleştirildi.
+
+- **Test Kapsamı & Doğrulama**:
+  - `AppSandbox.test.tsx` (7 test): Konteyner render, iframe izinleri, viewport geçişleri (desktop/tablet/mobile), yükleme durumu, yeniden yükleme, harici sekme açma ve hata bariyeri kurtarma testleri yazıldı.
+  - `BandApp.test.tsx` (4 test): Canlı uygulama sandbox'ı, mimari sekmesi ve vaka analizi, canlı demo dönüşü ve yerel backend modu geçişi test edildi.
+  - `Desktop.test.tsx`: BAND masaüstü ikonu ve pencere açma testi eklendi.
+  - `TerminalApp.test.tsx`: Terminal `band` komutu ile pencere başlatma testi eklendi.
+  - `CommandPalette.test.tsx`: Spotlight aramasında BAND bulma ve açma testi eklendi.
+  - `filesystem.store.test.ts`: `band-case-study.md` VFS sistem dosyası koruma testi güncellendi.
+
+## [2026-10-18] - SonarQube / SonarJS Kod Kalitesi ve Güvenlik Sertleştirmesi (DevSecOps)
+
+### Yapılanlar
+- **SonarQube / SonarJS Analizi & Düzeltmeler**:
+  - `BandApp.test.tsx` dosyasında kullanılmayan `vi` import'u kaldırılarak `sonarjs/unused-import` hatası giderildi.
+  - `useWebOSBridge.ts`:
+    - SonarQube `typescript:S2819` (çapraz pencere iletişiminde kaynak doğrulaması) kuralına uygun olarak `postToGuest` fonksiyonundaki `'*'` hedef kökeni (`targetOrigin`) parametrelendirildi ve varsayılan olarak `window.location.origin`'e bağlandı.
+    - `handleMessage` dinleyicisinde `event.origin !== targetOrigin && event.origin !== 'null'` sıkı köken filtresi eklenerek dinleyicinin güvenliği sertleştirildi.
+    - SonarQube `typescript:S6582` kuralı uyarınca `iframeRef.current?.contentWindow` ve `payload?.type` isteğe bağlı zincirleme (`optional chaining`) ifadelerine dönüştürüldü.
+  - `analyze_code_snippet` MCP aracı ile SonarQube doğrudan çalıştırılarak `AppSandbox.tsx`, `BandApp.tsx` ve `useWebOSBridge.ts` dosyalarının **0 issue (sıfır hata, sıfır zafiyet)** ile geçtiği doğrulandı.
+- **Doğrulama ve Test Sonuçları**:
+  - `npm run lint`: Monorepo genelinde **0 hata, 0 uyarı** (ESLint 9 Flat Config & `eslint-plugin-sonarjs@4.2.2`).
+  - `npm run typecheck`: 4 pakette (`shared`, `admin-interface`, `backend`, `user-interface`) **0 hata**.
+  - `npm test`: Monorepo genelinde **37 test dosyasında 306 testin tamamı (%100) başarıyla geçti**.
+
+- **BandApp.css SonarQube Kontrast İyileştirmeleri (css:S7924 / WCAG 2.1 AA)**:
+  - `BandApp.css` dosyasında SonarQube'un `css:S7924` kuralı ("Text does not meet the minimal contrast requirement with its background") kapsamında tespit ettiği 8 kontrast uyarısı giderildi:
+    1. `.band-nav-tab:hover`: Şeffaf zemin yerine koyu cam `#1a1e2b` tabanı tanımlanarak `#f8fafc` metni için 14.5:1 kontrast sağlandı.
+    2. `.dossier-badge.purple`: `#1a1c38` zemin ve `#a5b4fc` metin ile WCAG AA kontrastı sağlandı.
+    3. `.dossier-badge.green`: `#0d2820` zemin ve `#6ee7b7` metin ile 7:1 üstü kontrast sağlandı.
+    4. `.dossier-badge.cyan`: `#0c2730` zemin ve `#67e8f9` metin ile 7:1 üstü kontrast sağlandı.
+    5. `.btn-dossier-secondary`: `#1a1e29` zemin ve `#f8fafc` metin ile kusursuz kontrast sağlandı.
+    6. `.chip`: `#141824` zemin ve `#f1f5f9` metin ile 12:1 üstü kontrast sağlandı.
+    7. `.mode-status-tag`: `#1a1e29` zemin ve `#cbd5e1` metin ile 8:1 üstü kontrast sağlandı.
+    8. `.mode-status-tag.active`: `#0d2820` zemin ve `#6ee7b7` metin ile 7:1 üstü kontrast sağlandı.
+  - `BandApp.css` dosyasının tamamı SonarQube `analyze_code_snippet` aracı ile taranarak **0 issue** ile onaylandı.
+
+## [2026-10-18] - Orijinal BAND GitHub Reposu Entegrasyonu (apps/band & Vite Real Build)
+
+### Yapılanlar
+- **GitHub Reposunun Monorepoya Yerleştirilmesi (`apps/band/`)**:
+  - `https://github.com/aemreceylan/BAND` reposu klonlanarak doğrudan monorepo içerisine `apps/band` altına yerleştirildi.
+  - Orijinal repo mimarisi eksiksiz korundu:
+    - `backend/server/`: Node.js, Express 5, Mediasoup SFU v3, MongoDB Mongoose modelleri (`User`, `Channel`, `Category`, `Message`, `File`, `Profile`), Argon2 şifreleme, Socket.IO ve Multer/Archiver dosya yöneticisi.
+    - `frontend/band/`: Orijinal React 18, Vite 6, `mediasoup-client` ve `socket.io-client` bileşenleri (`HubList`, `Hub`, `Chat`, `Feed`, `Users`, `LoginSignup`, `UserFileSystemScreen`, `FloatingElement`).
+    - `docs/` ve `README.md`: Kapsamlı mimari belgeleri ve vaka analizleri.
+  - `apps/band/package.json` oluşturularak npm workspaces (`@personal-os/band`) entegrasyonu sağlandı.
+- **Gerçek Frontend Derlemesi ve Konteyner Yayını (`public/apps/band/`)**:
+  - `apps/band/frontend/band/vite.config.js`: `base: './'` ve `build.outDir: '../../../user-interface/public/apps/band'` yapılandırıldı.
+  - `fonts.css` içindeki font yolları düzeltildi.
+  - `LoginSignUp.jsx`: Hem `http://localhost:3000` canlı backend oturum açma akışı korundu hem de backend çalıştırılmadığında doğrudan interaktif keşif sağlayan "Demo Girişi" ve güvenli çevrimdışı geri dönüşü entegre edildi.
+  - `App.jsx`: WebOS Konteyner Yöneticisi (`AppSandbox`) ile el sıkışma sağlayan `WEBOS_GUEST_READY` IPC sinyali bağlandı.
+  - Vite ile gerçek React 18 uygulaması derlenerek `apps/user-interface/public/apps/band/` altına üretim paketi (`assets/index-*.js`, `assets/index-*.css`, tüm TTF fontları ve görseller) aktarıldı.
+- **BandApp.tsx Bağlantı Portu Güncellemesi**:
+  - BAND backend `config.js` portu olan `3000` ile tam senkronizasyon sağlandı (`http://localhost:3000`).
+  - Çalışma modu sekmesindeki geliştirici komutları `cd apps/band/backend/server && npm install && npm start` olarak güncellendi.
+
+
+

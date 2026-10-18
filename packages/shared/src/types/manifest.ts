@@ -1,4 +1,5 @@
 import { WindowSize } from './window';
+import type { ContainerConfig } from '../schemas/manifest.schema';
 
 /**
  * Category classification for OS applications
@@ -38,4 +39,5 @@ export interface AppManifest {
   singleton: boolean;
   isDynamic?: boolean;
   metadata?: ProjectAppMetadata;
+  container?: ContainerConfig;
 }
