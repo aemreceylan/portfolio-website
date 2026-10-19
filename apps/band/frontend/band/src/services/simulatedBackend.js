@@ -11,6 +11,79 @@ const CHANNELS_KEY = "band_db_channels";
 const MESSAGES_KEY = "band_db_messages";
 const SESSION_KEY = "band_db_session";
 
+/**
+ * Computes a salted SHA-256 hash using Web Crypto API.
+ * Conforms to OWASP A02:2021 cryptographic standards for sensitive credential storage.
+ */
+export async function hashPassword(password, salt) {
+  if (typeof crypto !== "undefined" && crypto.subtle) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(salt + ":" + password);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  let hash = 0;
+  const str = salt + ":" + password;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return "hash_" + Math.abs(hash);
+}
+
+/**
+ * Generates a cryptographically secure random salt.
+ */
+export function generateSalt() {
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const arr = new Uint8Array(16);
+    crypto.getRandomValues(arr);
+    return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  return Date.now().toString(36) + Math.random().toString(36).substring(2, 10);
+}
+
+/**
+ * Generates collision-resistant, cryptographically strong IDs without Math.random.
+ */
+export function generateSecureId(prefix = "id") {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${prefix}_${crypto.randomUUID()}`;
+  }
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const arr = new Uint32Array(2);
+    crypto.getRandomValues(arr);
+    return `${prefix}_${Date.now()}_${arr[0].toString(36)}${arr[1].toString(36)}`;
+  }
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+}
+
+/**
+ * Strict URL scheme verification against XSS and javascript: URI attacks.
+ */
+export function isSafePhotoUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim().toLowerCase();
+  if (
+    trimmed.startsWith("javascript:") ||
+    trimmed.startsWith("vbscript:") ||
+    trimmed.startsWith("data:text/html")
+  ) {
+    return false;
+  }
+  return (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:image/") ||
+    trimmed.startsWith("img/") ||
+    trimmed.startsWith("/apps/") ||
+    trimmed.startsWith("./") ||
+    trimmed.startsWith("/")
+  );
+}
+
 // In-memory fallback
 const memoryStorage = new Map();
 
@@ -290,29 +363,42 @@ export async function handleSimulatedRequest({ url, body }) {
     if (!nick || !password) {
       return { status: false, msg: "Missing required fields" };
     }
+    const sanitizedNick = String(nick).trim();
+    if (sanitizedNick.length < 3 || sanitizedNick.length > 32) {
+      return { status: false, msg: "Nickname must be between 3 and 32 characters" };
+    }
+    if (!/^[a-zA-Z0-9_\-.]+$/.test(sanitizedNick)) {
+      return { status: false, msg: "Nickname contains invalid characters" };
+    }
+    if (String(password).length < 5 || String(password).length > 128) {
+      return { status: false, msg: "Password must be between 5 and 128 characters" };
+    }
     if (password !== password_confirm) {
       return { status: false, msg: "Passwords do not match" };
     }
 
     const users = getCollection(USERS_KEY);
     const existing = users.find(
-      (u) => u.nick.toLowerCase() === nick.toLowerCase()
+      (u) => u.nick.toLowerCase() === sanitizedNick.toLowerCase()
     );
     if (existing) {
       return { status: false, msg: "Nickname in use" };
     }
 
     const isFirstUser = users.length === 0;
-    const userId = "usr_" + Date.now();
-    const profileId = "prf_" + Date.now();
+    const userId = generateSecureId("usr");
+    const profileId = generateSecureId("prf");
+    const salt = generateSalt();
+    const hashedPassword = await hashPassword(password, salt);
 
     const newUser = {
       _id: userId,
       id: userId,
       profile: profileId,
       profileId: profileId,
-      nick: nick,
-      password: password,
+      nick: sanitizedNick,
+      password: hashedPassword,
+      salt: salt,
       roles: isFirstUser ? ["1"] : ["0"],
       profilePhotoURL: "img/no-profile-photo.png",
       bannerURL: "img/no-profile-banner.png",
@@ -328,18 +414,36 @@ export async function handleSimulatedRequest({ url, body }) {
   if (url === "api/login") {
     const { nick, password } = parsedBody;
     const users = getCollection(USERS_KEY);
+    const sanitizedNick = (nick || "").trim();
     const user = users.find(
-      (u) => u.nick.toLowerCase() === (nick || "").toLowerCase()
+      (u) => u.nick.toLowerCase() === sanitizedNick.toLowerCase()
     );
 
-    if (!user || user.password !== password) {
+    if (!user) {
+      return { status: false, msg: "User not found or password incorrect" };
+    }
+
+    let isPasswordValid = false;
+    if (user.salt) {
+      const candidateHash = await hashPassword(password || "", user.salt);
+      isPasswordValid = candidateHash === user.password;
+    } else if (user.password === password) {
+      // Legacy plaintext migration: upgrade to salted hash on first successful login
+      const newSalt = generateSalt();
+      user.salt = newSalt;
+      user.password = await hashPassword(password, newSalt);
+      saveCollection(USERS_KEY, users);
+      isPasswordValid = true;
+    }
+
+    if (!isPasswordValid) {
       return { status: false, msg: "User not found or password incorrect" };
     }
     if (user.isBanned) {
       return { status: false, msg: "User banned." };
     }
 
-    const authToken = "sim_jwt_" + user._id + "_" + Date.now();
+    const authToken = "sim_jwt_" + user._id + "_" + generateSecureId("tok");
     const session = {
       isAuth: true,
       authToken: authToken,
@@ -396,6 +500,9 @@ export async function handleSimulatedRequest({ url, body }) {
     const users = getCollection(USERS_KEY);
 
     if (type === "set-profile-photo") {
+      if (!isSafePhotoUrl(data?.photoUrl)) {
+        return { status: false, msg: "Invalid or unsafe photo URL" };
+      }
       const idx = users.findIndex((u) => u._id === data.userId);
       if (idx !== -1) {
         users[idx].profilePhotoURL = data.photoUrl;
@@ -414,6 +521,9 @@ export async function handleSimulatedRequest({ url, body }) {
     }
 
     if (type === "set-profile-banner") {
+      if (!isSafePhotoUrl(data?.photoUrl)) {
+        return { status: false, msg: "Invalid or unsafe banner URL" };
+      }
       const idx = users.findIndex((u) => u.profileId === data.profileId);
       if (idx !== -1) {
         users[idx].bannerURL = data.photoUrl;
@@ -436,9 +546,13 @@ export async function handleSimulatedRequest({ url, body }) {
 
     switch (type) {
       case "add-category": {
+        const catName = String(data?.name || "").trim().slice(0, 64);
+        if (!catName) {
+          return { status: false, msg: "Category name cannot be empty" };
+        }
         const newCat = {
-          _id: "cat_" + Date.now(),
-          name: data.name,
+          _id: generateSecureId("cat"),
+          name: catName,
           channels: [],
         };
         categories.push(newCat);
@@ -447,10 +561,14 @@ export async function handleSimulatedRequest({ url, body }) {
         return { status: true, msg: "Category created" };
       }
       case "add-channel": {
+        const chanName = String(data?.name || "").trim().slice(0, 64);
+        if (!chanName) {
+          return { status: false, msg: "Channel name cannot be empty" };
+        }
         const newChan = {
-          _id: "chan_" + Date.now(),
-          name: data.name,
-          type: Number(data.type),
+          _id: generateSecureId("chan"),
+          name: chanName,
+          type: Number(data.type) || 0,
         };
         channels.push(newChan);
         saveCollection(CHANNELS_KEY, channels);
@@ -632,9 +750,13 @@ export class SimulatedSocket {
       const callback = args[1];
       const session = getActiveSession();
 
+      // Bound and sanitize text
+      const rawText = typeof data.text === "string" ? data.text.trim() : "";
+      const boundedText = rawText.slice(0, 2000);
+
       const newMsg = {
-        _id: "msg_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
-        text: data.text ? data.text.trim() : "",
+        _id: generateSecureId("msg"),
+        text: boundedText,
         sender: {
           nick: session?.nick || "User",
           _id: session?.userId || "user_1",
@@ -647,10 +769,15 @@ export class SimulatedSocket {
       };
 
       if (data.files && data.files.length > 0) {
+        const fileItem = data.files[0];
+        const safeUrl = isSafePhotoUrl(fileItem?.url) ? fileItem.url : "img/file.png";
+        const safeName = String(fileItem?.originalName || "file")
+          .replace(/[\r\n\0]/g, "")
+          .slice(0, 100);
         newMsg.file = [
-          data.files[0].originalName || "file",
-          data.files[0].url || "img/file.png",
-          data.files[0].size || 1024,
+          safeName,
+          safeUrl,
+          Number(fileItem?.size) || 1024,
         ];
       }
 

@@ -756,4 +756,26 @@ Aynı uygulamanın (özellikle **BAND** gibi mesajlaşma ve işbirliği platform
   - Seçili kanal (`selectedChannel_${instanceId}`) ve açık kategori durumu (`categoryIsOpen_${instanceId}`) pencereye özel tutulur.
   - Canlı backend (Port 3000) bağlantısında `useFetch.js` üzerinden `Authorization: Bearer <authToken>` ve `X-Instance-Id` başlıkları taşınarak canlı sunucu tarafında da oturum ayrışması sağlanır.
 
+---
+
+## 26. DevSecOps & OWASP Güvenlik Mimarisi (Micro-Container Security Hardening)
+
+WebOS mikro-konteyner çalışma zamanı ve BAND uygulamasının güvenliği OWASP Top 10 (2021) ve CWE standartlarına göre sıkılaştırılmıştır:
+
+* **Kriptografik Kimlik Doğrulama Güvenliği (OWASP A02: Cryptographic Failures, CWE-256 / CWE-312)**:
+  - `simulatedBackend.js`: Kullanıcı parolaları tarayıcı yerel depolamasında (`localStorage`) asla düz metin olarak tutulmaz.
+  - Web Crypto API (`crypto.subtle.digest('SHA-256', ...)`) ve her kullanıcıya özel 16-baytlık kriptografik tuz (`generateSalt()`) kullanılarak parolalar tuzlu SHA-256 özeti olarak saklanır.
+  - Oturum açma sürecinde şeffaf yükseltme mimarisiyle eski düz metin kayıtlar ilk başarılı girişte otomatik olarak tuzlu özet formatına geçirilir.
+* **Depolanmış XSS Engelleme (OWASP A03: Injection, CWE-79)**:
+  - `MessageFile.jsx`: Dosya indirme ve görüntüleme bağlantılarında `isSafeFileUrl` kontrolü işletilir; `javascript:`, `vbscript:`, `data:text/html` gibi kötü amaçlı URI şemaları engellenerek kullanıcılar tıklandığında rastgele kod çalıştırılmasından korunur.
+  - `ProfileScreen.jsx`, `UsersElement.jsx`, `Post.jsx`: Kullanıcı banner ve profil fotoğraflarında güvenli protokol doğrulaması ve tırnak/parantez kaçış filtrelemesi uygulanır (`getSafeImageUrl`). `img` etiketlerine erişilebilir `alt` nitelikleri eklenmiştir.
+* **Konteyner IPC Köprüsü Sıkılaştırması (OWASP A04, CWE-345 / CWE-942)**:
+  - `App.jsx`: Konuk iframe el sıkışmasında (`WEBOS_GUEST_READY`) joker karakter (`*`) hedef köken kaldırılmış; kesin `window.location.origin` kullanımına geçilmiştir.
+  - `useWebOSBridge.ts`: Gelen `postMessage` olaylarında `isEventOriginAllowed` ile hedef köken katı doğrulanır; `WEBOS_SET_TITLE` (maks. 100 karakter) ve `WEBOS_NOTIFICATION` (başlık maks. 100, gövde maks. 300 karakter) girdileri sanitize edilip sınırlandırılır.
+  - Fonksiyonel parçalama ile SonarJS Cognitive Complexity değeri 15 eşiğinin altına (<= 6) indirilmiştir.
+* **Hata Direnci ve DoS Koruması (CWE-754 / CWE-400)**:
+  - `Message.jsx`: Boş veya dosya içeren mesajlarda `data.text` tanımsız olduğunda meydana gelen React çökmesi (`TypeError: Cannot read properties of undefined (reading 'split')`) katı null-safe kontrollerle giderilmiştir.
+  - `simulatedBackend.js`: Rumuz (3-32 karakter), kategori/kanal adları (1-64 karakter) ve mesaj metni (maks. 2000 karakter) için girdi sınırlandırmaları getirilerek `localStorage` kota tüketimi engellenmiştir.
+
+
 

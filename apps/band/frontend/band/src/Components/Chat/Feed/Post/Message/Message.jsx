@@ -1,10 +1,12 @@
 import "./Message.css";
 import MessageFile from "./MessageFile/MessageFile";
+
 export default function Message({ data }) {
-  function parseLinks(text) {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.split(urlRegex).map((part, index) => {
-      if (urlRegex.test(part)) {
+  function parseLinks(rawText) {
+    if (!rawText || typeof rawText !== "string") return null;
+    const urlPattern = /(https?:\/\/[^\s]+)/;
+    return rawText.split(urlPattern).map((part, index) => {
+      if (/^https?:\/\/[^\s]+$/.test(part)) {
         return (
           <a key={index} href={part} target="_blank" rel="noopener noreferrer">
             {part}
@@ -14,14 +16,15 @@ export default function Message({ data }) {
       return part;
     });
   }
+
+  const textContent = typeof data?.text === "string" ? data.text : "";
+
   return (
-    <>
-      <div className="message">
-        <span>{parseLinks(data.text)}</span>
-        {Array.isArray(data.file) && data.file.length > 0 && (
-          <MessageFile file={data.file} />
-        )}
-      </div>
-    </>
+    <div className="message">
+      {textContent ? <span>{parseLinks(textContent)}</span> : null}
+      {Array.isArray(data?.file) && data.file.length > 0 && (
+        <MessageFile file={data.file} />
+      )}
+    </div>
   );
 }

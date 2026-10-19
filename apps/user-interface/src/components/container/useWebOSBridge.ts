@@ -21,8 +21,65 @@ export interface UseWebOSBridgeOptions {
 }
 
 /**
- * Custom React Hook establishing a secure, type-safe IPC bridge between
- * the WebOS host and a sandboxed micro-container application.
+ * Strict origin verification helper per OWASP & SonarQube S2819
+ */
+function isEventOriginAllowed(origin: string, targetOrigin: string): boolean {
+  if (origin === targetOrigin) return true;
+  return targetOrigin === '' && (origin === 'null' || origin === '');
+}
+
+/**
+ * Validates inbound message envelope structure
+ */
+function isValidEnvelope(data: unknown, appId: string): data is WebOSBridgeEnvelope<GuestToHostBridgeEvent> {
+  if (!data || typeof data !== 'object') return false;
+  const envelope = data as Record<string, unknown>;
+  return envelope.source === 'aec-webos-guest' && envelope.targetAppId === appId && Boolean(envelope.payload);
+}
+
+function handleNotificationPayload(
+  payload: Extract<GuestToHostBridgeEvent, { type: 'WEBOS_NOTIFICATION' }>,
+  onNotification?: (notification: { title: string; body: string; icon?: string }) => void
+) {
+  const safeTitle = typeof payload.title === 'string'
+    ? payload.title.replace(/[\r\n\0]/g, '').trim().slice(0, 100)
+    : '';
+  const safeBody = typeof payload.body === 'string'
+    ? payload.body.replace(/[\r\n\0]/g, '').trim().slice(0, 300)
+    : '';
+  const safeIcon =
+    typeof payload.icon === 'string' && !payload.icon.toLowerCase().startsWith('javascript:')
+      ? payload.icon.slice(0, 200)
+      : undefined;
+
+  if (safeTitle && safeBody) {
+    onNotification?.({
+      title: safeTitle,
+      body: safeBody,
+      icon: safeIcon,
+    });
+  }
+}
+
+function handleCrashReportPayload(
+  payload: Extract<GuestToHostBridgeEvent, { type: 'WEBOS_CRASH_REPORT' }>,
+  onCrashReport?: (crash: { message: string; stack?: string }) => void
+) {
+  const safeMessage = typeof payload.message === 'string'
+    ? payload.message.slice(0, 1000)
+    : 'Unknown guest crash';
+  const safeStack = typeof payload.stack === 'string'
+    ? payload.stack.slice(0, 4000)
+    : undefined;
+
+  onCrashReport?.({
+    message: safeMessage,
+    stack: safeStack,
+  });
+}
+
+/**
+ * Setup secure inbound message listener with strict OWASP origin and source verification
  */
 export function useWebOSBridge({
   appId,
@@ -93,27 +150,20 @@ export function useWebOSBridge({
    */
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // 1. Strict origin & source verification per OWASP & SonarQube S2819
-      if (event.origin !== targetOrigin && event.origin !== 'null' && event.origin !== '') {
+      if (!isEventOriginAllowed(event.origin, targetOrigin)) {
         return;
       }
       if (event.source !== iframeRef.current?.contentWindow) {
         return;
       }
+      if (!isValidEnvelope(event.data, appId)) {
+        return;
+      }
 
-      // 2. Validate envelope structure
-      const data = event.data;
-      if (!data || typeof data !== 'object') return;
-      if (data.source !== 'aec-webos-guest' || data.targetAppId !== appId) return;
-
-      const payload = data.payload as GuestToHostBridgeEvent;
-      if (!payload?.type) return;
-
-      // 3. Handle message types
+      const payload = event.data.payload;
       switch (payload.type) {
-        case 'WEBOS_GUEST_READY': {
-          onGuestReady?.(payload.version);
-          // Respond with initial host configuration
+        case 'WEBOS_GUEST_READY':
+          onGuestReady?.(typeof payload.version === 'string' ? payload.version.slice(0, 20) : undefined);
           postToGuest({
             type: 'WEBOS_INIT_CONFIG',
             theme: currentTheme,
@@ -122,26 +172,19 @@ export function useWebOSBridge({
             lang: currentLanguage,
           });
           break;
-        }
         case 'WEBOS_SET_TITLE': {
-          onSetTitle?.(payload.title);
+          const safeTitle = typeof payload.title === 'string'
+            ? payload.title.replace(/[\r\n\0]/g, '').trim().slice(0, 100)
+            : '';
+          if (safeTitle) onSetTitle?.(safeTitle);
           break;
         }
-        case 'WEBOS_NOTIFICATION': {
-          onNotification?.({
-            title: payload.title,
-            body: payload.body,
-            icon: payload.icon,
-          });
+        case 'WEBOS_NOTIFICATION':
+          handleNotificationPayload(payload, onNotification);
           break;
-        }
-        case 'WEBOS_CRASH_REPORT': {
-          onCrashReport?.({
-            message: payload.message,
-            stack: payload.stack,
-          });
+        case 'WEBOS_CRASH_REPORT':
+          handleCrashReportPayload(payload, onCrashReport);
           break;
-        }
       }
     };
 

@@ -58,10 +58,12 @@ export default function UsersElement({ data }) {
         <div className="usersElement-img">
           <img
             src={
-              data.profilePhotoURL != ""
+              data.profilePhotoURL &&
+              !data.profilePhotoURL.toLowerCase().startsWith("javascript:")
                 ? data.profilePhotoURL
                 : "img/no-profile-photo.png"
             }
+            alt={`${data?.nick || "Kullanıcı"} profil fotoğrafı`}
           />
         </div>
         <div className="usersElement-content">

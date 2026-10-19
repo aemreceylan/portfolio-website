@@ -1,5 +1,35 @@
 # NovaOS / AEC Portfolio Geliştirme Günlüğü (DEVLOG)
 
+## [2026-10-19] - DevSecOps Güvenlik Denetimi, Zafiyet İyileştirmeleri & OWASP Sıkılaştırması
+
+### Yapılanlar
+- **DevSecOps Güvenlik Denetimi (Security Audit)**:
+  - OWASP Top 10 (2021) ve CWE/SANS standartlarına uygun olarak BAND mikro-konteyner ve WebOS bileşenleri üzerinde kapsamlı güvenlik denetimi gerçekleştirildi.
+  - [security_audit_report.md](file:///C:/Users/ahmet/.gemini/antigravity-ide/brain/3656ab52-c7a4-4fa2-a70c-7c4b3043a4a2/security_audit_report.md) başlığı altında detaylı denetim raporu üretildi.
+- **Kriptografik Parola Güvenliği (SEC-01 - CWE-256 / CWE-312)**:
+  - `simulatedBackend.js`: `localStorage` üzerinde düz metin parola saklama kaldırıldı.
+  - Web Crypto API (`crypto.subtle.digest('SHA-256', ...)`) ve kullanıcı başına 16-baytlık kriptografik tuz (`generateSalt()`) ile tuzlu SHA-256 özet yapısına geçildi.
+  - Eski düz metin hesapların oturum açarken otomatik olarak güvenli özet formatına yükseltilmesi sağlandı.
+- **Dosya İndirme Bağlantılarında Stored XSS Koruması (SEC-02 - CWE-79)**:
+  - `MessageFile.jsx`: `file[1]` indirme URL'inde `isSafeFileUrl` doğrulaması eklendi; `javascript:`, `vbscript:`, `data:text/html` protokol enjeksiyonu engellendi.
+- **Profil ve Banner URL Enjeksiyonunun Önlenmesi (SEC-03 - CWE-79 / CWE-116)**:
+  - `ProfileScreen.jsx`: `backgroundImage: url(...)` yapısındaki CSS enjeksiyonu ve kaçış dizileri engellendi (`getSafeImageUrl`).
+  - `UsersElement.jsx` ve `Post.jsx`: Güvenli resim URL şeması kontrolü ve eksik `alt` erişilebilirlik nitelikleri tamamlandı.
+- **Mesaj Bağlantı Ayrıştırıcısında DoS/Crash Koruması (SEC-04 - CWE-754 / CWE-400)**:
+  - `Message.jsx`: Boş/dosyalı mesajlarda `data.text` undefined olduğunda oluşan React çökmesi (`text.split`) katı null-safe kontrollerle giderildi.
+- **Girdi Doğrulama ve Boyut Sınırlandırması (SEC-05 - CWE-20 / CWE-400)**:
+  - `simulatedBackend.js`: Rumuz (3-32 karakter, alfasayısal regex), kategori/kanal (1-64 karakter) ve mesaj metni (maks. 2000 karakter) için sınırlandırmalar getirildi.
+- **Konteyner IPC Köprüsü Sıkılaştırması (SEC-06 - CWE-345 / CWE-942)**:
+  - `App.jsx`: `postMessage` içindeki joker karakter `*` hedef kökeni kaldırılarak kesin `window.location.origin` yapısına geçildi.
+  - `useWebOSBridge.ts`: Gelen olaylarda `isEventOriginAllowed` ile köken doğrulandı; pencere başlığı (maks. 100) ve bildirim (başlık maks. 100, gövde maks. 300) içerikleri sınırlandırıldı.
+- **SonarJS Bilişsel Karmaşıklık (Cognitive Complexity) İyileştirmesi**:
+  - `useWebOSBridge.ts`: `handleMessage` fonksiyonunun karmaşıklığı (27) modüler yardımcı fonksiyonlara bölünerek (`isEventOriginAllowed`, `isValidEnvelope`, `handleNotificationPayload`, `handleCrashReportPayload`) SonarJS eşik değerinin (<= 15) çok altına çekildi.
+- **Test ve Kalite Standartları Doğrulaması**:
+  - `security-audit.test.tsx` dosyasına konteyner köprüsü köken denetimi ve girdi doğrulama birim testleri eklendi.
+  - Monorepo genelinde 38 test dosyasında **326 test %100 başarıyla geçti**.
+  - `npm run typecheck` ve `npm run lint` 0 hata ve 0 uyarı ile tamamlandı.
+  - `band` üretim paketi (`npm run build`) başarıyla derlenip `public/apps/band/` içine güncellendi.
+
 ## [2026-10-18] - IDE Hataları Temizliği & SonarQube Statik Kod Analizi Denetimi
 
 ### Yapılanlar

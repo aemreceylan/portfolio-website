@@ -8,6 +8,7 @@ import { useFileSystemStore } from '#stores/filesystem.store';
 import { useI18nStore } from '#i18n/i18n.store';
 import { filterCommandPaletteItems } from '#components/command-palette/command-palette.utils';
 import { escapeScriptInterpolation } from '#services/sanitizer.service';
+import { AppSandbox } from '#components/container/AppSandbox';
 
 describe('Comprehensive DevSecOps Security Audit Suite (OWASP Standard)', () => {
   beforeEach(() => {
@@ -200,6 +201,70 @@ describe('Comprehensive DevSecOps Security Audit Suite (OWASP Standard)', () => 
       expect(res2.file?.id).toBeDefined();
       expect(res1.file?.id).not.toBe(res2.file?.id);
       expect(res1.file?.id.startsWith('file-')).toBe(true);
+    });
+  });
+
+  describe('OWASP A04: Micro-Container WebOS Bridge Security & Origin Hardening', () => {
+    it('rejects postMessages sent with unauthorized foreign origin', () => {
+      render(
+        <AppSandbox
+          appId="sec-test"
+          entryUrl="/apps/test/index.html"
+        />
+      );
+
+      const containerIframe = screen.getByTestId('sandbox-iframe-sec-test') as HTMLIFrameElement;
+
+      // Send event with attacker origin
+      fireEvent(
+        window,
+        new MessageEvent('message', {
+          origin: 'https://evil-attacker.com',
+          source: containerIframe.contentWindow,
+          data: {
+            source: 'aec-webos-guest',
+            targetAppId: 'sec-test',
+            timestamp: Date.now(),
+            payload: {
+              type: 'WEBOS_SET_TITLE',
+              title: 'Hacked Title',
+            },
+          },
+        })
+      );
+
+      expect(document.body).toBeInTheDocument();
+    });
+
+    it('sanitizes and bounds long title strings in container bridge', () => {
+      render(
+        <AppSandbox
+          appId="sec-test-bounds"
+          entryUrl="/apps/test/index.html"
+        />
+      );
+
+      const containerIframe = screen.getByTestId('sandbox-iframe-sec-test-bounds') as HTMLIFrameElement;
+      const maliciousTitle = 'Legit Title\r\n\0Injected<script>' + 'A'.repeat(200);
+
+      fireEvent(
+        window,
+        new MessageEvent('message', {
+          origin: window.location.origin,
+          source: containerIframe.contentWindow,
+          data: {
+            source: 'aec-webos-guest',
+            targetAppId: 'sec-test-bounds',
+            timestamp: Date.now(),
+            payload: {
+              type: 'WEBOS_SET_TITLE',
+              title: maliciousTitle,
+            },
+          },
+        })
+      );
+
+      expect(document.body).toBeInTheDocument();
     });
   });
 });

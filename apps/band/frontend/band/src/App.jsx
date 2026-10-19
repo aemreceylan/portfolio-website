@@ -32,23 +32,25 @@ export default function App() {
     // Notify WebOS Container Runtime that BAND guest application is ready
     if (window.parent && window.parent !== window) {
       const targetOrigin =
-        typeof window !== 'undefined' && window.location.origin
+        typeof window !== "undefined" && window.location && window.location.origin
           ? window.location.origin
-          : '*';
+          : window.origin || "";
 
-      window.parent.postMessage(
-        {
-          source: 'aec-webos-guest',
-          targetAppId: 'band',
-          timestamp: Date.now(),
-          payload: {
-            type: 'WEBOS_GUEST_READY',
-            appId: 'band',
-            version: '1.0.0',
+      if (targetOrigin) {
+        window.parent.postMessage(
+          {
+            source: "aec-webos-guest",
+            targetAppId: "band",
+            timestamp: Date.now(),
+            payload: {
+              type: "WEBOS_GUEST_READY",
+              appId: "band",
+              version: "1.0.0",
+            },
           },
-        },
-        targetOrigin
-      );
+          targetOrigin
+        );
+      }
     }
   }, [setInviteToken]);
   useEffect(() => {
