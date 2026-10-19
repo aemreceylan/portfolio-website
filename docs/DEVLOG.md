@@ -1,5 +1,15 @@
 # NovaOS / AEC Portfolio Geliştirme Günlüğü (DEVLOG)
 
+## [2026-10-19] - CI/CD Docker Frontend Build Düzeltmesi & BAND Bağımlılık Senkronizasyonu
+
+### Yapılanlar
+- **GitHub Actions Frontend Buildx Hata Çözümü (`exit code: 2`)**:
+  - `MultiInstanceIsolation.test.tsx` dosyasının `apps/band/frontend/band/src/services/simulatedBackend` modülüne yaptığı import referansının Docker ortamında derleme hatasına (`TS2307: Cannot find module`) yol açtığı tespit edildi.
+  - `docker/Dockerfile.frontend`: Builder aşamasına `COPY apps/band/ ./apps/band/` eklendi; böylece `tsc --noEmit` aşamasında çapraz monorepo test tipi çözünürlüğü sağlandı.
+  - `.github/workflows/deploy.yml`: Seçici CI/CD `frontend:` yolu filtresine `'apps/band/**'` eklendi.
+  - Docker imaj derlemesi yerel olarak test edildi (`docker build -f ./docker/Dockerfile.frontend .` başarıyla tamamlandı, `exit code: 0`).
+  - Monorepo testleri (38 dosya, 326 test), tip denetimi ve lint kontrolleri sıfır hatayla doğrulandı.
+
 ## [2026-10-19] - DevSecOps Güvenlik Denetimi, Zafiyet İyileştirmeleri & OWASP Sıkılaştırması
 
 ### Yapılanlar

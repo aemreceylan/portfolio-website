@@ -15,6 +15,7 @@ RUN npm ci
 # Copy sources
 COPY packages/shared/ ./packages/shared/
 COPY apps/user-interface/ ./apps/user-interface/
+COPY apps/band/ ./apps/band/
 
 # Build static production bundle
 RUN npm run build --workspace=@personal-os/user-interface

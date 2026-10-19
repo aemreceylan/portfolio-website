@@ -45,6 +45,7 @@ jobs:
               - 'package-lock.json'
             frontend:
               - 'apps/user-interface/**'
+              - 'apps/band/**'
               - 'packages/shared/**'
               - 'docker/Dockerfile.frontend'
               - 'docker/nginx.frontend.conf'
